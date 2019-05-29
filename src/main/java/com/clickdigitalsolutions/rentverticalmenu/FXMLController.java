@@ -42,6 +42,12 @@ public class FXMLController implements Initializable {
     
     @FXML
     private AnchorPane paymentContainer;
+    
+    @FXML
+    private Tab monthlyExpensesTab;
+    
+    @FXML
+    private AnchorPane monthlyContainer;
 
     private double tabWidth = 90.0;
     public static int lastSelectedTabIndex = 0;
@@ -69,7 +75,7 @@ public class FXMLController implements Initializable {
         configureTab(tenantDetailsTab, "Tenant\nDetails", "file:///C:/Users/Mike254/Documents/NetbeansProjects/NewRentLayout/iconsnew/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD.fxml"), replaceBackgroundColorHandler);
         configureTab(repairsTab, "Repairs", "file:///C:/Users/Mike254/Documents/NetbeansProjects/NewRentLayout/iconsnew/icons8_house_48px.png", repairsContainer, getClass().getResource("/fxml/R.fxml"), replaceBackgroundColorHandler);
         configureTab(paymentDetailsTab, "Payment\nDetails", "file:///C:/Users/Mike254/Documents/NetbeansProjects/NewRentLayout/iconsnew/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD.fxml"), replaceBackgroundColorHandler);
-
+        configureTab(monthlyExpensesTab, "Monthly\nExpenses", "file:///C:/Users/Mike254/Documents/NetbeansProjects/NewRentLayout/iconsnew/icons8_overtime_48px.png", monthlyContainer, getClass().getResource("/fxml/ME.fxml"), replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
 
