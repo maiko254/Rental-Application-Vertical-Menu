@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
 
-<StackPane prefHeight="431.0" prefWidth="661.0" stylesheets="@../styles/global.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.FXMLController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="431.0" prefWidth="661.0" stylesheets="@../styles/global.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.FXMLController">
    <children>
       <JFXTabPane fx:id="tabContainer" prefHeight="128.0" prefWidth="308.0" side="LEFT" tabClosingPolicy="UNAVAILABLE">
          <tabs>

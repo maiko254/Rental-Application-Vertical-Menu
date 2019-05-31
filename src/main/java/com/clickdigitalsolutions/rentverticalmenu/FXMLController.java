@@ -1,6 +1,8 @@
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTabPane;
+import com.jfoenix.controls.JFXTextField;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -48,7 +50,7 @@ public class FXMLController implements Initializable {
     
     @FXML
     private AnchorPane monthlyContainer;
-
+    
     private double tabWidth = 90.0;
     public static int lastSelectedTabIndex = 0;
 
