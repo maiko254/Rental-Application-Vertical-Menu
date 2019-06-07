@@ -15,27 +15,27 @@
    <children>
       <Label layoutX="14.0" layoutY="5.0" prefHeight="18.0" prefWidth="125.0" text="House Number" textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="154.0" prefHeight="18.0" prefWidth="126.0" text="Tenant Name" textFill="#fdfdfd" />
-      <JFXTextField layoutX="200.0" layoutY="150.0" prefHeight="26.0" prefWidth="218.0" />
+      <JFXTextField fx:id="tenantNamePD" layoutX="200.0" layoutY="150.0" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
       <Label layoutX="15.0" layoutY="204.0" prefHeight="18.0" prefWidth="171.0" text="Amount Paid" textFill="#fdfdfd" />
-      <JFXTextField layoutX="200.0" layoutY="200.0" prefHeight="26.0" prefWidth="218.0" />
+      <JFXTextField fx:id="amountPD" layoutX="200.0" layoutY="200.0" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
       <Label layoutX="15.0" layoutY="254.0" prefHeight="18.0" prefWidth="126.0" text="Month " textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="304.0" prefHeight="18.0" prefWidth="126.0" text="Payment Date" textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="354.0" prefHeight="18.0" prefWidth="126.0" text="Payment Method" textFill="#fdfdfd" />
-      <JFXButton buttonType="RAISED" layoutX="200.0" layoutY="551.0" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
+      <JFXButton fx:id="saveButtonPD" buttonType="RAISED" layoutX="200.0" layoutY="551.0" onAction="#saveButtonActionPD" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
          <font>
             <Font name="System Bold" size="13.0" />
          </font>
       </JFXButton>
-      <TitledPane expanded="false" layoutX="199.0" layoutY="30.0" prefHeight="119.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House">
+      <TitledPane fx:id="houseComboTitledPanePD" expanded="false" layoutX="199.0" layoutY="30.0" prefHeight="119.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
          <content>
             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="20.0" prefWidth="218.0">
                <children>
                   <VBox prefHeight="200.0" prefWidth="218.0">
                      <children>
-                        <JFXComboBox prefHeight="27.0" prefWidth="218.0" promptText="Block A" />
-                        <JFXComboBox prefHeight="27.0" prefWidth="218.0" promptText="Block B" />
-                        <JFXComboBox prefHeight="27.0" prefWidth="218.0" promptText="Block C" />
-                        <JFXComboBox prefHeight="27.0" prefWidth="218.0" promptText="Nasra Block" />
+                        <JFXComboBox fx:id="blockAComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
+                        <JFXComboBox fx:id="blockBComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
+                        <JFXComboBox fx:id="blockCComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block C" stylesheets="@../styles/combobox%20css.css" />
+                        <JFXComboBox fx:id="nasraBlockPD" prefHeight="27.0" prefWidth="218.0" promptText="Nasra Block" stylesheets="@../styles/combobox%20css.css" />
                      </children>
                   </VBox>
                </children>
@@ -45,8 +45,9 @@
             <Font size="13.0" />
          </font>
       </TitledPane>
-      <JFXComboBox layoutX="200.0" layoutY="250.0" prefHeight="26.0" prefWidth="218.0" />
-      <JFXTreeView layoutX="199.0" layoutY="354.0" prefHeight="150.0" prefWidth="218.0" />
-      <JFXDatePicker layoutX="199.0" layoutY="299.0" prefHeight="28.0" prefWidth="218.0" />
+      <JFXComboBox fx:id="monthComboPD" layoutX="200.0" layoutY="250.0" prefHeight="26.0" prefWidth="218.0" stylesheets="@../styles/combobox%20css.css" />
+      <JFXTreeView fx:id="paymentMethodPD" layoutX="199.0" layoutY="354.0" prefHeight="150.0" prefWidth="218.0" />
+      <JFXDatePicker fx:id="rentPaymentDatePD" layoutX="199.0" layoutY="299.0" prefHeight="28.0" prefWidth="218.0" />
+      <Label fx:id="rentArrears" layoutX="439.0" layoutY="205.0" prefHeight="18.0" prefWidth="206.0" text="Label" />
    </children>
 </AnchorPane>
