@@ -17,8 +17,6 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -156,6 +154,96 @@ public class RController implements Initializable {
                 comboboxRCheck = "Block A";
                 Label label = new Label();
                 label.setText((String)blockAComboR.getSelectionModel().getSelectedItem());
+                label.setStyle("-fx-text-fill: red;");
+                houseComboTitledPaneR.setGraphic(label);
+                houseComboTitledPaneR.setExpanded(false);
+            });
+            blockBComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                try {
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchRepairsSql);
+                    pstmt.setString(1, (String)blockBComboR.getSelectionModel().getSelectedItem());
+                    ResultSet rs = pstmt.executeQuery();
+                    if (!rs.next()){
+                        setEmpty();
+                    }else 
+                        do {                            
+                            tenantNameR.setText(rs.getString("TenantName"));
+                            repairsDoneR.setText(rs.getString("Repairs"));
+                            costOfRepairR.setText(rs.getString("CostOfRepairs"));
+                            if (rs.getString("DateOfRepairs") != null){
+                                repairDateR.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
+                            }else
+                                repairDateR.setValue(null);
+                            miscellaneousR.setText(rs.getString("MiscellaneousExpenses"));
+                        } while (rs.next());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                comboboxRCheck = "Block B";
+                Label label = new Label();
+                label.setText((String)blockBComboR.getSelectionModel().getSelectedItem());
+                label.setStyle("-fx-text-fill: red;");
+                houseComboTitledPaneR.setGraphic(label);
+                houseComboTitledPaneR.setExpanded(false);
+            });
+            blockCComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                try {
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchRepairsSql);
+                    pstmt.setString(1, (String)blockCComboR.getSelectionModel().getSelectedItem());
+                    ResultSet rs = pstmt.executeQuery();
+                    if (!rs.next()){
+                        setEmpty();
+                    }else 
+                        do {                            
+                            tenantNameR.setText(rs.getString("TenantName"));
+                            repairsDoneR.setText(rs.getString("Repairs"));
+                            costOfRepairR.setText(rs.getString("CostOfRepairs"));
+                            if (rs.getString("DateOfRepairs") != null){
+                                repairDateR.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
+                            }else
+                                repairDateR.setValue(null);
+                            miscellaneousR.setText(rs.getString("MiscellaneousExpenses"));
+                        } while (rs.next());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                comboboxRCheck = "Block C";
+                Label label = new Label();
+                label.setText((String)blockCComboR.getSelectionModel().getSelectedItem());
+                label.setStyle("-fx-text-fill: red;");
+                houseComboTitledPaneR.setGraphic(label);
+                houseComboTitledPaneR.setExpanded(false);
+            });
+            nasraBlockR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                try {
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchRepairsSql);
+                    pstmt.setString(1, (String)nasraBlockR.getSelectionModel().getSelectedItem());
+                    ResultSet rs = pstmt.executeQuery();
+                    if (!rs.next()){
+                        setEmpty();
+                    }else 
+                        do {                            
+                            tenantNameR.setText(rs.getString("TenantName"));
+                            repairsDoneR.setText(rs.getString("Repairs"));
+                            costOfRepairR.setText(rs.getString("CostOfRepairs"));
+                            if (rs.getString("DateOfRepairs") != null){
+                                repairDateR.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
+                            }else
+                                repairDateR.setValue(null);
+                            miscellaneousR.setText(rs.getString("MiscellaneousExpenses"));
+                        } while (rs.next());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                comboboxRCheck = "Nasra Block";
+                Label label = new Label();
+                label.setText((String)nasraBlockR.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: red;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);

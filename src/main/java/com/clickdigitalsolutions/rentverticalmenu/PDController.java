@@ -7,10 +7,12 @@ package com.clickdigitalsolutions.rentverticalmenu;
  */
 
 
+import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,11 +29,15 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.stage.Stage;
 
 /**
  * FXML Controller class
@@ -73,6 +79,8 @@ public class PDController implements Initializable {
     @FXML
     private Label rentArrears;
     
+    @FXML
+    private JFXButton viewHistory;
     
     String paymentMode;
     
@@ -188,6 +196,48 @@ public class PDController implements Initializable {
         bank.setValue("Enter cheque no.");
         root2.setExpanded(false);
         rentArrears.setVisible(false);
+    }
+    
+    public ObservableList<PDModel> getPaymentDetails(){
+        ObservableList<PDModel> PDTableData = FXCollections.observableArrayList();
+        if (comboboxPDCheck.equals("Block A")){
+            try {
+                String tableDataQuery = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
+                Connection conn = DriverManager.getConnection(databaseURL);
+                PreparedStatement pstmt = conn.prepareStatement(tableDataQuery);
+                pstmt.setString(1, (String)blockAComboPD.getSelectionModel().getSelectedItem());
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {                    
+                    String houseNo = rs.getString("HouseNumber");
+                    String tenantName = rs.getString("TenantName");
+                    String rentAmount = rs.getString("Amount");
+                    String month = rs.getString("Month");
+                    String paymentDate = rs.getString("PaymentDate");
+                    String paymentMethod = rs.getString("PaymentMethod");
+                    PDModel paymentData = new PDModel(houseNo, tenantName, rentAmount, month, paymentDate, paymentMethod);
+                    PDTableData.add(paymentData);
+                }
+                pstmt.close();
+                conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return PDTableData;
+    }
+    
+    @FXML
+    private void viewHistoryButtonAction() throws IOException{
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/fxml/PDTableView.fxml"));
+        PDTableViewController subcontroller = new PDTableViewController();
+        loader.setController(subcontroller);
+        Parent root = loader.load();
+        Scene viewHistoryScene = new Scene(root);
+        Stage window  = new Stage();
+        viewHistory.disableProperty().bind(window.showingProperty());
+        window.setScene(viewHistoryScene);
+        window.show();
     }
     
     @Override
@@ -557,6 +607,8 @@ public class PDController implements Initializable {
         paymentMethodPD.setShowRoot(false);
         
         tenantNamePD.setDisable(true);
+        
+        rentArrears.setVisible(false);
     }    
     
 }

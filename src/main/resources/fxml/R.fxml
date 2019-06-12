@@ -19,7 +19,7 @@
       <JFXTextField fx:id="repairsDoneR" layoutX="200.0" layoutY="200.0" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
       <Label layoutX="15.0" layoutY="254.0" prefHeight="18.0" prefWidth="126.0" text="Cost of Repair" textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="304.0" prefHeight="18.0" prefWidth="126.0" text="Repair Date" textFill="#fdfdfd" />
-      <Label layoutX="15.0" layoutY="354.0" prefHeight="18.0" prefWidth="126.0" text="MIscellaneous Expenses" textFill="#fdfdfd" />
+      <Label layoutX="15.0" layoutY="354.0" prefHeight="18.0" prefWidth="171.0" text="MIscellaneous Expenses" textFill="#fdfdfd" />
       <JFXButton fx:id="saveButtonR" buttonType="RAISED" layoutX="200.0" layoutY="551.0" onAction="#saveButtonActionR" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
          <font>
             <Font name="System Bold" size="13.0" />
