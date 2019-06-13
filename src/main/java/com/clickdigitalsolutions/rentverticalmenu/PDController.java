@@ -38,6 +38,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro8.JMetro;
 
 /**
  * FXML Controller class
@@ -82,6 +83,8 @@ public class PDController implements Initializable {
     @FXML
     private JFXButton viewHistory;
     
+    private static JMetro.Style STYLE = JMetro.Style.DARK;
+    
     String paymentMode;
     
     String comboboxPDCheck;
@@ -94,7 +97,7 @@ public class PDController implements Initializable {
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novenber", "December");
     
-    String databaseURL = "jdbc:sqlite:C:\\Users\\Mike254\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, String Month, String PaymentDate, String PaymentMethod){
         try {
@@ -230,10 +233,11 @@ public class PDController implements Initializable {
     private void viewHistoryButtonAction() throws IOException{
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/PDTableView.fxml"));
-        PDTableViewController subcontroller = new PDTableViewController();
+        PDTableViewController subcontroller = new PDTableViewController(this);
         loader.setController(subcontroller);
         Parent root = loader.load();
         Scene viewHistoryScene = new Scene(root);
+        new JMetro(STYLE).applyTheme(viewHistoryScene);
         Stage window  = new Stage();
         viewHistory.disableProperty().bind(window.showingProperty());
         window.setScene(viewHistoryScene);
@@ -323,7 +327,7 @@ public class PDController implements Initializable {
                 comboboxPDCheck = "Block A";
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
@@ -399,7 +403,7 @@ public class PDController implements Initializable {
                 comboboxPDCheck = "Block B";
                 Label label = new Label();
                 label.setText((String)blockBComboPD.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
             });
@@ -474,7 +478,7 @@ public class PDController implements Initializable {
                 comboboxPDCheck = "Block C";
                 Label label = new Label();
                 label.setText((String)blockCComboPD.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
             });
@@ -552,7 +556,7 @@ public class PDController implements Initializable {
                 comboboxPDCheck = "Nasra Block";
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());

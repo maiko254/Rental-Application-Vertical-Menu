@@ -120,5 +120,10 @@
             <artifactId>fontawesomefx</artifactId>
             <version>8.9</version>
         </dependency>
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jmetro</artifactId>
+            <version>5.2</version>
+        </dependency>
     </dependencies>
 </project>

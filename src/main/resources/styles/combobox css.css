@@ -12,5 +12,5 @@ and open the template in the editor.
     -fx-text-fill: #000000f5;
 }
 .combo-box .cell:selected {
-    -fx-text-fill:  red;
+    -fx-text-fill:  #c93926;
 }

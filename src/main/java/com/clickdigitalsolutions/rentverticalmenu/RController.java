@@ -9,6 +9,7 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -20,9 +21,14 @@ import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
+import javafx.stage.Stage;
+import jfxtras.styles.jmetro8.JMetro;
 
 /**
  * FXML Controller class
@@ -53,6 +59,10 @@ public class RController implements Initializable {
     private JFXTextField miscellaneousR;
     @FXML
     private JFXButton saveButtonR;
+    @FXML
+    private JFXButton viewRepairsHistoryButton;
+    
+    private JMetro.Style STYLE = JMetro.Style.DARK;
     
     private String comboboxRCheck;
     
@@ -61,7 +71,7 @@ public class RController implements Initializable {
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
 
-    String databaseURL = "jdbc:sqlite:C:\\Users\\Mike254\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
     public void createRepairsTable(String HouseNumber, String TenantName, String Repairs, String CostOfRepairs, String DateOfRepairs, String Miscellaneous){
         try {
@@ -118,7 +128,46 @@ public class RController implements Initializable {
         return repairsDateString;
     }
     
+    public  ObservableList<RModel> getRepairsDetails(){
+        ObservableList<RModel> repairsData = FXCollections.observableArrayList();
+        if (comboboxRCheck.equals("Block A")) {
+            try {
+                String repairsTableQuery = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                Connection conn = DriverManager.getConnection(databaseURL);
+                PreparedStatement pstmt = conn.prepareStatement(repairsTableQuery);
+                pstmt.setString(1, (String) blockAComboR.getSelectionModel().getSelectedItem());
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {                    
+                    String houseNo = rs.getString("HouseNumber");
+                    String tenantName = rs.getString("Tenantname");
+                    String repairsDone = rs.getString("Repairs");
+                    String costOfRepair = rs.getString("CostOfRepairs");
+                    String dateOfRepair = rs.getString("DateOfRepairs");
+                    String miscellaneous = rs.getString("MiscellaneousExpenses");
+                    
+                    RModel repairsInfo = new RModel(houseNo, tenantName, repairsDone, costOfRepair, dateOfRepair, miscellaneous);
+                    repairsData.add(repairsInfo);
+                }
+            } catch (Exception e) {
+            }
+        }
+        return repairsData;
+    }
     
+    @FXML
+    public void viewRepairsHistoryButton() throws IOException{
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/fxml/RTableView.fxml"));
+        RTableViewController controller = new RTableViewController(this);
+        loader.setController(controller);
+        Parent root = loader.load();
+        Scene viewRepairsScene = new Scene(root);
+        new JMetro(STYLE).applyTheme(viewRepairsScene);
+        Stage window = new Stage();
+        viewRepairsHistoryButton.disableProperty().bind(window.showingProperty());
+        window.setScene(viewRepairsScene);
+        window.show();
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -154,7 +203,7 @@ public class RController implements Initializable {
                 comboboxRCheck = "Block A";
                 Label label = new Label();
                 label.setText((String)blockAComboR.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
             });
@@ -184,7 +233,7 @@ public class RController implements Initializable {
                 comboboxRCheck = "Block B";
                 Label label = new Label();
                 label.setText((String)blockBComboR.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
             });
@@ -214,7 +263,7 @@ public class RController implements Initializable {
                 comboboxRCheck = "Block C";
                 Label label = new Label();
                 label.setText((String)blockCComboR.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
             });
@@ -244,7 +293,7 @@ public class RController implements Initializable {
                 comboboxRCheck = "Nasra Block";
                 Label label = new Label();
                 label.setText((String)nasraBlockR.getSelectionModel().getSelectedItem());
-                label.setStyle("-fx-text-fill: red;");
+                label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
             });

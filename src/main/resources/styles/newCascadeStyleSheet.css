@@ -8,7 +8,7 @@ and open the template in the editor.
     Author     : Mike254
 */
 .titled-pane > .title {
-    -fx-background-color: grey;
+    -fx-background-color: #4d4d4d;
     -fx-pref-height: 0.000001; 
 
 }

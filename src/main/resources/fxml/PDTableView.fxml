@@ -3,13 +3,13 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<TableView fx:id="paymentDetailsTable" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="821.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<TableView fx:id="paymentDetailsTable" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
   <columns>
-    <TableColumn fx:id="houseNumberCol" prefWidth="88.00000154972076" text="HouseNumber" />
-    <TableColumn fx:id="tenantNameCol" prefWidth="172.79998016357422" text="Tenant Name" />
-      <TableColumn fx:id="rentPaidCol" prefWidth="129.5999755859375" text="Amount" />
-      <TableColumn fx:id="monthCol" prefWidth="138.40005493164062" text="Month Rent is For" />
-      <TableColumn fx:id="paymentDateCol" prefWidth="147.20001220703125" text="Date of Payment" />
-      <TableColumn fx:id="paymentMethodCol" prefWidth="147.9998779296875" text="Method of Payment" />
+    <TableColumn fx:id="houseNumberCol" prefWidth="127.19997864961624" text="HouseNumber" />
+    <TableColumn fx:id="tenantNameCol" prefWidth="197.6000518798828" text="Tenant Name" />
+      <TableColumn fx:id="rentPaidCol" prefWidth="150.0" text="Amount" />
+      <TableColumn fx:id="monthCol" prefWidth="190.0" text="Month Rent is For" />
+      <TableColumn fx:id="paymentDateCol" prefWidth="175.2000732421875" text="Date of Payment" />
+      <TableColumn fx:id="paymentMethodCol" prefWidth="158.0" text="Method of Payment" />
   </columns>
 </TableView>

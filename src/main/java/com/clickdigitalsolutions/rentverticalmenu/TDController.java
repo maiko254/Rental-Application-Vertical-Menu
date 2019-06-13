@@ -95,7 +95,7 @@ public class TDController implements Initializable {
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
     
-    String databaseURL = "jdbc:sqlite:C:\\Users\\Mike254\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
     private void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate){
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(HouseNumber text PRIMARY KEY, TenantName text, TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text)";

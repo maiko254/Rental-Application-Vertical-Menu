@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import jfxtras.styles.jmetro8.JMetro;
 
 /**
  * FXML Controller class
@@ -35,6 +36,12 @@ public class PDTableViewController implements Initializable {
     @FXML
     public TableColumn<PDModel, String> paymentMethodCol;
     
+    private final PDController controller;
+    
+    public PDTableViewController(PDController subcontroller){
+        controller = subcontroller;
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         houseNumberCol.setCellValueFactory(cellData -> cellData.getValue().houseNumberTablePDProperty());
@@ -43,6 +50,9 @@ public class PDTableViewController implements Initializable {
         monthCol.setCellValueFactory(cellData -> cellData.getValue().monthTablePDProperty());
         paymentDateCol.setCellValueFactory(cellData -> cellData.getValue().paymentDateTablePDProperty());
         paymentMethodCol.setCellValueFactory(cellData -> cellData.getValue().paymentMethodPDProperty());
+        
+        paymentDetailsTable.setItems(controller.getPaymentDetails());
+        paymentDetailsTable.setStyle("-fx-border-color: #E5E5E5; -fx-border-width: 1px; -fx-border-style: solid;");
     }    
     
 }

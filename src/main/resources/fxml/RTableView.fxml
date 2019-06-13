@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+
+<TableView fx:id="repairsTable" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <columns>
+      <TableColumn fx:id="houseNumberCol" prefWidth="127.19997864961624" text="HouseNumber" />
+      <TableColumn fx:id="tenantNameCol" prefWidth="164.80006408691406" text="Tenant Name" />
+      <TableColumn fx:id="repairsDoneCol" prefWidth="239.99993896484375" text="Repairs Done on House" />
+      <TableColumn fx:id="costofRepairCol" prefWidth="120.79998779296875" text="Cost of Repairs" />
+      <TableColumn fx:id="dateofRepairCol" prefWidth="137.5999755859375" text="Date of Repairs" />
+      <TableColumn fx:id="miscellaneousCol" prefWidth="213.5999755859375" text="Miscellaneous Expenses" />
+   </columns>
+</TableView>
