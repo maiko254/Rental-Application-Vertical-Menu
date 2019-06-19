@@ -12,6 +12,9 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
@@ -31,12 +34,16 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro8.JMetro;
 
@@ -83,11 +90,19 @@ public class PDController implements Initializable {
     @FXML
     private JFXButton viewHistory;
     
+    @FXML
+    private AnchorPane PDAnchor;
+    
+    @FXML
+    private JFXButton updatePDAmount;
+    
     private static JMetro.Style STYLE = JMetro.Style.DARK;
     
     String paymentMode;
     
     String comboboxPDCheck;
+    
+    SimpleStringProperty addCheck = new SimpleStringProperty("null");
     
     boolean arrearsCheck = false;
      
@@ -254,7 +269,6 @@ public class PDController implements Initializable {
         monthComboPD.setItems(months);
         
         
-        
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -270,6 +284,7 @@ public class PDController implements Initializable {
                     ResultSet rs1 = pstmt1.executeQuery();
                     if(!rs.next()){
                         setEmpty();
+                        addCheck.set("Empty");
                     }else
                         do {                            
                             tenantNamePD.setText(rs.getString("TenantName"));
@@ -320,6 +335,10 @@ public class PDController implements Initializable {
                                         break;
                                 }
                             }
+                            if (rs.getString("Amount") == null) {
+                                addCheck.set("Empty");
+                            } else
+                                addCheck.set("Occupied");
                         } while (rs.next());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -328,6 +347,7 @@ public class PDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd;");
+                houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
@@ -404,6 +424,7 @@ public class PDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockBComboPD.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd;");
+                houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
             });
@@ -479,6 +500,7 @@ public class PDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockCComboPD.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd;");
+                houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
             });
@@ -557,6 +579,7 @@ public class PDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd;");
+                houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
@@ -613,6 +636,29 @@ public class PDController implements Initializable {
         tenantNamePD.setDisable(true);
         
         rentArrears.setVisible(false);
-    }    
-    
+        
+        viewHistory.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.TABLE_LARGE, "View Payment History"));
+        viewHistory.setPadding(Insets.EMPTY);
+        
+        
+       updatePDAmount.setVisible(false);
+        addCheck.addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals("Occupied")) {
+                updatePDAmount.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
+                updatePDAmount.setPadding(Insets.EMPTY);
+                updatePDAmount.visibleProperty().bind(amountPD.textProperty().isEmpty().not());
+                updatePDAmount.setOnAction((event) -> {
+                    System.out.println("It works");
+                });
+                System.out.println(addCheck.get());
+            } else if (newValue.equals("Empty")) {
+                updatePDAmount.visibleProperty().unbind();
+                updatePDAmount.setVisible(false);
+                System.out.println("Do nothing");
+                System.out.println(addCheck.get());
+            }
+        });
+        System.out.println(addCheck.get()); 
+    }
+
 }

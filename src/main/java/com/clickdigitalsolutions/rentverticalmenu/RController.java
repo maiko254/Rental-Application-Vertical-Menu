@@ -9,6 +9,8 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
@@ -23,10 +25,13 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro8.JMetro;
 
@@ -61,6 +66,8 @@ public class RController implements Initializable {
     private JFXButton saveButtonR;
     @FXML
     private JFXButton viewRepairsHistoryButton;
+    @FXML
+    private AnchorPane RAnchor;
     
     private JMetro.Style STYLE = JMetro.Style.DARK;
     
@@ -176,6 +183,7 @@ public class RController implements Initializable {
         blockCComboR.setItems(blockC);
         nasraBlockR.setItems(nasraBlock);
         
+        
         houseComboTitledPaneR.setOnMouseClicked((event) -> {
             blockAComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
@@ -204,6 +212,7 @@ public class RController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockAComboR.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: fdfdfd;");
+                houseComboTitledPaneR.setText("");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
             });
@@ -298,6 +307,9 @@ public class RController implements Initializable {
                 houseComboTitledPaneR.setExpanded(false);
             });
         });
+        
+        viewRepairsHistoryButton.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.TABLE_LARGE, "View Repairs History"));
+        viewRepairsHistoryButton.setPadding(Insets.EMPTY);
     }    
     
 }

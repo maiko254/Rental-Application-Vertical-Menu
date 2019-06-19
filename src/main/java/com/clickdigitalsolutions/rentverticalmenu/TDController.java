@@ -10,6 +10,8 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,12 +20,12 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.AnchorPane;
@@ -87,6 +89,9 @@ public class TDController implements Initializable {
     
     @FXML
     private Label houseStateLabel;
+    
+    @FXML
+    private AnchorPane TDAnchor;
     
     private String comboboxTDCheck;
     
@@ -246,6 +251,7 @@ public class TDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockACombo.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd");
+                houseComboTitledPane.setText("");
                 houseComboTitledPane.setGraphic(label);
                 comboboxTDCheck = "Block A";
                 houseComboTitledPane.setExpanded(false);
@@ -254,6 +260,7 @@ public class TDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockBCombo.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd");
+                houseComboTitledPane.setText("");
                 houseComboTitledPane.setGraphic(label);
                 comboboxTDCheck = "Block B";
                 houseComboTitledPane.setExpanded(false);
@@ -262,6 +269,7 @@ public class TDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockCCombo.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd");
+                houseComboTitledPane.setText("");
                 houseComboTitledPane.setGraphic(label);
                 comboboxTDCheck = "Block C";
                 houseComboTitledPane.setExpanded(false);
@@ -270,13 +278,14 @@ public class TDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)nasraBlockCombo.getSelectionModel().getSelectedItem());
                 label.setStyle("-fx-text-fill: #fdfdfd");
+                houseComboTitledPane.setText("");
                 houseComboTitledPane.setGraphic(label);
                 comboboxTDCheck = "Nasra Block";
                 houseComboTitledPane.setGraphic(label);
             });
         });
         
-        houseStateLabel.setVisible(false);
+        houseStateLabel.setVisible(false); 
     }    
     
 }
