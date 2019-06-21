@@ -155,21 +155,25 @@ public class TDController implements Initializable {
             subcontroller.createPaymentDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             repairscontroller.createRepairsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             setEmpty();
+            blockACombo.setValue(null);
         }else if (comboboxTDCheck.equals("Block B")){
             createTenantDetailsTable((String)blockBCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             subcontroller.createPaymentDetailsTable((String)blockBCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             repairscontroller.createRepairsTable((String)blockBCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             setEmpty();
+            blockBCombo.setValue(null);
         }else if (comboboxTDCheck.equals("Block C")){
             createTenantDetailsTable((String)blockCCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             subcontroller.createPaymentDetailsTable((String)blockCCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             repairscontroller.createRepairsTable((String)blockCCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             setEmpty();
+            blockCCombo.setValue(null);
         }else if (comboboxTDCheck.equals("Nasra Block")){
             createTenantDetailsTable((String)nasraBlockCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             subcontroller.createPaymentDetailsTable((String)nasraBlockCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             repairscontroller.createRepairsTable((String)nasraBlockCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             setEmpty();
+            nasraBlockCombo.setValue(null);
         }
     }
     
@@ -286,6 +290,9 @@ public class TDController implements Initializable {
         });
         
         houseStateLabel.setVisible(false); 
+        TDAnchor.setOnMouseClicked((event) -> {
+            houseComboTitledPane.setExpanded(false);
+        });
     }    
     
 }

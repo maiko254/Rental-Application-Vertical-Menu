@@ -310,6 +310,10 @@ public class RController implements Initializable {
         
         viewRepairsHistoryButton.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.TABLE_LARGE, "View Repairs History"));
         viewRepairsHistoryButton.setPadding(Insets.EMPTY);
+        
+        RAnchor.setOnMouseClicked((event) -> {
+            houseComboTitledPaneR.setExpanded(false);
+        });
     }    
     
 }
