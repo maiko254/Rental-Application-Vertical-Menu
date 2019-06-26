@@ -21,7 +21,7 @@
       <Label layoutX="15.0" layoutY="254.0" prefHeight="18.0" prefWidth="126.0" text="Month " textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="304.0" prefHeight="18.0" prefWidth="126.0" text="Payment Date" textFill="#fdfdfd" />
       <Label layoutX="15.0" layoutY="354.0" prefHeight="18.0" prefWidth="126.0" text="Payment Method" textFill="#fdfdfd" />
-      <JFXButton fx:id="saveButtonPD" buttonType="RAISED" layoutX="200.0" layoutY="551.0" onAction="#saveButtonActionPD" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
+      <JFXButton fx:id="saveButtonPD" buttonType="RAISED" layoutX="200.0" layoutY="551.0" onAction="#saveButtonActionPD" prefHeight="30.0" prefWidth="70.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
          <font>
             <Font name="System Bold" size="13.0" />
          </font>
@@ -54,6 +54,6 @@
             <Font name="System Bold" size="13.0" />
          </font>
       </JFXButton>
-      <JFXButton fx:id="updatePDAmount" layoutX="439.0" layoutY="201.0" onAction="#rentUpdatePDButton"  prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
+      <JFXButton fx:id="updatePDAmount" layoutX="439.0" layoutY="201.0" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
    </children>
 </AnchorPane>

@@ -44,6 +44,10 @@ public class PDTableViewController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
+        houseNumberCol.setPrefWidth(200);
+        paymentMethodCol.setPrefWidth(300);
+        
         houseNumberCol.setCellValueFactory(cellData -> cellData.getValue().houseNumberTablePDProperty());
         tenantNameCol.setCellValueFactory(cellData -> cellData.getValue().tenantNameTablePDProperty());
         rentPaidCol.setCellValueFactory(cellData -> cellData.getValue().amountTablePDProperty());

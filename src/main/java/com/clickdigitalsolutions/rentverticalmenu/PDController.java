@@ -37,7 +37,6 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -97,6 +96,9 @@ public class PDController implements Initializable {
     @FXML
     private JFXButton updatePDAmount;
     
+    @FXML
+    private JFXButton saveButtonPD;
+    
     private static JMetro.Style STYLE = JMetro.Style.DARK;
     
     String paymentMode;
@@ -113,7 +115,7 @@ public class PDController implements Initializable {
     ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
-    ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novenber", "December");
+    ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
@@ -346,7 +348,6 @@ public class PDController implements Initializable {
                     ResultSet rs1 = pstmt1.executeQuery();
                     if(!rs.next()){
                         setEmpty();
-                        addCheck.set("Empty");
                     }else
                         do {                            
                             tenantNamePD.setText(rs.getString("TenantName"));
@@ -399,7 +400,10 @@ public class PDController implements Initializable {
                             }
                             if (rs.getString("Amount") == null) {
                                 addCheck.set("Empty");
-                            } else
+                            } else if (paidRent == expectedRent) {
+                                addCheck.set("Cleared");
+                            }
+                            else
                                 addCheck.set("Occupied");
                             rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
                         } while (rs.next());
@@ -483,7 +487,10 @@ public class PDController implements Initializable {
                                 }
                                 if (rs.getString("Amount") == null) {
                                     addCheck.set("Empty");
-                                } else {
+                                } else if (paidRent == expectedRent) {
+                                    addCheck.set("Cleared");
+                                }
+                                else {
                                     addCheck.set("Occupied");
                                 }
                                 rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
@@ -532,7 +539,6 @@ public class PDController implements Initializable {
                             } else if (arrear == 0 || arrear < 0) {
                                 rentArrears.setVisible(false);
                             }
-                            
                             amountPD.setText(rs.getString("Amount"));
                             monthComboPD.setValue(rs.getString("Month"));
                             if (rs.getString("PaymentDate") != null){
@@ -568,7 +574,10 @@ public class PDController implements Initializable {
                                 }
                                 if (rs.getString("Amount") == null) {
                                     addCheck.set("Empty");
-                                } else {
+                                } else if (paidRent == expectedRent) {
+                                    addCheck.set("Cleared");
+                                }
+                                else {
                                     addCheck.set("Occupied");
                                 }
                                 rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
@@ -653,7 +662,10 @@ public class PDController implements Initializable {
                                 }
                                 if (rs.getString("Amount") == null) {
                                     addCheck.set("Empty");
-                                } else {
+                                } else if (paidRent == expectedRent) {
+                                    addCheck.set("Cleared");
+                                }
+                                else {
                                     addCheck.set("Occupied");
                                 }
                                 rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
@@ -676,15 +688,15 @@ public class PDController implements Initializable {
             });
         });
         
-        monthComboPD.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+        monthComboPD.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             monthComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String rentPayMethodPD = null;
-                String rentPaypayMonthPD = null;
-                int paidRent = 0;
-                int expectedRent = 0;
+                String rentPayMonthPD = null;
+                int paidRent;
+                int expectedRent;
                 
                 try {
-                   String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNUmber = ? AND Month = ?";
+                   String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
                    Connection conn = DriverManager.getConnection(databaseURL);
                    PreparedStatement pstmt = conn.prepareStatement(searchPDTable);
                    String searchTDTable = "SELECT RentAmount FROM TenantDetails WHERE HouseNumber = ?";
@@ -693,9 +705,89 @@ public class PDController implements Initializable {
                        case "Block A":
                            pstmt.setString(1, (String)blockAComboPD.getSelectionModel().getSelectedItem());
                            pstmt1.setString(1, (String)blockAComboPD.getSelectionModel().getSelectedItem());
+                           break;
                        case "Block B":
+                           pstmt.setString(1, (String)blockBComboPD.getSelectionModel().getSelectedItem());
+                           pstmt1.setString(1, (String)blockBComboPD.getSelectionModel().getSelectedItem());
+                           break;
+                       case "Block C":
+                           pstmt.setString(1, (String)blockCComboPD.getSelectionModel().getSelectedItem());
+                           pstmt1.setString(1, (String)blockCComboPD.getSelectionModel().getSelectedItem());
+                           break;
+                       case "Nasra Block":
+                           pstmt.setString(1, (String)nasraBlockPD.getSelectionModel().getSelectedItem());
+                           pstmt1.setString(1, (String)nasraBlockPD.getSelectionModel().getSelectedItem());
+                           break;
+                       default:
+                           break;
                    }
+                   pstmt.setString(2, (String)monthComboPD.getSelectionModel().getSelectedItem());
+                   ResultSet rs = pstmt.executeQuery();
+                   ResultSet rs1 = pstmt1.executeQuery();
+                   if (!rs.next()){
+                       amountPD.setText("");
+                       rentPaymentDatePD.setValue(null);
+                   } else {
+                       do {
+                           rentPayMonthPD = rs.getString("Month");
+                           if (rentPayMonthPD.isEmpty() || rentPayMonthPD == null){
+                               amountPD.setText("");
+                           }else
+                               amountPD.setText(rs.getString("Month"));
+                           
+                           Object paymentDate = rs.getObject("PaymentDate");
+                           if (paymentDate == null){
+                               rentPaymentDatePD.setValue(null);
+                           } else 
+                               rentPaymentDatePD.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
+                           
+                           rentPayMethodPD = rs.getString("PaymentMethod");
+                           paidRent = getStringNumber(rs.getString("Amount"));
+                           expectedRent = getStringNumber(rs1.getString("RentAmount"));
+                           int arrears = expectedRent - paidRent;
+                           if (!rs1.next() || arrears == 0){
+                               rentArrears.setVisible(false);
+                           }else {
+                               if (arrears > 0){
+                                   do {                                       
+                                       rentLabel("In Arrears: Ksh ", "In Arrears: Ksh "+Integer.toString(arrears));
+                                   } while (rs1.next());
+                               }
+                           }
+                       } while (rs.next());
+                   }
+                   pstmt.close();
+                   pstmt1.close();
+                   conn.close();
+                   
+                   if (rentPayMethodPD == null) {
+                        cash.setValue("Cash received by:");
+                        root3.setExpanded(false);
+                        mpesa.setValue("Enter mpesa transaction code:");
+                        root1.setExpanded(false);
+                        bank.setValue("Enter cheque no:");
+                        root2.setExpanded(false);
+                    } else {
+                        String[] paystring = rentPayMethodPD.split(":");
+                        if (paystring[0].equals("Cash payment received by")) {
+                            cash.setValue(rentPayMethodPD);
+                            if (!root3.isExpanded()) {
+                                root3.setExpanded(true);
+                            }
+                        } else if (paystring[0].equals("Mpesa transaction code is")) {
+                            mpesa.setValue(rentPayMethodPD);
+                            if (!root1.isExpanded()) {
+                                root1.setExpanded(true);
+                            }
+                        } else if (paystring[0].equals("Banker's cheque no")) {
+                            bank.setValue(rentPayMethodPD);
+                            if (!root2.isExpanded()) {
+                                root2.setExpanded(true);
+                            }
+                        }
+                    }
                 } catch (Exception e) {
+                    e.printStackTrace();
                 }
             });
         });
@@ -764,10 +856,16 @@ public class PDController implements Initializable {
             } else if (newValue.equals("Empty")) {
                 updatePDAmount.visibleProperty().unbind();
                 updatePDAmount.setVisible(false);
+            } else if(newValue.equals("Cleared")){
+                updatePDAmount.visibleProperty().unbind();
+                updatePDAmount.setVisible(false);
             }
         });    
         PDAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPanePD.setExpanded(false);
         });
+        
+        saveButtonPD.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Save", "20", "14", ContentDisplay.RIGHT));
+        saveButtonPD.setPadding(Insets.EMPTY);
     } 
 }
