@@ -1,6 +1,10 @@
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTabPane;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -11,7 +15,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -48,8 +56,28 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane monthlyContainer;
     
+    @FXML
+    private MenuBar rentalMenu;
+    
+    @FXML
+    private AnchorPane motherAnchor;
+    
+    @FXML
+    private MenuItem editTable;
+    
+    @FXML
+    private MenuItem search;
+    
+    @FXML
+    private MenuItem Import;
+    
+    @FXML
+    private MenuItem about;
+    
     private double tabWidth = 90.0;
     public static int lastSelectedTabIndex = 0;
+    
+    String fxmlCheck;
 
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
@@ -114,9 +142,50 @@ public class FXMLController implements Initializable {
             }
         }
     }
+    
+    private JFXButton createIconButton(JFXButton iconButton, double iconXLayout, double iconYLayout, String fxmlShowing) {
+        if (fxmlShowing.equals("PDfxml")) {
+            iconButton.setPrefSize(28, 26);
+            iconButton.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
+            iconButton.setLayoutX(iconXLayout);
+            iconButton.setLayoutY(iconYLayout);
+            iconButton.setVisible(true);
+        } else {
+            iconButton.setVisible(false);
+        }
+        return iconButton;
+    }
 
+    PDController controller = new PDController();
+    
+    @FXML
+    private void editTableEntryAction() {
+        Scene mpScene = (Scene)motherAnchor.getScene();
+        if (fxmlCheck.equals("PDfxml")){
+          JFXButton addButton = (JFXButton) mpScene.lookup("#updateAmountButton"); 
+            
+            motherAnchor.getChildren().add(createIconButton(new JFXButton(), 510.0, 225.0, fxmlCheck));
+        }
+    }
+    
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configureView();
+        
+        rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
+        
+        tabContainer.setOnMouseClicked((event) -> {
+            if (tenantDetailsTab.isSelected()) {
+                fxmlCheck = "TDfxml";
+            } else if (repairsTab.isSelected()) {
+                fxmlCheck = "Rfxml";
+            } else if (paymentDetailsTab.isSelected()) {
+                fxmlCheck = "PDfxml";
+            } else if (monthlyExpensesTab.isSelected()) {
+                fxmlCheck = "MEfxml";
+            }
+        });
+        
     }
 }

@@ -54,6 +54,6 @@
             <Font name="System Bold" size="13.0" />
          </font>
       </JFXButton>
-      <JFXButton fx:id="updatePDAmount" layoutX="439.0" layoutY="201.0" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
+      <JFXButton fx:id="updatePDAmount" id="updateAmountButton" layoutX="439.0" layoutY="201.0" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
    </children>
 </AnchorPane>

@@ -201,7 +201,7 @@ public class PDController implements Initializable {
             arrearsCheck = true;
         } 
     }
-    
+    JFXButton buttonA = new JFXButton();
     TreeItem<String> pseudoroot = new TreeItem<>();
     TreeItem<String> root = new TreeItem<>();
     TreeItem<String> root3 = new TreeItem<>("Cash");
@@ -322,6 +322,7 @@ public class PDController implements Initializable {
             nasraBlockPD.setValue(null);
         }
     }
+    
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
