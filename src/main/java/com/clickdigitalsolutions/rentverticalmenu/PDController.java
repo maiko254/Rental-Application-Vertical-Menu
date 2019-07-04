@@ -45,6 +45,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -325,7 +326,6 @@ public class PDController implements Initializable {
             nasraBlockPD.setValue(null);
         }
     }
-    
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -737,7 +737,7 @@ public class PDController implements Initializable {
                            if (rentPayMonthPD.isEmpty() || rentPayMonthPD == null){
                                amountPD.setText("");
                            }else
-                               amountPD.setText(rs.getString("Month"));
+                               amountPD.setText(rs.getString("Amount"));
                            
                            Object paymentDate = rs.getObject("PaymentDate");
                            if (paymentDate == null){
@@ -757,6 +757,13 @@ public class PDController implements Initializable {
                                        rentLabel("In Arrears: Ksh ", "In Arrears: Ksh "+Integer.toString(arrears));
                                    } while (rs1.next());
                                }
+                           }
+                           if (rs.getString("Amount") == null) {
+                               addCheck.set("Empty");
+                           } else if (paidRent == expectedRent) {
+                               addCheck.set("Cleared");
+                           } else {
+                               addCheck.set("Occupied");
                            }
                        } while (rs.next());
                    }
@@ -872,12 +879,20 @@ public class PDController implements Initializable {
         saveButtonPD.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Save", "20", "14", ContentDisplay.RIGHT));
         saveButtonPD.setPadding(Insets.EMPTY);
         
+        ContextMenu editMenu = new ContextMenu();
         MenuItem edit = new MenuItem("Edit");
         edit.setOnAction((event) -> {
-            System.out.println("Edit works");
+            if (updatePDAmount.isVisible()) {
+                editMenu.hide();
+            } else {
+                System.out.println("Edit works");
+                updatePDAmount.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
+                updatePDAmount.setPadding(Insets.EMPTY);
+                updatePDAmount.setVisible(true);
+            }
         });
+        edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         
-        ContextMenu editMenu = new ContextMenu();
         PDAnchor.setOnContextMenuRequested((event) -> {
             editMenu.getItems().add(edit);
             editMenu.show(PDAnchor, event.getScreenX(), event.getScreenY());
