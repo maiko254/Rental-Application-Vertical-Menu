@@ -35,10 +35,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Side;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.TextFieldTreeCell;
@@ -73,7 +76,7 @@ public class PDController implements Initializable {
     private JFXTextField tenantNamePD;
     
     @FXML
-    private JFXTextField amountPD;
+    public JFXTextField amountPD;
     
     @FXML
     private JFXComboBox monthComboPD;
@@ -91,10 +94,10 @@ public class PDController implements Initializable {
     private JFXButton viewHistory;
     
     @FXML
-    private AnchorPane PDAnchor;
+    public AnchorPane PDAnchor;
     
     @FXML
-    private JFXButton updatePDAmount;
+    public JFXButton updatePDAmount;
     
     @FXML
     private JFXButton saveButtonPD;
@@ -868,5 +871,21 @@ public class PDController implements Initializable {
         
         saveButtonPD.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Save", "20", "14", ContentDisplay.RIGHT));
         saveButtonPD.setPadding(Insets.EMPTY);
-    } 
+        
+        MenuItem edit = new MenuItem("Edit");
+        edit.setOnAction((event) -> {
+            System.out.println("Edit works");
+        });
+        
+        ContextMenu editMenu = new ContextMenu();
+        PDAnchor.setOnContextMenuRequested((event) -> {
+            editMenu.getItems().add(edit);
+            editMenu.show(PDAnchor, event.getScreenX(), event.getScreenY());
+        });
+        PDAnchor.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            editMenu.hide();
+        });
+        
+    }
+    
 }

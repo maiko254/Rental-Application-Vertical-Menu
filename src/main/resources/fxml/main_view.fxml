@@ -38,7 +38,7 @@
             </JFXTabPane>
          </children>
       </StackPane>
-      <MenuBar fx:id="rentalMenu" layoutY="-1.0" prefHeight="29.0" prefWidth="500.0">
+      <MenuBar fx:id="rentalMenu" layoutY="-1.0" prefHeight="28.0" prefWidth="500.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
@@ -48,7 +48,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem fx:id="editTable" onAction="#editTableEntryAction"  mnemonicParsing="false" text="Edit Table Entry" />
+              <MenuItem fx:id="editTable" mnemonicParsing="false" text="Edit Table Entry" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">

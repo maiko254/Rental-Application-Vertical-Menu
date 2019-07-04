@@ -8,6 +8,9 @@ import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -23,6 +26,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextAlignment;
@@ -78,7 +82,11 @@ public class FXMLController implements Initializable {
     public static int lastSelectedTabIndex = 0;
     
     String fxmlCheck;
-
+    
+    JFXButton addButton;
+    
+    private PDController controller;
+   
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
         tabContainer.setTabMaxWidth(tabWidth);
@@ -143,31 +151,19 @@ public class FXMLController implements Initializable {
         }
     }
     
-    private JFXButton createIconButton(JFXButton iconButton, double iconXLayout, double iconYLayout, String fxmlShowing) {
-        if (fxmlShowing.equals("PDfxml")) {
-            iconButton.setPrefSize(28, 26);
-            iconButton.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
-            iconButton.setLayoutX(iconXLayout);
-            iconButton.setLayoutY(iconYLayout);
-            iconButton.setVisible(true);
-        } else {
-            iconButton.setVisible(false);
-        }
+    private JFXButton createIconButton(double iconXLayout, double iconYLayout) {
+        JFXButton iconButton = new JFXButton();
+
+        iconButton.setPrefSize(28, 26);
+        iconButton.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
+        iconButton.setLayoutX(iconXLayout);
+        iconButton.setLayoutY(iconYLayout);
+        iconButton.setVisible(true);
+        iconButton.setId("updateAmount");
+
         return iconButton;
     }
 
-    PDController controller = new PDController();
-    
-    @FXML
-    private void editTableEntryAction() {
-        Scene mpScene = (Scene)motherAnchor.getScene();
-        if (fxmlCheck.equals("PDfxml")){
-          JFXButton addButton = (JFXButton) mpScene.lookup("#updateAmountButton"); 
-            
-            motherAnchor.getChildren().add(createIconButton(new JFXButton(), 510.0, 225.0, fxmlCheck));
-        }
-    }
-    
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -186,6 +182,7 @@ public class FXMLController implements Initializable {
                 fxmlCheck = "MEfxml";
             }
         });
+        
         
     }
 }
