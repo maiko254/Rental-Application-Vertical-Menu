@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -282,7 +283,6 @@ public class PDController implements Initializable {
             pstmt.setString(3, tName);
             pstmt.setString(4, paymentDate);
             pstmt.executeUpdate();
-            amountPD.setText("");
             pstmt.close();
             conn.close();
         } catch (Exception e) {
@@ -294,6 +294,8 @@ public class PDController implements Initializable {
     public void rentUpdatePDButton(){
         if(arrearsCheck  == true && comboboxPDCheck.equals("Block A")){
             rentAmountPDUpdate("Ksh "+Integer.toString(rentAmountPDPaid + getStringNumber(amountPD.getText())), (String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), getDateValueAsString(rentPaymentDatePD.getValue()));
+            System.out.println(Integer.toString(rentAmountPDPaid));
+            System.out.println(getStringNumber(amountPD.getText()));
             setEmpty();
             blockAComboPD.setValue(null);
         }else if (arrearsCheck == true && comboboxPDCheck.equals("Block B")){
@@ -409,8 +411,11 @@ public class PDController implements Initializable {
                             }
                             else
                                 addCheck.set("Occupied");
+                            
                             rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
+                            
                         } while (rs.next());
+                    
                     pstmt.close();
                     pstmt1.close();
                     conn.close();
@@ -424,7 +429,6 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
             });
             blockBComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -765,6 +769,7 @@ public class PDController implements Initializable {
                            } else {
                                addCheck.set("Occupied");
                            }
+                           rentAmountPDPaid = getStringNumber(rs.getString("Amount"));
                        } while (rs.next());
                    }
                    pstmt.close();
