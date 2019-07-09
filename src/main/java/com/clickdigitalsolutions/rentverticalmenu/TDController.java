@@ -26,8 +26,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
@@ -94,6 +98,7 @@ public class TDController implements Initializable {
     private AnchorPane TDAnchor;
     
     private String comboboxTDCheck;
+    
     
     ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
     ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
@@ -192,7 +197,10 @@ public class TDController implements Initializable {
         return repairsDateString;
     }
     
-    
+    public Boolean isValidName(String S){
+        String regex = "[A-Za-z\\s]+";
+        return S.matches(regex);
+    } 
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -293,6 +301,23 @@ public class TDController implements Initializable {
         TDAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPane.setExpanded(false);
         });
+        
+        Tooltip v = new Tooltip("Only letters and whitespace is allowed");
+        tenantName.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            tenantName.textProperty().addListener((observable, oldValue, newValue) -> {
+                tenantName.setOnKeyReleased((even) -> {
+                    if (!isValidName(newValue)) {
+                        v.show(tenantName, event.getScreenX(), event.getScreenY());
+                        System.out.println(newValue);
+                        System.out.println(oldValue);
+                    } else 
+                        if (v.isShowing()){
+                            v.hide();
+                        }
+                });
+            });
+        });
+        v.setAutoHide(true);
     }    
     
 }
