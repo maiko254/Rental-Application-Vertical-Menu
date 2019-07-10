@@ -3,14 +3,10 @@ package com.clickdigitalsolutions.rentverticalmenu;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTabPane;
 import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -26,10 +22,11 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class FXMLController implements Initializable {
 
@@ -163,6 +160,21 @@ public class FXMLController implements Initializable {
 
         return iconButton;
     }
+    
+    @FXML
+    private void searchAction() throws IOException{
+        FXMLLoader loader = new  FXMLLoader();
+        loader.setLocation(getClass().getResource("/fxml/SearchFXML.fxml"));
+        SearchFXMLController controller = new SearchFXMLController();
+        loader.setController(controller);
+        Parent root = loader.load();
+        Scene searchScene = new Scene(root);
+        Stage window = new Stage();
+        window.setScene(searchScene);
+        window.setTitle("Search...");
+        window.initModality(Modality.APPLICATION_MODAL);
+        window.show();
+    }
 
     
     @Override
@@ -182,7 +194,5 @@ public class FXMLController implements Initializable {
                 fxmlCheck = "MEfxml";
             }
         });
-        
-        
     }
 }

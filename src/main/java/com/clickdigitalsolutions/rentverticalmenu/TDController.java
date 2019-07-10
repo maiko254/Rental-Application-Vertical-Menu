@@ -308,8 +308,6 @@ public class TDController implements Initializable {
                 tenantName.setOnKeyReleased((even) -> {
                     if (!isValidName(newValue)) {
                         v.show(tenantName, event.getScreenX(), event.getScreenY());
-                        System.out.println(newValue);
-                        System.out.println(oldValue);
                     } else 
                         if (v.isShowing()){
                             v.hide();

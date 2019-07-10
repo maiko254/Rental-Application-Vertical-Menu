@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXRadioButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="searchPane" prefHeight="363.0" prefWidth="455.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <HBox fx:id="searchHbox" prefHeight="28.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+          <BorderPane.margin>
+              <Insets bottom="0" left="10" right="5" top="2" />
+          </BorderPane.margin>
+         <children>
+            <Label prefHeight="31.0" prefWidth="48.0" text="Find:">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Label>
+            <TextField prefHeight="26.0" prefWidth="322.0" />
+            <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="63.0" text="Find" />
+         </children>
+      </HBox>
+   </top>
+   <right>
+      <VBox fx:id="textAreaVbox" prefHeight="370.0" prefWidth="264.0" BorderPane.alignment="CENTER">
+          <BorderPane.margin>
+              <Insets bottom="2" left="0" right="1" top="0" />
+          </BorderPane.margin>
+         <children>
+            <TextArea prefHeight="369.0" prefWidth="273.0" />
+         </children>
+      </VBox>
+   </right>
+   <left>
+      <VBox fx:id="searchVbox" prefHeight="330.0" prefWidth="191.0" BorderPane.alignment="CENTER">
+          <BorderPane.margin>
+              <Insets bottom="2" left="0" right="0" top="0" />
+          </BorderPane.margin>
+         <children>
+            <Label prefHeight="18.0" prefWidth="106.0" text="Search By:" />
+            <JFXRadioButton fx:id="houseNumberButton" text="House Number" />
+            <JFXRadioButton fx:id="tenantNameButton" text="Tenant Name" />
+         </children>
+      </VBox>
+   </left>
+</BorderPane>
