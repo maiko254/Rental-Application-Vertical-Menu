@@ -7,11 +7,19 @@ package com.clickdigitalsolutions.rentverticalmenu;
  */
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
+import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import jfxtras.styles.jmetro8.JMetro;
 
 /**
@@ -35,6 +43,10 @@ public class PDTableViewController implements Initializable {
     public TableColumn<PDModel, String> paymentDateCol;
     @FXML
     public TableColumn<PDModel, String> paymentMethodCol;
+    @FXML
+    public AnchorPane tableAnchor;
+    @FXML
+    public TextField searchTable;
     
     private final PDController controller;
     
@@ -42,9 +54,27 @@ public class PDTableViewController implements Initializable {
         controller = subcontroller;
     }
     
+    
+    public void filterTenantList(String oldValue, String newValue){
+        FilteredList<PDModel> tenantList = new FilteredList<>(controller.getPaymentDetails());
+        ObservableList<PDModel> filteredList = FXCollections.observableArrayList();
+        if (searchTable == null || (newValue.length() < oldValue.length()) || newValue == null || newValue.isEmpty()){
+            paymentDetailsTable.setItems(null);;
+        }else {
+            newValue = newValue.toLowerCase();
+            for(PDModel tenants : paymentDetailsTable.getItems()){
+                String filterText = tenants.gettenantNameTablePD();
+                if (filterText.contains(newValue)){
+                    filteredList.add(tenants);
+                }
+            }
+            paymentDetailsTable.setItems(filteredList);
+        }
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
+        PDModel mydata = new PDModel();
         houseNumberCol.setPrefWidth(200);
         paymentMethodCol.setPrefWidth(300);
         
@@ -57,6 +87,11 @@ public class PDTableViewController implements Initializable {
         
         paymentDetailsTable.setItems(controller.getPaymentDetails());
         paymentDetailsTable.setStyle("-fx-border-color: #E5E5E5; -fx-border-width: 1px; -fx-border-style: solid;");
+        paymentDetailsTable.prefWidthProperty().bind(tableAnchor.widthProperty());
+        
+        searchTable.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterTenantList(oldValue, newValue);
+        });
     }    
     
 }

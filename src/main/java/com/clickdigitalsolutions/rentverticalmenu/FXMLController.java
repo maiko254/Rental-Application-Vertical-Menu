@@ -83,6 +83,8 @@ public class FXMLController implements Initializable {
     JFXButton addButton;
     
     private PDController controller;
+    
+    private SearchFXMLController searchController;
    
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
@@ -165,7 +167,7 @@ public class FXMLController implements Initializable {
     private void searchAction() throws IOException{
         FXMLLoader loader = new  FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/SearchFXML.fxml"));
-        SearchFXMLController controller = new SearchFXMLController();
+        SearchFXMLController controller = new SearchFXMLController(this);
         loader.setController(controller);
         Parent root = loader.load();
         Scene searchScene = new Scene(root);

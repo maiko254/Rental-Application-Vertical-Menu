@@ -6,5 +6,6 @@ com\clickdigitalsolutions\rentverticalmenu\PDController.class
 com\clickdigitalsolutions\rentverticalmenu\PDTableViewController.class
 com\clickdigitalsolutions\rentverticalmenu\RController.class
 com\clickdigitalsolutions\rentverticalmenu\RTableViewController.class
+com\clickdigitalsolutions\rentverticalmenu\TDModel.class
 com\clickdigitalsolutions\rentverticalmenu\FXMLController.class
 com\clickdigitalsolutions\rentverticalmenu\SearchFXMLController.class

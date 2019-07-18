@@ -141,6 +141,27 @@ public class TDController implements Initializable {
         }
     }
     
+    public ObservableList<TDModel> getTenantDetails() {
+        ObservableList<TDModel> TDTableData = FXCollections.observableArrayList();
+        try {
+            String tableDataQuery = "SELECT * FROM TenantDetails";
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement(tableDataQuery);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String houseNo = rs.getString("HouseNumber");
+                String tenantName = rs.getString("TenantName");
+                TDModel tenantData = new TDModel(tenantName);
+                TDTableData.add(tenantData);
+            }
+            pstmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return TDTableData;
+    }
+    
     private void setEmpty(){
        tenantName.setText("");
        tenantPhoneNumber.setText("");
