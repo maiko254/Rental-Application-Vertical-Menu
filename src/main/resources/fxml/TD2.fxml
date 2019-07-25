@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="TDAnchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.TDController">
+   <children>
+      <VBox layoutX="36.0" layoutY="42.0" prefHeight="600.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: #122949;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <HBox prefHeight="51.0" prefWidth="590.0" spacing="10.0">
+               <children>
+                  <HBox prefHeight="19.0" prefWidth="119.0">
+                     <children>
+                        <Label prefHeight="18.0" prefWidth="118.0" text="House Number" textFill="#fdfdfd">
+                           <HBox.margin>
+                              <Insets top="-10.0" />
+                           </HBox.margin>
+                        </Label>
+                     </children>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                  </HBox>
+                  <TitledPane fx:id="houseComboTitledPane" expanded="false" prefHeight="119.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
+                     <font>
+                        <Font size="13.0" />
+                     </font>
+                     <content>
+                        <VBox prefHeight="200.0" prefWidth="218.0">
+                           <children>
+                              <JFXComboBox fx:id="blockACombo" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="blockBCombo" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="blockCCombo" prefHeight="27.0" prefWidth="218.0" promptText="Block C" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="nasraBlockCombo" prefHeight="27.0" prefWidth="218.0" promptText="Nasra Block" stylesheets="@../styles/combobox%20css.css" />
+                           </children>
+                        </VBox>
+                     </content>
+                     <HBox.margin>
+                        <Insets top="10.0" />
+                     </HBox.margin>
+                  </TitledPane>
+                  <Label fx:id="houseStateLabel" prefHeight="18.0" prefWidth="153.0" text="Label">
+                     <HBox.margin>
+                        <Insets top="-10.0" />
+                     </HBox.margin>
+                  </Label>
+               </children>
+               <padding>
+                  <Insets top="25.0" />
+               </padding>
+            </HBox>
+            <HBox prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="130.0" text="Tenant Name" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="tenantName" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="64.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Tenant Phone Number" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="tenantPhoneNumber" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="105.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="128.0" text="Monthly Rent" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="monthlyRent" prefHeight="26.0" prefWidth="218.0" promptText="Ksh" style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="147.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="127.0" text="Deposit" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="houseDeposit" prefHeight="26.0" prefWidth="218.0" promptText="Ksh" style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="188.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="126.0" text="Rent Due Date" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="dueDate" prefHeight="26.0" prefWidth="218.0" promptText="(1st - 5th) " style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="230.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="126.0" text="Move-In-Date" textFill="#fdfdfd" />
+                  <JFXDatePicker fx:id="moveInDate" prefHeight="28.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="272.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="126.0" text="Move-Out-Date" textFill="#fdfdfd" />
+                  <JFXDatePicker fx:id="moveOutDate" prefHeight="28.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="313.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="125.0" text="Lease-Start-Date" textFill="#fdfdfd" />
+                  <JFXDatePicker fx:id="leaseStartDate" prefHeight="28.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="355.0" prefHeight="31.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="123.0" text="Lease-End-Date" textFill="#fdfdfd" />
+                  <JFXDatePicker fx:id="leaseEndDate" prefHeight="28.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox alignment="BOTTOM_LEFT" prefHeight="41.0" prefWidth="600.0">
+               <children>
+                  <JFXButton fx:id="saveButtonTD" buttonType="RAISED" onAction="#saveButtonActionTD" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </JFXButton>
+               </children>
+               <VBox.margin>
+                  <Insets left="150.0" right="300.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <padding>
+            <Insets left="10.0" />
+         </padding>
+      </VBox>
+   </children>
+</AnchorPane>

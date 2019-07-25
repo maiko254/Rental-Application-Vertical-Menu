@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXTreeView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="PDAnchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
+   <children>
+      <VBox layoutX="120.0" layoutY="30.0" prefHeight="600.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: #122949;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <HBox prefHeight="34.0" prefWidth="600.0" spacing="10.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="119.0" text="House Number" textFill="#fdfdfd" />
+                  <TitledPane fx:id="houseComboTitledPanePD" expanded="false" prefHeight="64.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
+                     <font>
+                        <Font size="13.0" />
+                     </font>
+                     <content>
+                        <VBox prefHeight="200.0" prefWidth="218.0">
+                           <children>
+                              <JFXComboBox fx:id="blockAComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="blockBComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="blockCComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block C" stylesheets="@../styles/combobox%20css.css" />
+                              <JFXComboBox fx:id="nasraBlockPD" prefHeight="27.0" prefWidth="218.0" promptText="Nasra Block" stylesheets="@../styles/combobox%20css.css" />
+                           </children>
+                        </VBox>
+                     </content>
+                     <HBox.margin>
+                        <Insets top="20.0" />
+                     </HBox.margin>
+                  </TitledPane>
+                  <JFXButton fx:id="viewHistory" buttonType="RAISED" onAction="#viewHistoryButtonAction" prefHeight="0.0" prefWidth="171.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="View Payment History">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </JFXButton>
+               </children>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+            </HBox>
+            <HBox prefHeight="28.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Tenant Name" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="tenantNamePD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Amount Paid" textFill="#fdfdfd" />
+                  <JFXTextField fx:id="amountPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label fx:id="rentArrears" prefHeight="18.0" prefWidth="158.0" text="Label" />
+                  <JFXButton id="updateAmountButton" fx:id="updatePDAmount" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Month " textFill="#fdfdfd" />
+                  <JFXComboBox fx:id="monthComboPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" stylesheets="@../styles/combobox%20css.css" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="146.0" prefHeight="28.0" prefWidth="600.0">
+               <children>
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Payment Date" textFill="#fdfdfd" />
+                  <JFXDatePicker fx:id="rentPaymentDatePD" defaultColor="#06c2dff2" prefHeight="28.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="189.0" prefHeight="28.0" prefWidth="600.0">
+               <children>
+                  <Label alignment="BOTTOM_LEFT" prefHeight="18.0" prefWidth="126.0" text="Payment Method" textFill="#fdfdfd" />
+                  <JFXTreeView fx:id="paymentMethodPD" prefHeight="150.0" prefWidth="218.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="232.0" prefHeight="30.0" prefWidth="437.0">
+               <children>
+                  <JFXButton fx:id="saveButtonPD" buttonType="RAISED" onAction="#saveButtonActionPD" prefHeight="30.0" prefWidth="70.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </JFXButton>
+               </children>
+               <VBox.margin>
+                  <Insets left="200.0" right="330.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <padding>
+            <Insets left="10.0" top="10.0" />
+         </padding>
+      </VBox>
+   </children>
+</AnchorPane>

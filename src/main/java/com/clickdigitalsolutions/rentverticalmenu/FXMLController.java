@@ -105,9 +105,9 @@ public class FXMLController implements Initializable {
         };
 
         
-        configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD.fxml"), replaceBackgroundColorHandler);
+        configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
         configureTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", repairsContainer, getClass().getResource("/fxml/R.fxml"), replaceBackgroundColorHandler);
-        configureTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD.fxml"), replaceBackgroundColorHandler);
+        configureTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
         configureTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", monthlyContainer, getClass().getResource("/fxml/ME.fxml"), replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
@@ -167,8 +167,8 @@ public class FXMLController implements Initializable {
     private void searchAction() throws IOException{
         FXMLLoader loader = new  FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/SearchFXML.fxml"));
-        SearchFXMLController controller = new SearchFXMLController(this);
-        loader.setController(controller);
+        SearchFXMLController sub = new SearchFXMLController(this);
+        loader.setController(sub);
         Parent root = loader.load();
         Scene searchScene = new Scene(root);
         Stage window = new Stage();

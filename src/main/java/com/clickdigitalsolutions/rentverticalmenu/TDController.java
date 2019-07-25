@@ -10,8 +10,6 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
-import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,14 +23,12 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
@@ -42,6 +38,12 @@ import javafx.scene.text.TextAlignment;
  * @author Mike254
  */
 public class TDController implements Initializable {
+    
+    ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
+    ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
+    ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
+    ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
+    
 
     @FXML
     private JFXTextField tenantName;
@@ -74,22 +76,19 @@ public class TDController implements Initializable {
     private JFXButton saveButtonTD;
     
     @FXML
-    private TitledPane houseComboTitledPane;
-    
-    @FXML
     private AnchorPane houseComboAnchorPane;
     
     @FXML
-    private JFXComboBox blockACombo;
+    private JFXComboBox blockACombo = new JFXComboBox(blockA);
     
     @FXML
-    private JFXComboBox blockBCombo;
+    private JFXComboBox blockBCombo = new JFXComboBox(blockB);
     
     @FXML
-    private JFXComboBox blockCCombo;
+    private JFXComboBox blockCCombo = new JFXComboBox(blockC);
     
     @FXML
-    private JFXComboBox nasraBlockCombo;
+    private JFXComboBox nasraBlockCombo = new JFXComboBox(nasraBlock);
     
     @FXML
     private Label houseStateLabel;
@@ -97,13 +96,10 @@ public class TDController implements Initializable {
     @FXML
     private AnchorPane TDAnchor;
     
+    @FXML
+    private TitledPane houseComboTitledPane;
+    
     private String comboboxTDCheck;
-    
-    
-    ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
-    ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
-    ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
-    ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
     
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     

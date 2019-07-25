@@ -12,15 +12,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -98,18 +94,19 @@ public class SearchFXMLController implements Initializable {
         return tdSearchList;
     }
     
-    ObservableList<TDModel> tenanList = FXCollections.observableArrayList(new TDModel("Michael Odhiambo"), new TDModel("Akello Aggie"), new TDModel("Vincentia Fiona Akinyi"), new TDModel("Atieno Beryl"), new TDModel("Mathew Onguti"));
-    public void filterTenantList(String oldValue, String newValue){
-        FilteredList<TDModel> filterItems = new FilteredList<>(tenanList);
+    ObservableList<TDModel> tenanList = FXCollections.observableArrayList(new TDModel("Michael Odhiambo"), new TDModel("Akello Aggie"), new TDModel("Vincentia Fiona Akinyi"), new TDModel("Atieno Beryl"), new TDModel("Mathew Onguti"), new TDModel("Athieno"));
+    public void filterTenantList(String oldValue, String newValue) {
         ObservableList<TDModel> filteredList = FXCollections.observableArrayList();
-        if (searchText == null || (newValue.length() < oldValue.length()) || newValue == null || newValue.isEmpty()){
-            searchResultArea.setItems(tenanList);
-        }else {
+        if (searchText == null || newValue == null || newValue.isEmpty() ) {
+            searchResultArea.setItems(initializeList());
+        } else {
             newValue = newValue.toUpperCase();
-            for (TDModel Person : searchResultArea.getItems()){
+            for (TDModel Person : searchResultArea.getItems()) {
                 String filterText = Person.getTenantNameTD();
-                if (filterText.contains(newValue)){
+                if (filterText.contains(newValue)) {
                     filteredList.add(Person);
+                    searchResultArea.setItems(filteredList);
+                } else if (newValue.length() < oldValue.length()) {
                     searchResultArea.setItems(filteredList);
                 }
             }
@@ -118,17 +115,9 @@ public class SearchFXMLController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        searchHbox.setSpacing(3);
-        searchVbox.setSpacing(5);
-        searchVbox.setStyle(vboxLayout1);
-        textAreaVbox.setStyle(vboxLayout);
-        houseNumberButton.setPadding(new Insets(0, 0, 0, 5.0));
-        tenantNameButton.setPadding(new Insets(0, 0, 0, 5.0));
-        
-        searchResultArea.setItems(tenanList);
+        searchResultArea.setItems(initializeList());
         searchText.textProperty().addListener((observable, oldValue, newValue) -> {
             filterTenantList(oldValue, newValue);
-            System.out.println(newValue);
         });
     }    
     
