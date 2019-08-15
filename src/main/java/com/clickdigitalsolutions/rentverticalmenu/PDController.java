@@ -16,6 +16,7 @@ import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,7 +26,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,6 +44,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Side;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -51,6 +58,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro8.JMetro;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.view.JasperViewer;
+import org.sqlite.SQLiteException;
 
 /**
  * FXML Controller class
@@ -63,16 +76,16 @@ public class PDController implements Initializable {
     private TitledPane houseComboTitledPanePD;
     
     @FXML
-    private JFXComboBox blockAComboPD;
+    public JFXComboBox blockAComboPD;
     
     @FXML
-    private JFXComboBox blockBComboPD;
+    public JFXComboBox blockBComboPD;
     
     @FXML
-    private JFXComboBox blockCComboPD;
+    public JFXComboBox blockCComboPD;
     
     @FXML
-    private JFXComboBox nasraBlockPD;
+    public JFXComboBox nasraBlockPD;
     
     @FXML
     private JFXTextField tenantNamePD;
@@ -81,7 +94,7 @@ public class PDController implements Initializable {
     public JFXTextField amountPD;
     
     @FXML
-    private JFXComboBox monthComboPD;
+    public JFXComboBox monthComboPD;
     
     @FXML
     private JFXDatePicker rentPaymentDatePD;
@@ -107,14 +120,25 @@ public class PDController implements Initializable {
     private static JMetro.Style STYLE = JMetro.Style.DARK;
     
     String paymentMode;
-    
-    String comboboxPDCheck;
+
+    String comboboxPDCheck = "Empty";
+
+    String houseComboSelect;
+
+    String monthComboSelect;
     
     SimpleStringProperty addCheck = new SimpleStringProperty("null");
     
     boolean arrearsCheck = false;
     
     int rentAmountPDPaid = 0;
+    
+    public PDController(){
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/PD2.fxml"));
+        fxmlLoader.setRoot(this);
+        fxmlLoader.setController(this);
+        
+    }
      
     ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
     ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
@@ -123,6 +147,13 @@ public class PDController implements Initializable {
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    
+    public String getComboSelect(){
+        return houseComboSelect;
+    }
+    public String getMonthComboSelect(){
+        return monthComboSelect;
+    }
     
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, String Month, String PaymentDate, String PaymentMethod){
         try {
@@ -170,6 +201,12 @@ public class PDController implements Initializable {
             createPaymentDetailsTable((String)nasraBlockPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
             setEmpty();
             nasraBlockPD.setValue(null);
+        }else if(comboboxPDCheck.equals("Empty")){
+            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
+            emptyAlert.setTitle("Error Dialog");
+            emptyAlert.setHeaderText("Empty Field");
+            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
+            emptyAlert.showAndWait();
         }
     }
     
@@ -261,18 +298,26 @@ public class PDController implements Initializable {
     
     
     @FXML
-    private void viewHistoryButtonAction() throws IOException{
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/fxml/PDTableView.fxml"));
-        PDTableViewController subcontroller = new PDTableViewController(this);
-        loader.setController(subcontroller);
-        Parent root = loader.load();
-        Scene viewHistoryScene = new Scene(root);
-        new JMetro(STYLE).applyTheme(viewHistoryScene);
-        Stage window  = new Stage();
-        viewHistory.disableProperty().bind(window.showingProperty());
-        window.setScene(viewHistoryScene);
-        window.show();
+    private void viewHistoryButtonAction() throws IOException {
+        if (comboboxPDCheck.equals("Empty")) {
+            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
+            emptyAlert.setTitle("Error Dialog");
+            emptyAlert.setHeaderText("Empty Field");
+            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
+            emptyAlert.showAndWait();
+        } else {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/fxml/PDTableView.fxml"));
+            PDTableViewController subcontroller = new PDTableViewController(this);
+            loader.setController(subcontroller);
+            Parent root = loader.load();
+            Scene viewHistoryScene = new Scene(root);
+            new JMetro(STYLE).applyTheme(viewHistoryScene);
+            Stage window = new Stage();
+            viewHistory.disableProperty().bind(window.showingProperty());
+            window.setScene(viewHistoryScene);
+            window.show();
+        }
     }
     
     public void rentAmountPDUpdate(String rentAmount, String hNumber, String tName, String paymentDate){
@@ -331,6 +376,13 @@ public class PDController implements Initializable {
         }
     }
     
+    private Map getReceiptParameters(){
+        HashMap map = new HashMap();
+        map.put("houseNumber", (String)blockAComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMonth", (String)monthComboPD.getSelectionModel().getSelectedItem());
+        return map;
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockAComboPD.setItems(blockA);
@@ -340,12 +392,12 @@ public class PDController implements Initializable {
         
         monthComboPD.setItems(months);
         
-        
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
                 try {
                     String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
+                    Class.forName("org.sqlite.JDBC");
                     Connection conn = DriverManager.getConnection(databaseURL);
                     PreparedStatement pstmt = conn.prepareStatement(searchPDSql);
                     pstmt.setString(1, (String)blockAComboPD.getSelectionModel().getSelectedItem());
@@ -427,6 +479,8 @@ public class PDController implements Initializable {
                 comboboxPDCheck = "Block A";
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
+                houseComboSelect = (String)blockAComboPD.getSelectionModel().getSelectedItem();
+                System.out.println(houseComboSelect);
                 label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
@@ -807,6 +861,7 @@ public class PDController implements Initializable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                monthComboSelect = (String)monthComboPD.getSelectionModel().getSelectedItem();
             });
         });
         
@@ -888,6 +943,7 @@ public class PDController implements Initializable {
         
         ContextMenu editMenu = new ContextMenu();
         MenuItem edit = new MenuItem("Edit");
+        MenuItem printReceipt = new MenuItem("Print Receipt");
         edit.setOnAction((event) -> {
             if (updatePDAmount.isVisible()) {
                 editMenu.hide();
@@ -898,10 +954,51 @@ public class PDController implements Initializable {
                 updatePDAmount.setVisible(true);
             }
         });
+        printReceipt.setOnAction((event) -> {
+            Map map = null;
+
+            try {
+                map = getReceiptParameters();
+            } catch (Exception e) {
+                e.printStackTrace();
+                String message = "An Error occured while compiling the report";
+                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setTitle("Error occured");
+                alert.setHeaderText("Error in retrieving data for printing the receipt");
+                alert.showAndWait();
+                return;
+            }
+
+            final String resourcePath = "C:\\Users\\bonyo\\Documents\\NetbeansProjects\\Rental-Application-Vertical-Menu\\src\\main\\resources\\Receipt\\Receipt.jrxml";
+            JasperPrint jasperPrint = null;
+            Connection conn = null;
+            try {
+                Class.forName("org.sqlite.JDBC");
+                conn = DriverManager.getConnection(databaseURL);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try (InputStream reportStream = this.getClass().getResourceAsStream(resourcePath)) {
+                JasperReport jasperreport = JasperCompileManager.compileReport(resourcePath);
+                jasperPrint = JasperFillManager.fillReport(jasperreport, map, conn);
+            } catch (Exception e) {
+                e.printStackTrace();
+                String message = "An Error occurred while preparing to print the receipt";
+                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setTitle("Error Occurred");
+                alert.setHeaderText("Error in printing the receipt");
+                alert.showAndWait();
+            }
+            JasperViewer jasperViewer = new JasperViewer(jasperPrint, false);
+            jasperViewer.setTitle("Rent Receipt");
+            jasperViewer.setVisible(true); 
+        });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         
         PDAnchor.setOnContextMenuRequested((event) -> {
-            editMenu.getItems().add(edit);
+            editMenu.getItems().addAll(edit, printReceipt);
             editMenu.show(PDAnchor, event.getScreenX(), event.getScreenY());
         });
         PDAnchor.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {

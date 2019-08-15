@@ -66,7 +66,7 @@
             </HBox>
             <HBox layoutX="10.0" layoutY="64.0" prefHeight="31.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Tenant Phone Number" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Phone Number" textFill="#fdfdfd" />
                   <JFXTextField fx:id="tenantPhoneNumber" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
                </children>
             </HBox>
@@ -90,25 +90,25 @@
             </HBox>
             <HBox layoutX="10.0" layoutY="230.0" prefHeight="31.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="126.0" text="Move-In-Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="133.0" text="Move-In-Date" textFill="#fdfdfd" />
                   <JFXDatePicker fx:id="moveInDate" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="272.0" prefHeight="31.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="126.0" text="Move-Out-Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="135.0" text="Move-Out-Date" textFill="#fdfdfd" />
                   <JFXDatePicker fx:id="moveOutDate" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="313.0" prefHeight="31.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="125.0" text="Lease-Start-Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="134.0" text="Lease-Start-Date" textFill="#fdfdfd" />
                   <JFXDatePicker fx:id="leaseStartDate" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="355.0" prefHeight="31.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="123.0" text="Lease-End-Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="134.0" text="Lease-End-Date" textFill="#fdfdfd" />
                   <JFXDatePicker fx:id="leaseEndDate" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>

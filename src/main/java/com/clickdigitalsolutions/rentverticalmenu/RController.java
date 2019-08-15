@@ -28,6 +28,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -71,7 +72,7 @@ public class RController implements Initializable {
     
     private JMetro.Style STYLE = JMetro.Style.DARK;
     
-    private String comboboxRCheck;
+    private String comboboxRCheck = "Empty";
     
     ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
     ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
@@ -122,6 +123,21 @@ public class RController implements Initializable {
         if (comboboxRCheck.equals("Block A")){
             createRepairsTable((String)blockAComboR.getSelectionModel().getSelectedItem(), tenantNameR.getText(), repairsDoneR.getText(), costOfRepairR.getText(), getDateValueAsString(repairDateR.getValue()), miscellaneousR.getText());
             setEmpty();
+        }else if (comboboxRCheck.equals("Block B")){
+            createRepairsTable((String)blockBComboR.getSelectionModel().getSelectedItem(), tenantNameR.getText(), repairsDoneR.getText(), costOfRepairR.getText(), getDateValueAsString(repairDateR.getValue()), miscellaneousR.getText());
+            setEmpty();
+        }else if (comboboxRCheck.equals("Block C")){
+            createRepairsTable((String)blockCComboR.getSelectionModel().getSelectedItem(), tenantNameR.getText(), repairsDoneR.getText(), costOfRepairR.getText(), getDateValueAsString(repairDateR.getValue()), miscellaneousR.getText());
+            setEmpty();
+        }else if (comboboxRCheck.equals("Nasra Block")){
+            createRepairsTable((String)nasraBlockR.getSelectionModel().getSelectedItem(), tenantNameR.getText(), repairsDoneR.getText(), costOfRepairR.getText(), getDateValueAsString(repairDateR.getValue()), miscellaneousR.getText());
+            setEmpty();
+        }else if (comboboxRCheck.equals("Empty")){
+            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
+            emptyAlert.setTitle("Error Dialog");
+            emptyAlert.setHeaderText("Empty Field");
+            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
+            emptyAlert.showAndWait();
         }
     }
     
@@ -162,18 +178,26 @@ public class RController implements Initializable {
     }
     
     @FXML
-    public void viewRepairsHistoryButton() throws IOException{
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/fxml/RTableView.fxml"));
-        RTableViewController controller = new RTableViewController(this);
-        loader.setController(controller);
-        Parent root = loader.load();
-        Scene viewRepairsScene = new Scene(root);
-        new JMetro(STYLE).applyTheme(viewRepairsScene);
-        Stage window = new Stage();
-        viewRepairsHistoryButton.disableProperty().bind(window.showingProperty());
-        window.setScene(viewRepairsScene);
-        window.show();
+    public void viewRepairsHistoryButton() throws IOException {
+        if (comboboxRCheck.equals("Empty")) {
+            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
+            emptyAlert.setTitle("Error Dialog");
+            emptyAlert.setHeaderText("Empty Field");
+            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
+            emptyAlert.showAndWait();
+        } else {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/fxml/RTableView.fxml"));
+            RTableViewController controller = new RTableViewController(this);
+            loader.setController(controller);
+            Parent root = loader.load();
+            Scene viewRepairsScene = new Scene(root);
+            new JMetro(STYLE).applyTheme(viewRepairsScene);
+            Stage window = new Stage();
+            viewRepairsHistoryButton.disableProperty().bind(window.showingProperty());
+            window.setScene(viewRepairsScene);
+            window.show();
+        }
     }
     
     @Override

@@ -23,6 +23,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
@@ -99,7 +100,7 @@ public class TDController implements Initializable {
     @FXML
     private TitledPane houseComboTitledPane;
     
-    private String comboboxTDCheck;
+    private String comboboxTDCheck = "Empty";
     
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
@@ -196,6 +197,12 @@ public class TDController implements Initializable {
             repairscontroller.createRepairsTable((String)nasraBlockCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             setEmpty();
             nasraBlockCombo.setValue(null);
+        }else if (comboboxTDCheck.equals("Empty")) {
+            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
+            emptyAlert.setTitle("Error Dialog");
+            emptyAlert.setHeaderText("Empty Field");
+            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
+            emptyAlert.showAndWait();
         }
     }
     

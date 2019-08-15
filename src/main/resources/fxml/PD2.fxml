@@ -80,7 +80,7 @@
                   <JFXTreeView fx:id="paymentMethodPD" prefHeight="150.0" prefWidth="218.0" />
                </children>
             </HBox>
-            <HBox layoutX="10.0" layoutY="232.0" prefHeight="30.0" prefWidth="437.0">
+            <HBox layoutX="10.0" layoutY="232.0" prefHeight="74.0" prefWidth="60.0">
                <children>
                   <JFXButton fx:id="saveButtonPD" buttonType="RAISED" onAction="#saveButtonActionPD" prefHeight="30.0" prefWidth="70.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
                      <font>
@@ -89,7 +89,7 @@
                   </JFXButton>
                </children>
                <VBox.margin>
-                  <Insets left="200.0" right="330.0" />
+                  <Insets left="200.0" right="330.0" top="30.0" />
                </VBox.margin>
             </HBox>
          </children>

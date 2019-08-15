@@ -1,6 +1,38 @@
 Manifest-Version: 1.0
+Export-Package: org.apache.commons.beanutils;version="1.9.0",org.apach
+ e.commons.beanutils.converters;version="1.9.0",org.apache.commons.bea
+ nutils.expression;version="1.9.0",org.apache.commons.beanutils.locale
+ ;version="1.9.0",org.apache.commons.beanutils.locale.converters;versi
+ on="1.9.0"
+Implementation-Title: Apache Commons BeanUtils
+Built-By: oheger
+Tool: Bnd-2.1.0.20130426-122213
+Implementation-Vendor: The Apache Software Foundation
+Implementation-Vendor-Id: org.apache
+Specification-Title: Apache Commons BeanUtils
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-SymbolicName: org.apache.commons.beanutils
+X-Compile-Target-JDK: 1.5
+Implementation-Version: 1.9.0
+Specification-Vendor: The Apache Software Foundation
+Bundle-Name: Apache Commons BeanUtils
+Created-By: Apache Maven Bundle Plugin
+X-Compile-Source-JDK: 1.5
+Bundle-Vendor: The Apache Software Foundation
+Build-Jdk: 1.7.0_45
+Bundle-Version: 1.9.0
+Bnd-LastModified: 1386430199881
+Bundle-ManifestVersion: 2
+Bundle-Description: Apache Commons BeanUtils provides an easy-to-use b
+ ut flexible wrapper around reflection and introspection.
+Bundle-DocURL: http://commons.apache.org/proper/commons-beanutils/
+Import-Package: org.apache.commons.collections,org.apache.commons.coll
+ ections.comparators,org.apache.commons.collections.keyvalue,org.apach
+ e.commons.logging
+Include-Resource: META-INF/LICENSE.txt=LICENSE.txt,META-INF/NOTICE.txt
+ =NOTICE.txt
+Specification-Version: 1.9.0
+Implementation-Build: tags/BEANUTILS_1_9_0_RC1@r1548928; 2013-12-07 16
+ :29:52+0100
 Archiver-Version: Plexus Archiver
-Built-By: Lummerland
-Created-By: Apache Maven 3.2.3
-Build-Jdk: 1.8.0_40
 

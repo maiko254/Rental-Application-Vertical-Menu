@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.8.0.final using JasperReports Library version 6.8.0-2ed8dfabb690ff337a5797129f2cd92902b0c87b  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="JReceipt2" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="5466dbca-2fb9-4cae-97c1-27c773608dea">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="New Data Adapter "/>
+	<parameter name="houseNumber" class="java.lang.String">
+		<parameterDescription><![CDATA[Passing selected HouseNumber to report]]></parameterDescription>
+		<defaultValueExpression><![CDATA["A1"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PayMonth" class="java.lang.String">
+		<defaultValueExpression><![CDATA["December"]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT *
+FROM  PaymentDetails 
+WHERE 
+	  PaymentDetails . HouseNumber  =    $P{houseNumber}
+AND 
+	  PaymentDetails . Month =  $P{PayMonth}]]>
+	</queryString>
+	<field name="HouseNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="HouseNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<field name="TenantName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="TenantName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<field name="Amount" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="Amount"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<field name="Month" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="Month"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<field name="PaymentDate" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PaymentDate"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<field name="PaymentMethod" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PaymentMethod"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="PaymentDetails"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="380" splitType="Stretch">
+			<staticText>
+				<reportElement x="170" y="30" width="159" height="30" forecolor="#2E0A0A" uuid="3f38f884-f612-4dd0-9596-d383b70f669a"/>
+				<textElement>
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[      RENT RECEIPT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="-1" y="205" width="101" height="22" uuid="8d3a1a59-fc45-4f75-b6f2-595096f3b086"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[for the Period:]]></text>
+			</staticText>
+			<line>
+				<reportElement x="110" y="227" width="390" height="1" uuid="8a5aba2a-517e-4b48-8996-6a38c81943c4"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="170" width="100" height="20" uuid="7d1fb3e7-5322-487c-996c-60019e08c256"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[the Sum of:]]></text>
+			</staticText>
+			<line>
+				<reportElement x="110" y="190" width="100" height="1" uuid="fec32328-d870-47f1-a0ce-3254648b2e9b"/>
+			</line>
+			<staticText>
+				<reportElement x="70" y="275" width="40" height="23" uuid="f25eff10-7ec7-4b6b-b084-7ac34cf92fa8"/>
+				<textElement>
+					<font size="12" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Kshs.]]></text>
+			</staticText>
+			<line>
+				<reportElement x="110" y="282" width="180" height="1" uuid="c8c42d88-3669-42a7-aa3f-cebdb096763c"/>
+			</line>
+			<staticText>
+				<reportElement x="110" y="283" width="40" height="18" uuid="0c809496-82b9-401a-a77f-87c46a7cf926"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Cash]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="150" y="282" width="70" height="18" uuid="2cf52487-0847-47e3-99dd-6ac0c81ca9f6"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Cheque No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="224" y="282" width="70" height="18" uuid="8581bf19-a91a-44d5-8217-b4114506ea6a"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Mpesa]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="110" y="263" width="100" height="20" uuid="d928c5f3-66a0-4f05-a25b-333813ca915f"/>
+				<textFieldExpression><![CDATA[$F{Amount}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="348" y="282" width="152" height="20" uuid="7afd2f72-d808-4ee6-97df-d6e38128ffde"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[    for Jatom Apartments]]></text>
+			</staticText>
+			<line>
+				<reportElement x="339" y="282" width="161" height="1" uuid="c73ee0ac-a86a-4d01-b7d9-e10b4e977707"/>
+			</line>
+			<staticText>
+				<reportElement x="410" y="237" width="66" height="21" uuid="a8633685-39ad-4b16-9963-8536534d7293"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Thank You]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="309" y="170" width="90" height="20" uuid="7eb01a81-524c-4c79-966f-aaa0e70cabaa"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[HouseNumber:]]></text>
+			</staticText>
+			<line>
+				<reportElement x="400" y="190" width="100" height="1" uuid="ebddf7d1-05e2-4e36-b9f1-f8d124bc6fca"/>
+			</line>
+			<textField>
+				<reportElement x="110" y="171" width="100" height="18" uuid="7868ce48-8718-4bfd-bf24-7f830b4b6cdc"/>
+				<textFieldExpression><![CDATA[$F{Amount}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="129" width="100" height="20" uuid="8721ab5c-1669-44df-86a4-709fe4d299cd"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Received from:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="330" y="79" width="61" height="22" uuid="1bdcccb6-2380-4dc1-a7d9-0e4e9273604b"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[ Date:]]></text>
+			</staticText>
+			<textField>
+				<reportElement key="" x="393" y="79" width="100" height="22" uuid="b2c69bec-3e2c-4c8b-b2e7-25b4f7a0652e"/>
+				<textFieldExpression><![CDATA[$F{PaymentDate}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="79" width="79" height="22" uuid="53b28e32-a457-4963-a9be-5c5e978caa8c"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Receipt No.]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="400" y="170" width="100" height="20" uuid="16e756f1-5bc5-40ef-ad1d-8bca6295a13d">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$P{houseNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="110" y="205" width="390" height="22" uuid="443c3c67-b65b-457e-badf-3d13f5d4edd2">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$P{PayMonth}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch">
+			<textField>
+				<reportElement x="109" y="-251" width="390" height="20" uuid="dcce417a-b39f-43b1-8d6b-8a37d147bdba"/>
+				<textFieldExpression><![CDATA[$F{TenantName}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="109" y="-225" width="390" height="1" uuid="8b8fcc4d-44bc-4bf0-beab-4d60e563ec69"/>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

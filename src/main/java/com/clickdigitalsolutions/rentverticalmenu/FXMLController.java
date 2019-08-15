@@ -5,7 +5,9 @@ import com.jfoenix.controls.JFXTabPane;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -15,6 +17,8 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
@@ -27,6 +31,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.export.oasis.Utility;
+import net.sf.jasperreports.view.JasperViewer;
 
 public class FXMLController implements Initializable {
 
@@ -47,45 +55,46 @@ public class FXMLController implements Initializable {
 
     @FXML
     private Tab paymentDetailsTab;
-    
+
     @FXML
     private AnchorPane paymentContainer;
-    
+
     @FXML
     private Tab monthlyExpensesTab;
-    
+
     @FXML
     private AnchorPane monthlyContainer;
-    
+
     @FXML
     private MenuBar rentalMenu;
-    
+
     @FXML
     private AnchorPane motherAnchor;
-    
+
     @FXML
     private MenuItem editTable;
-    
+
     @FXML
     private MenuItem search;
-    
+
     @FXML
     private MenuItem Import;
-    
+
+    @FXML
+    private MenuItem print;
+
     @FXML
     private MenuItem about;
-    
+
     private double tabWidth = 90.0;
     public static int lastSelectedTabIndex = 0;
-    
+
     String fxmlCheck;
-    
+
     JFXButton addButton;
-    
-    private PDController controller;
-    
+
     private SearchFXMLController searchController;
-   
+
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
         tabContainer.setTabMaxWidth(tabWidth);
@@ -104,7 +113,6 @@ public class FXMLController implements Initializable {
             }
         };
 
-        
         configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
         configureTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", repairsContainer, getClass().getResource("/fxml/R2.fxml"), replaceBackgroundColorHandler);
         configureTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
@@ -149,7 +157,7 @@ public class FXMLController implements Initializable {
             }
         }
     }
-    
+
     private JFXButton createIconButton(double iconXLayout, double iconYLayout) {
         JFXButton iconButton = new JFXButton();
 
@@ -162,10 +170,10 @@ public class FXMLController implements Initializable {
 
         return iconButton;
     }
-    
+
     @FXML
-    private void searchAction() throws IOException{
-        FXMLLoader loader = new  FXMLLoader();
+    private void searchAction() throws IOException {
+        FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/fxml/SearchFXML.fxml"));
         SearchFXMLController sub = new SearchFXMLController(this);
         loader.setController(sub);
@@ -178,13 +186,14 @@ public class FXMLController implements Initializable {
         window.show();
     }
 
-    
+    PDController subcontroller = new PDController();
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configureView();
-        
+
         rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
-        
+
         tabContainer.setOnMouseClicked((event) -> {
             if (tenantDetailsTab.isSelected()) {
                 fxmlCheck = "TDfxml";
@@ -195,6 +204,43 @@ public class FXMLController implements Initializable {
             } else if (monthlyExpensesTab.isSelected()) {
                 fxmlCheck = "MEfxml";
             }
+        });
+        String hNo = "A1";
+        String Month = "July";
+        print.setOnAction((event) -> {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PD2.fxml"));
+            PDModel pdmodel = new PDModel();
+            Map map = null;
+
+            try {
+                System.out.println();
+                map.put("houseNumber", pdmodel.gethouseNumberTablePD());
+                map.put("Month", Month);
+            } catch (Exception e) {
+                e.printStackTrace();
+                String message = "An Error occured while compiling the report";
+                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setTitle("Error occured");
+                alert.setHeaderText("Error in retrieving data for printing the receipt");
+                alert.showAndWait();
+                return;
+            }
+
+            final String resourcePath = "/Receipt/Receipt.jasper";
+            JasperPrint jasperPrint = null;
+
+            try (InputStream reportStream = this.getClass().getResourceAsStream(resourcePath)) {
+                jasperPrint = JasperFillManager.fillReport(reportStream, map);
+            } catch (Exception e) {
+                String message = "An Error occurred while preparing to print the receipt";
+                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setTitle("Error Occurred");
+                alert.setHeaderText("Error in printing the receipt");
+                alert.showAndWait();
+            }
+            JasperViewer jasperViewer = new JasperViewer(jasperPrint, false);
+            jasperViewer.setTitle("Rent Receipt");
+            jasperViewer.setVisible(true);
         });
     }
 }
