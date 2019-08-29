@@ -7,6 +7,7 @@ import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.event.Event;
@@ -116,7 +117,7 @@ public class FXMLController implements Initializable {
         configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
         configureTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", repairsContainer, getClass().getResource("/fxml/R2.fxml"), replaceBackgroundColorHandler);
         configureTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
-        configureTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", monthlyContainer, getClass().getResource("/fxml/ME.fxml"), replaceBackgroundColorHandler);
+        configureTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", monthlyContainer, getClass().getResource("/fxml/ME3.fxml"), replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
 
@@ -187,7 +188,14 @@ public class FXMLController implements Initializable {
     }
 
     PDController subcontroller = new PDController();
-
+    
+    private Map getReceiptParameters(){
+        HashMap map = new HashMap();
+        map.put("houseNumber", (String)subcontroller.blockAComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMonth", (String)subcontroller.monthComboPD.getSelectionModel().getSelectedItem());
+        return map;
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configureView();
@@ -213,9 +221,7 @@ public class FXMLController implements Initializable {
             Map map = null;
 
             try {
-                System.out.println();
-                map.put("houseNumber", pdmodel.gethouseNumberTablePD());
-                map.put("Month", Month);
+                map = getReceiptParameters();
             } catch (Exception e) {
                 e.printStackTrace();
                 String message = "An Error occured while compiling the report";

@@ -16,13 +16,11 @@ import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -41,7 +39,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.geometry.Side;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -63,7 +60,6 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
-import org.sqlite.SQLiteException;
 
 /**
  * FXML Controller class
@@ -127,6 +123,8 @@ public class PDController implements Initializable {
 
     String monthComboSelect;
     
+    String payMethodCheck;
+    
     SimpleStringProperty addCheck = new SimpleStringProperty("null");
     
     boolean arrearsCheck = false;
@@ -161,6 +159,8 @@ public class PDController implements Initializable {
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createPDSql);
             pstmt.execute();
+            pstmt.close();
+            conn.close();
         } catch (SQLException ex) {
             ex.getErrorCode();
         }
@@ -185,7 +185,31 @@ public class PDController implements Initializable {
     
     @FXML
     private void saveButtonActionPD(){
-        if (comboboxPDCheck.equals("Block A")){
+        if (comboboxPDCheck.equals("Block A") && amountPD.getText().isEmpty()){
+            Alert amountEmptyAlert = new Alert(Alert.AlertType.INFORMATION);
+            amountEmptyAlert.setTitle("Information Dialog");
+            amountEmptyAlert.setHeaderText("Empty Field");
+            amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
+            amountEmptyAlert.showAndWait();
+        } else if (comboboxPDCheck.equals("Block B") && amountPD.getText().isEmpty()){
+            Alert amountEmptyAlert = new Alert(Alert.AlertType.INFORMATION);
+            amountEmptyAlert.setTitle("Information Dialog");
+            amountEmptyAlert.setHeaderText("Empty Field");
+            amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
+            amountEmptyAlert.showAndWait();
+        } else if (comboboxPDCheck.equals("Block C") && amountPD.getText().isEmpty()){
+            Alert amountEmptyAlert = new Alert(Alert.AlertType.INFORMATION);
+            amountEmptyAlert.setTitle("Information Dialog");
+            amountEmptyAlert.setHeaderText("Empty Field");
+            amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
+            amountEmptyAlert.showAndWait();
+        } else if (comboboxPDCheck.equals("Nasra Block") && amountPD.getText().isEmpty()){
+            Alert amountEmptyAlert = new Alert(Alert.AlertType.INFORMATION);
+            amountEmptyAlert.setTitle("Information Dialog");
+            amountEmptyAlert.setHeaderText("Empty Field");
+            amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
+            amountEmptyAlert.showAndWait();
+        } else if (comboboxPDCheck.equals("Block A")){
             createPaymentDetailsTable((String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
             setEmpty();
             blockAComboPD.setValue(null);
@@ -202,8 +226,8 @@ public class PDController implements Initializable {
             setEmpty();
             nasraBlockPD.setValue(null);
         }else if(comboboxPDCheck.equals("Empty")){
-            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
-            emptyAlert.setTitle("Error Dialog");
+            Alert emptyAlert = new Alert(Alert.AlertType.INFORMATION);
+            emptyAlert.setTitle("Information Dialog");
             emptyAlert.setHeaderText("Empty Field");
             emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
             emptyAlert.showAndWait();
@@ -378,8 +402,17 @@ public class PDController implements Initializable {
     
     private Map getReceiptParameters(){
         HashMap map = new HashMap();
-        map.put("houseNumber", (String)blockAComboPD.getSelectionModel().getSelectedItem());
-        map.put("PayMonth", (String)monthComboPD.getSelectionModel().getSelectedItem());
+        if (comboboxPDCheck.equals("Block A")) {
+            map.put("houseNumber", (String) blockAComboPD.getSelectionModel().getSelectedItem());
+        }else if (comboboxPDCheck.equals("Block B")){
+            map.put("houseNumber", (String) blockBComboPD.getSelectionModel().getSelectedItem());
+        }else if (comboboxPDCheck.equals("Block C")){
+            map.put("houseNumber", (String) blockCComboPD.getSelectionModel().getSelectedItem());
+        }else if (comboboxPDCheck.equals("Nasra Block")){
+            map.put("houseNumber", (String) nasraBlockPD.getSelectionModel().getSelectedItem());
+        }
+        map.put("PayMonth", (String) monthComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMethod", payMethodCheck);
         return map;
     }
     
@@ -443,14 +476,17 @@ public class PDController implements Initializable {
                                 String[] paymentModeCheck = paymentModeString.split(":");
                                 switch (paymentModeCheck[0]) {
                                     case "Cash payment received by":
+                                        payMethodCheck = "Paid in cash";
                                         cash.setValue(paymentModeString);
                                         root3.setExpanded(true);
                                         break;
                                     case "Mpesa transaction code is":
+                                        payMethodCheck = "Paid via mpesa";
                                         mpesa.setValue(paymentModeString);
                                         root1.setExpanded(true);
                                         break;
                                     case "Banker's cheque no":
+                                        payMethodCheck = "Paid via banker's cheque";
                                         bank.setValue(paymentModeString);
                                         root2.setExpanded(true);
                                         break;
@@ -535,14 +571,17 @@ public class PDController implements Initializable {
                                 String[] paymentModeCheck = paymentModeString.split(":");
                                 switch (paymentModeCheck[0]) {
                                     case "Cash payment received by":
+                                        payMethodCheck = "Paid in cash";
                                         cash.setValue(paymentModeString);
                                         root3.setExpanded(true);
                                         break;
                                     case "Mpesa transaction code is":
+                                        payMethodCheck = "Paid via mpesa";
                                         mpesa.setValue(paymentModeString);
                                         root1.setExpanded(true);
                                         break;
                                     case "Banker's cheque no":
+                                        payMethodCheck = "Paid via banker's cheque";
                                         bank.setValue(paymentModeString);
                                         root2.setExpanded(true);
                                         break;
@@ -622,14 +661,17 @@ public class PDController implements Initializable {
                                 String[] paymentModeCheck = paymentModeString.split(":");
                                 switch (paymentModeCheck[0]) {
                                     case "Cash payment received by":
+                                        payMethodCheck = "Paid in cash";
                                         cash.setValue(paymentModeString);
                                         root3.setExpanded(true);
                                         break;
                                     case "Mpesa transaction code is":
+                                        payMethodCheck = "Paid via mpesa";
                                         mpesa.setValue(paymentModeString);
                                         root1.setExpanded(true);
                                         break;
                                     case "Banker's cheque no":
+                                        payMethodCheck = "Paid via banker's cheque";
                                         bank.setValue(paymentModeString);
                                         root2.setExpanded(true);
                                         break;
@@ -710,14 +752,17 @@ public class PDController implements Initializable {
                                 String[] paymentModeCheck = paymentModeString.split(":");
                                 switch (paymentModeCheck[0]) {
                                     case "Cash payment received by":
+                                        payMethodCheck = "Paid in cash";
                                         cash.setValue(paymentModeString);
                                         root3.setExpanded(true);
                                         break;
                                     case "Mpesa transaction code is":
+                                        payMethodCheck = "Paid via mpesa";
                                         mpesa.setValue(paymentModeString);
                                         root1.setExpanded(true);
                                         break;
                                     case "Banker's cheque no":
+                                        payMethodCheck = "Paid via banker's cheque";
                                         bank.setValue(paymentModeString);
                                         root2.setExpanded(true);
                                         break;
@@ -751,6 +796,7 @@ public class PDController implements Initializable {
                 System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
             });
         });
+        
         
         monthComboPD.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             monthComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -791,6 +837,7 @@ public class PDController implements Initializable {
                    if (!rs.next()){
                        amountPD.setText("");
                        rentPaymentDatePD.setValue(null);
+                       rentArrears.setVisible(false);
                    } else {
                        do {
                            rentPayMonthPD = rs.getString("Month");
@@ -858,7 +905,7 @@ public class PDController implements Initializable {
                             }
                         }
                     }
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
                 monthComboSelect = (String)monthComboPD.getSelectionModel().getSelectedItem();
@@ -887,6 +934,7 @@ public class PDController implements Initializable {
                 System.out.println(paymentMode);
             }
         });
+        
         
         root3.expandedProperty().addListener((observable, oldValue, newValue) -> {
            if (root3.isExpanded()){
@@ -980,7 +1028,7 @@ public class PDController implements Initializable {
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            try (InputStream reportStream = this.getClass().getResourceAsStream(resourcePath)) {
+            try {
                 JasperReport jasperreport = JasperCompileManager.compileReport(resourcePath);
                 jasperPrint = JasperFillManager.fillReport(jasperreport, map, conn);
             } catch (Exception e) {

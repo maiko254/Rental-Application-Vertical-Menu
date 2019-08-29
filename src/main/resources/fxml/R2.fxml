@@ -14,11 +14,11 @@
 
 <AnchorPane fx:id="RAnchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" style="-fx-background-color: #122949;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.RController">
    <children>
-      <VBox prefHeight="600.0" prefWidth="600.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox prefHeight="600.0" prefWidth="600.0" spacing="10.0" style="-fx-background-color: #dedede;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <HBox prefHeight="41.0" prefWidth="600.0" spacing="15.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="121.0" text="House Number" textFill="#fdfdfd">
+                  <Label prefHeight="18.0" prefWidth="121.0" text="House Number">
                      <HBox.margin>
                         <Insets top="-15.0" />
                      </HBox.margin>
@@ -28,7 +28,7 @@
                         <Font size="13.0" />
                      </font>
                      <content>
-                        <VBox prefHeight="200.0" prefWidth="218.0">
+                        <VBox prefHeight="200.0" prefWidth="218.0" style="-fx-border-color: black;">
                            <children>
                               <JFXComboBox fx:id="blockAComboR" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
                               <JFXComboBox fx:id="blockBComboR" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
@@ -59,32 +59,32 @@
             </HBox>
             <HBox prefHeight="30.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="135.0" text="Tenant Name" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="tenantNameR" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="18.0" prefWidth="135.0" text="Tenant Name" />
+                  <JFXTextField fx:id="tenantNameR" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="52.0" prefHeight="30.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="134.0" text="Repairs Done on House" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="repairsDoneR" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="18.0" prefWidth="134.0" text="Repairs Done" />
+                  <JFXTextField fx:id="repairsDoneR" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="82.0" prefHeight="30.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="134.0" text="Cost of Repair" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="costOfRepairR" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="18.0" prefWidth="134.0" text="Cost of Repair" />
+                  <JFXTextField fx:id="costOfRepairR" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="112.0" prefHeight="30.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="134.0" text="Repair Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="134.0" text="Repair Date" />
                   <JFXDatePicker fx:id="repairDateR" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>
-            <HBox layoutX="10.0" layoutY="184.0" prefHeight="30.0" prefWidth="600.0">
+            <HBox layoutX="10.0" layoutY="184.0" prefHeight="43.0" prefWidth="590.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="134.0" text="MIscellaneous Expenses" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="miscellaneousR" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="47.0" prefWidth="134.0" text="MIscellaneous &#10;Expenses" />
+                  <JFXTextField fx:id="miscellaneousR" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="225.0" prefHeight="30.0" prefWidth="600.0">

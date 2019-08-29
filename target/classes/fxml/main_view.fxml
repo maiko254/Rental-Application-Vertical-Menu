@@ -12,7 +12,7 @@
    <children>
       <StackPane layoutY="26.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="611.0" prefWidth="750.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">
          <children>
-            <JFXTabPane fx:id="tabContainer" prefHeight="128.0" prefWidth="308.0" side="LEFT" tabClosingPolicy="UNAVAILABLE">
+            <JFXTabPane fx:id="tabContainer" prefHeight="128.0" prefWidth="308.0" side="LEFT" stylesheets="@../styles/tabSpacing.css" tabClosingPolicy="UNAVAILABLE">
                <tabs>
                   <Tab fx:id="tenantDetailsTab" closable="false" text="User Profile">
                      <content>

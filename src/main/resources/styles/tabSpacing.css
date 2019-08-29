@@ -1,0 +1,13 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Aug 21, 2019, 5:31:54 PM
+    Author     : bonyo
+*/
+.tab {
+  -fx-background-insets: 0 0.417em 0 0, 1 0.417em 1 1, 2 0.417em 0 0;
+  -fx-padding: 0.083333em 0.417em 0.083333em 0.417em;
+}

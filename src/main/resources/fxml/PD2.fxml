@@ -15,17 +15,17 @@
 
 <AnchorPane fx:id="PDAnchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
    <children>
-      <VBox layoutX="120.0" layoutY="30.0" prefHeight="600.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: #122949;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox prefHeight="600.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: #dedede;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <HBox prefHeight="34.0" prefWidth="600.0" spacing="10.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="119.0" text="House Number" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="119.0" text="House Number" />
                   <TitledPane fx:id="houseComboTitledPanePD" expanded="false" prefHeight="64.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
                      <font>
                         <Font size="13.0" />
                      </font>
                      <content>
-                        <VBox prefHeight="200.0" prefWidth="218.0">
+                        <VBox prefHeight="200.0" prefWidth="218.0" style="-fx-border-color: black;">
                            <children>
                               <JFXComboBox fx:id="blockAComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
                               <JFXComboBox fx:id="blockBComboPD" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
@@ -50,33 +50,33 @@
             </HBox>
             <HBox prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Tenant Name" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="tenantNamePD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Tenant Name" />
+                  <JFXTextField fx:id="tenantNamePD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Amount Paid" textFill="#fdfdfd" />
-                  <JFXTextField fx:id="amountPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" style="-fx-text-fill: #fdfdfd;" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Amount Paid" />
+                  <JFXTextField fx:id="amountPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" />
                   <Label fx:id="rentArrears" prefHeight="18.0" prefWidth="158.0" text="Label" />
                   <JFXButton id="updateAmountButton" fx:id="updatePDAmount" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Month " textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Month " />
                   <JFXComboBox fx:id="monthComboPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" stylesheets="@../styles/combobox%20css.css" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="146.0" prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Payment Date" textFill="#fdfdfd" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Payment Date" />
                   <JFXDatePicker fx:id="rentPaymentDatePD" defaultColor="#06c2dff2" prefHeight="28.0" prefWidth="218.0" />
                </children>
             </HBox>
-            <HBox layoutX="10.0" layoutY="189.0" prefHeight="28.0" prefWidth="600.0">
+            <HBox layoutX="10.0" layoutY="189.0" prefHeight="116.0" prefWidth="590.0">
                <children>
-                  <Label alignment="BOTTOM_LEFT" prefHeight="18.0" prefWidth="126.0" text="Payment Method" textFill="#fdfdfd" />
+                  <Label alignment="BOTTOM_LEFT" prefHeight="18.0" prefWidth="126.0" text="Payment Method" />
                   <JFXTreeView fx:id="paymentMethodPD" prefHeight="150.0" prefWidth="218.0" />
                </children>
             </HBox>

@@ -10,6 +10,7 @@
 	<parameter name="PayMonth" class="java.lang.String">
 		<defaultValueExpression><![CDATA["December"]]></defaultValueExpression>
 	</parameter>
+	<parameter name="PayMethod" class="java.lang.String"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT *
 FROM  PaymentDetails 
@@ -46,127 +47,112 @@ AND
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="380" splitType="Stretch">
+		<band height="290" splitType="Stretch">
 			<staticText>
-				<reportElement x="170" y="30" width="159" height="30" forecolor="#2E0A0A" uuid="3f38f884-f612-4dd0-9596-d383b70f669a"/>
+				<reportElement x="171" y="50" width="159" height="30" forecolor="#2E0A0A" uuid="3f38f884-f612-4dd0-9596-d383b70f669a"/>
 				<textElement>
 					<font size="14" isBold="true"/>
 				</textElement>
 				<text><![CDATA[      RENT RECEIPT]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="-1" y="205" width="101" height="22" uuid="8d3a1a59-fc45-4f75-b6f2-595096f3b086"/>
+				<reportElement x="0" y="160" width="80" height="22" uuid="8d3a1a59-fc45-4f75-b6f2-595096f3b086"/>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[for the Period:]]></text>
 			</staticText>
 			<line>
-				<reportElement x="110" y="227" width="390" height="1" uuid="8a5aba2a-517e-4b48-8996-6a38c81943c4"/>
+				<reportElement x="80" y="182" width="421" height="1" uuid="8a5aba2a-517e-4b48-8996-6a38c81943c4"/>
 			</line>
 			<staticText>
-				<reportElement x="0" y="170" width="100" height="20" uuid="7d1fb3e7-5322-487c-996c-60019e08c256"/>
+				<reportElement x="0" y="130" width="79" height="20" uuid="7d1fb3e7-5322-487c-996c-60019e08c256"/>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[the Sum of:]]></text>
 			</staticText>
 			<line>
-				<reportElement x="110" y="190" width="100" height="1" uuid="fec32328-d870-47f1-a0ce-3254648b2e9b"/>
+				<reportElement x="79" y="150" width="131" height="1" uuid="fec32328-d870-47f1-a0ce-3254648b2e9b"/>
 			</line>
 			<staticText>
-				<reportElement x="70" y="275" width="40" height="23" uuid="f25eff10-7ec7-4b6b-b084-7ac34cf92fa8"/>
+				<reportElement x="40" y="212" width="40" height="23" uuid="f25eff10-7ec7-4b6b-b084-7ac34cf92fa8"/>
 				<textElement>
-					<font size="12" isBold="true" isItalic="true"/>
+					<font size="10" isBold="true" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Kshs.]]></text>
 			</staticText>
 			<line>
-				<reportElement x="110" y="282" width="180" height="1" uuid="c8c42d88-3669-42a7-aa3f-cebdb096763c"/>
+				<reportElement x="80" y="219" width="180" height="1" uuid="c8c42d88-3669-42a7-aa3f-cebdb096763c"/>
 			</line>
-			<staticText>
-				<reportElement x="110" y="283" width="40" height="18" uuid="0c809496-82b9-401a-a77f-87c46a7cf926"/>
-				<textElement>
-					<font size="12"/>
-				</textElement>
-				<text><![CDATA[Cash]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="150" y="282" width="70" height="18" uuid="2cf52487-0847-47e3-99dd-6ac0c81ca9f6"/>
-				<textElement>
-					<font size="12"/>
-				</textElement>
-				<text><![CDATA[Cheque No.]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="224" y="282" width="70" height="18" uuid="8581bf19-a91a-44d5-8217-b4114506ea6a"/>
-				<textElement>
-					<font size="12"/>
-				</textElement>
-				<text><![CDATA[Mpesa]]></text>
-			</staticText>
 			<textField>
-				<reportElement x="110" y="263" width="100" height="20" uuid="d928c5f3-66a0-4f05-a25b-333813ca915f"/>
+				<reportElement x="80" y="200" width="180" height="20" uuid="d928c5f3-66a0-4f05-a25b-333813ca915f"/>
 				<textFieldExpression><![CDATA[$F{Amount}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="348" y="282" width="152" height="20" uuid="7afd2f72-d808-4ee6-97df-d6e38128ffde"/>
+				<reportElement x="349" y="219" width="152" height="20" uuid="7afd2f72-d808-4ee6-97df-d6e38128ffde"/>
 				<textElement>
 					<font size="12"/>
 				</textElement>
 				<text><![CDATA[    for Jatom Apartments]]></text>
 			</staticText>
 			<line>
-				<reportElement x="339" y="282" width="161" height="1" uuid="c73ee0ac-a86a-4d01-b7d9-e10b4e977707"/>
+				<reportElement x="340" y="219" width="161" height="1" uuid="c73ee0ac-a86a-4d01-b7d9-e10b4e977707"/>
 			</line>
 			<staticText>
-				<reportElement x="410" y="237" width="66" height="21" uuid="a8633685-39ad-4b16-9963-8536534d7293"/>
+				<reportElement x="411" y="187" width="66" height="13" uuid="a8633685-39ad-4b16-9963-8536534d7293"/>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Thank You]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="309" y="170" width="90" height="20" uuid="7eb01a81-524c-4c79-966f-aaa0e70cabaa"/>
+				<reportElement x="309" y="130" width="90" height="20" uuid="7eb01a81-524c-4c79-966f-aaa0e70cabaa"/>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[HouseNumber:]]></text>
 			</staticText>
 			<line>
-				<reportElement x="400" y="190" width="100" height="1" uuid="ebddf7d1-05e2-4e36-b9f1-f8d124bc6fca"/>
+				<reportElement x="400" y="150" width="100" height="1" uuid="ebddf7d1-05e2-4e36-b9f1-f8d124bc6fca"/>
 			</line>
 			<textField>
-				<reportElement x="110" y="171" width="100" height="18" uuid="7868ce48-8718-4bfd-bf24-7f830b4b6cdc"/>
+				<reportElement x="79" y="133" width="131" height="18" uuid="7868ce48-8718-4bfd-bf24-7f830b4b6cdc"/>
 				<textFieldExpression><![CDATA[$F{Amount}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="0" y="129" width="100" height="20" uuid="8721ab5c-1669-44df-86a4-709fe4d299cd"/>
+				<reportElement x="0" y="100" width="79" height="20" uuid="8721ab5c-1669-44df-86a4-709fe4d299cd"/>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Received from:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="330" y="79" width="61" height="22" uuid="1bdcccb6-2380-4dc1-a7d9-0e4e9273604b"/>
+				<reportElement x="330" y="79" width="61" height="20" uuid="1bdcccb6-2380-4dc1-a7d9-0e4e9273604b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[ Date:]]></text>
 			</staticText>
 			<textField>
-				<reportElement key="" x="393" y="79" width="100" height="22" uuid="b2c69bec-3e2c-4c8b-b2e7-25b4f7a0652e"/>
+				<reportElement key="" x="393" y="79" width="100" height="20" uuid="b2c69bec-3e2c-4c8b-b2e7-25b4f7a0652e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<textFieldExpression><![CDATA[$F{PaymentDate}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="0" y="79" width="79" height="22" uuid="53b28e32-a457-4963-a9be-5c5e978caa8c"/>
+				<reportElement x="0" y="79" width="79" height="20" uuid="53b28e32-a457-4963-a9be-5c5e978caa8c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<textElement>
-					<font size="12"/>
+					<font size="10"/>
 				</textElement>
 				<text><![CDATA[Receipt No.]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="400" y="170" width="100" height="20" uuid="16e756f1-5bc5-40ef-ad1d-8bca6295a13d">
+				<reportElement x="400" y="130" width="100" height="20" uuid="16e756f1-5bc5-40ef-ad1d-8bca6295a13d">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -174,13 +160,26 @@ AND
 				<textFieldExpression><![CDATA[$P{houseNumber}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="110" y="205" width="390" height="22" uuid="443c3c67-b65b-457e-badf-3d13f5d4edd2">
+				<reportElement x="80" y="160" width="421" height="22" uuid="443c3c67-b65b-457e-badf-3d13f5d4edd2">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$P{PayMonth}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="79" y="100" width="421" height="20" uuid="dcce417a-b39f-43b1-8d6b-8a37d147bdba"/>
+				<textFieldExpression><![CDATA[$F{TenantName}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="79" y="122" width="422" height="1" uuid="8b8fcc4d-44bc-4bf0-beab-4d60e563ec69"/>
+			</line>
+			<textField>
+				<reportElement x="80" y="221" width="180" height="18" uuid="57690fe8-cd3d-49a3-a263-43576d04a1b5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$P{PayMethod}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -191,15 +190,7 @@ AND
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band splitType="Stretch">
-			<textField>
-				<reportElement x="109" y="-251" width="390" height="20" uuid="dcce417a-b39f-43b1-8d6b-8a37d147bdba"/>
-				<textFieldExpression><![CDATA[$F{TenantName}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement x="109" y="-225" width="390" height="1" uuid="8b8fcc4d-44bc-4bf0-beab-4d60e563ec69"/>
-			</line>
-		</band>
+		<band splitType="Stretch"/>
 	</detail>
 	<columnFooter>
 		<band splitType="Stretch"/>
