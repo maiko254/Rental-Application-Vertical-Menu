@@ -7,20 +7,16 @@ package com.clickdigitalsolutions.rentverticalmenu;
  */
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.ResourceBundle;
-import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import jfxtras.styles.jmetro8.JMetro;
 
 /**
  * FXML Controller class
