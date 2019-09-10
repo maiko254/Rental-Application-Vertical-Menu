@@ -21,6 +21,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -30,9 +32,12 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Callback;
 
 /**
  * FXML Controller class
@@ -60,16 +65,75 @@ public class ME2Controller implements Initializable {
     public JFXButton saveMonthlyExpense;
     public JFXButton deleteMonthlyExpense;
     public TableView<MonthlyModel> monthlyExpenseTable;
-    public TableColumn<MonthlyModel, String> monthCol;
-    public TableColumn<MonthlyModel, String> amountCol;
-    public TableColumn<MonthlyModel, String> dateCol;
-    public TableColumn<MonthlyModel, String> unitsCol;
     
     
     private double tabWidth = 90.0;
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
+    
+    public static class MonthlyModel {
+
+        public SimpleStringProperty monthME;
+        public SimpleStringProperty amountPaidME;
+        public SimpleStringProperty datePaidME;
+        public SimpleStringProperty unitsConsumedME;
+
+        public MonthlyModel(String month, String amountPaid, String datePaid, String unitsConsumed) {
+            this.monthME = new SimpleStringProperty(month);
+            this.amountPaidME = new SimpleStringProperty(amountPaid);
+            this.datePaidME = new SimpleStringProperty(datePaid);
+            this.unitsConsumedME = new SimpleStringProperty(unitsConsumed);
+        }
+
+        public String getMonthME() {
+            return this.monthME.get();
+        }
+
+        public void setMonthME(String value) {
+            this.monthME.set(value);
+        }
+
+        public StringProperty monthMEProperty() {
+            return this.monthME;
+        }
+
+        public String getAmountPaidME() {
+            return this.amountPaidME.get();
+        }
+
+        public void setAmountPaidME(String value) {
+            this.amountPaidME.set(value);
+        }
+
+        public StringProperty amountPaidMEProperty() {
+            return amountPaidME;
+        }
+
+        public String getDatePaidME() {
+            return this.datePaidME.get();
+        }
+
+        public void setDatePaidME(String value) {
+            this.datePaidME.set(value);
+        }
+
+        public StringProperty datePaidMEProperty() {
+            return this.datePaidME;
+        }
+
+        public String getUnitsConsumedME() {
+            return this.unitsConsumedME.get();
+        }
+
+        public void setUnitsConsumedME(String value) {
+            this.unitsConsumedME.set(value);
+        }
+
+        public StringProperty unitsConsumedMEProperty() {
+            return this.unitsConsumedME;
+        }
+    }
     
     public void createElecMonthlyExpensesTable(String Month, String Amount, String Date, String UnitsConsumed){
         try {
@@ -186,9 +250,9 @@ public class ME2Controller implements Initializable {
         EventHandler<Event> replaceBackgroundColorHandler = (event) -> {
             Tab currentTab =  (Tab)event.getTarget();
             if (currentTab.isSelected()){
-                currentTab.setStyle("-fx-background-color: #D8D2FD;");
+                currentTab.setStyle("-fx-background-color: #ababab;");
             } else {
-                currentTab.setStyle("-fx-background-color: #D8D2FD;");
+                currentTab.setStyle("-fx-background-color: #ababab;");
             }
         };
         
@@ -274,9 +338,42 @@ public class ME2Controller implements Initializable {
         return monthlyData;
     }
     
+    class MyStringTableCell extends TableCell<MonthlyModel, String> {
+
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(empty ? null : getString());
+        }
+
+        private String getString() {
+            return getItem() == null ? "" : getItem().toString();
+        }
+    }
+    
+    class MyEventHandler implements EventHandler<MouseEvent> {
+        
+        @Override
+        public void handle(MouseEvent t) {
+            TableCell c = (TableCell) t.getSource();
+            int index = c.getIndex();
+            try {
+                MonthlyModel item = getMonthlyDetails().get(index);
+                elecAmount.setText(item.getAmountPaidME());
+                elecDate.setValue(LocalDate.parse(item.getDatePaidME(), DateTimeFormatter.ISO_DATE));
+                elecUnits.setText(item.getUnitsConsumedME());
+                System.out.println("Month = " + item.getMonthME());
+                System.out.println("Amount Paid = " + item.getAmountPaidME());
+                System.out.println("Date = " +item.getDatePaidME());
+                System.out.println("Units Consumed = " + item.getUnitsConsumedME());
+            } catch (Exception e) {
+            }
+        }
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-       
+       configureView();
        
        elecCombo.setItems(months);
        waterCombo.setItems(months);
@@ -368,11 +465,35 @@ public class ME2Controller implements Initializable {
                 monthlyExpenseTable.setItems(getMonthlyDetails());
             });
         });
-
-        monthCol.setCellValueFactory(cellData -> cellData.getValue().monthMEProperty());
-        amountCol.setCellValueFactory(cellData -> cellData.getValue().amountPaidMEProperty());
-        dateCol.setCellValueFactory(cellData -> cellData.getValue().datePaidMEProperty());
-        unitsCol.setCellValueFactory(cellData -> cellData.getValue().unitsConsumedMEProperty());
+        
+        Callback<TableColumn, TableCell> stringCellFactory
+                = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn param) {
+                MyStringTableCell cell = new MyStringTableCell();
+                cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+                return cell;
+            }
+        };
+        
+        TableColumn monthCol = new TableColumn("Month");
+        monthCol.setCellValueFactory(
+                new PropertyValueFactory<MonthlyModel, String>("monthME"));
+        monthCol.setCellFactory(stringCellFactory);
+        TableColumn amountCol = new TableColumn("Amount Paid");
+        amountCol.setCellValueFactory(
+                new PropertyValueFactory<MonthlyModel, String>("amountPaidME"));
+        amountCol.setCellFactory(stringCellFactory);
+        TableColumn dateCol = new TableColumn("Date");
+        dateCol.setCellValueFactory(
+                new PropertyValueFactory<MonthlyModel, String>("datePaidME"));
+        dateCol.setCellFactory(stringCellFactory);
+        TableColumn unitsCol = new TableColumn("Units Consumed");
+        unitsCol.setCellValueFactory(
+                new PropertyValueFactory<MonthlyModel, String>("unitsConsumedME"));
+        unitsCol.setCellFactory(stringCellFactory);
+        
+        monthlyExpenseTable.getColumns().addAll(monthCol, amountCol, dateCol, unitsCol);
     }
 
 }
