@@ -29,6 +29,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -41,6 +42,9 @@ public class FXMLController implements Initializable {
 
     @FXML
     private JFXTabPane tabContainer;
+    
+    @FXML
+    private StackPane mainStack;
 
     @FXML
     private Tab tenantDetailsTab;

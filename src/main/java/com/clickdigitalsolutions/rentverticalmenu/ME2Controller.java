@@ -36,7 +36,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 /**
@@ -47,6 +51,7 @@ import javafx.util.Callback;
 public class ME2Controller implements Initializable {
 
     public JFXTabPane tabContainer1;
+    public GridPane monthGridPane;
     public Tab electricityExpense;
     public Tab waterExpense;
     public Tab otherExpenses;
@@ -64,11 +69,22 @@ public class ME2Controller implements Initializable {
     public JFXTextField expenseReason;
     public JFXButton saveMonthlyExpense;
     public JFXButton deleteMonthlyExpense;
-    public TableView<MonthlyModel> monthlyExpenseTable;
+    public TableView<MonthlyModel> monthlyElectricExpenseTable = new TableView<>();
+    public TableView<waterMonthlyModel> waterExpenseTable = new TableView<>();
+    public TableView<otherMonthlyModel> otherExpenseTable = new TableView<>();
+    public AnchorPane electricityAnchor;
+    public AnchorPane waterAnchor;
+    public AnchorPane otherAnchor;
+    public VBox electricVbox = new VBox();
+    public VBox waterVbox = new VBox();
+    public VBox otherVbox = new VBox();
+    public AnchorPane savePane;
+    public AnchorPane deletePane;
     
     
     private double tabWidth = 90.0;
     String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String tabCheck = null;
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     
@@ -135,12 +151,140 @@ public class ME2Controller implements Initializable {
         }
     }
     
+    public static class waterMonthlyModel {
+
+        public SimpleStringProperty monthME;
+        public SimpleStringProperty amountPaidME;
+        public SimpleStringProperty datePaidME;
+        public SimpleStringProperty unitsConsumedME;
+
+        public waterMonthlyModel(String month, String amountPaid, String datePaid, String unitsConsumed) {
+            this.monthME = new SimpleStringProperty(month);
+            this.amountPaidME = new SimpleStringProperty(amountPaid);
+            this.datePaidME = new SimpleStringProperty(datePaid);
+            this.unitsConsumedME = new SimpleStringProperty(unitsConsumed);
+        }
+
+        public String getMonthME() {
+            return this.monthME.get();
+        }
+
+        public void setMonthME(String value) {
+            this.monthME.set(value);
+        }
+
+        public StringProperty monthMEProperty() {
+            return this.monthME;
+        }
+
+        public String getAmountPaidME() {
+            return this.amountPaidME.get();
+        }
+
+        public void setAmountPaidME(String value) {
+            this.amountPaidME.set(value);
+        }
+
+        public StringProperty amountPaidMEProperty() {
+            return amountPaidME;
+        }
+
+        public String getDatePaidME() {
+            return this.datePaidME.get();
+        }
+
+        public void setDatePaidME(String value) {
+            this.datePaidME.set(value);
+        }
+
+        public StringProperty datePaidMEProperty() {
+            return this.datePaidME;
+        }
+
+        public String getUnitsConsumedME() {
+            return this.unitsConsumedME.get();
+        }
+
+        public void setUnitsConsumedME(String value) {
+            this.unitsConsumedME.set(value);
+        }
+
+        public StringProperty unitsConsumedMEProperty() {
+            return this.unitsConsumedME;
+        }
+    }
+    
+    public static class otherMonthlyModel {
+
+        public SimpleStringProperty monthME;
+        public SimpleStringProperty amountPaidME;
+        public SimpleStringProperty datePaidME;
+        public SimpleStringProperty unitsConsumedME;
+
+        public otherMonthlyModel(String month, String amountPaid, String datePaid, String unitsConsumed) {
+            this.monthME = new SimpleStringProperty(month);
+            this.amountPaidME = new SimpleStringProperty(amountPaid);
+            this.datePaidME = new SimpleStringProperty(datePaid);
+            this.unitsConsumedME = new SimpleStringProperty(unitsConsumed);
+        }
+
+        public String getMonthME() {
+            return this.monthME.get();
+        }
+
+        public void setMonthME(String value) {
+            this.monthME.set(value);
+        }
+
+        public StringProperty monthMEProperty() {
+            return this.monthME;
+        }
+
+        public String getAmountPaidME() {
+            return this.amountPaidME.get();
+        }
+
+        public void setAmountPaidME(String value) {
+            this.amountPaidME.set(value);
+        }
+
+        public StringProperty amountPaidMEProperty() {
+            return amountPaidME;
+        }
+
+        public String getDatePaidME() {
+            return this.datePaidME.get();
+        }
+
+        public void setDatePaidME(String value) {
+            this.datePaidME.set(value);
+        }
+
+        public StringProperty datePaidMEProperty() {
+            return this.datePaidME;
+        }
+
+        public String getUnitsConsumedME() {
+            return this.unitsConsumedME.get();
+        }
+
+        public void setUnitsConsumedME(String value) {
+            this.unitsConsumedME.set(value);
+        }
+
+        public StringProperty unitsConsumedMEProperty() {
+            return this.unitsConsumedME;
+        }
+    }
+    
     public void createElecMonthlyExpensesTable(String Month, String Amount, String Date, String UnitsConsumed){
         try {
             String createTable = "CREATE TABLE IF NOT EXISTS ElectricityMonthlyExpenses(Month text, Amount text, Date text, UnitsConsumed text, PRIMARY KEY(Month, Date, UnitsConsumed))";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt =  conn.prepareStatement(createTable);
             pstmt.execute();
+            pstmt.close();
+            conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -275,9 +419,10 @@ public class ME2Controller implements Initializable {
         return repairsDateString;
     }
     
-    public ObservableList<MonthlyModel> getMonthlyDetails() {
+    
+    public ObservableList<MonthlyModel> getElectricityMonthlyDetails() {
         ObservableList<MonthlyModel> monthlyData = FXCollections.observableArrayList();
-        if (electricityExpense.isSelected()) {
+        if (tabCheck.equals("Electricity")) {
             try {
                 String searchElecTable = "SELECT * FROM ElectricityMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -297,7 +442,14 @@ public class ME2Controller implements Initializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        } else if (waterExpense.isSelected()){
+            System.out.println("Electricity");
+        }  
+        return monthlyData;
+    }
+    
+    public ObservableList<waterMonthlyModel> getWaterMonthlyDetails() {
+        ObservableList<waterMonthlyModel> monthlyData = FXCollections.observableArrayList();
+        if (tabCheck.equals("Water")){
             try {
                 String searchWaterTable = "SELECT * FROM WaterMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -309,7 +461,7 @@ public class ME2Controller implements Initializable {
                     String amount = rs.getString("Amount");
                     String date = rs.getString("Date");
                     String units = rs.getString("UnitsConsumed");
-                    MonthlyModel monthlyDataModel = new MonthlyModel(month, amount, date, units);
+                    waterMonthlyModel monthlyDataModel = new waterMonthlyModel(month, amount, date, units);
                     monthlyData.add(monthlyDataModel);
                 }
                 pstmt.close();
@@ -317,7 +469,14 @@ public class ME2Controller implements Initializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        } else if (otherExpenses.isSelected()){
+            System.out.println("Water");
+        } 
+        return monthlyData;
+    }
+    
+    public ObservableList<otherMonthlyModel> getOtherMonthlyDetails() {
+        ObservableList<otherMonthlyModel> monthlyData = FXCollections.observableArrayList();
+        if (tabCheck.equals("Other")){
             try {
                 String searchOtherTable = "SELECT * FROM OtherMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -329,11 +488,13 @@ public class ME2Controller implements Initializable {
                    String amount = rs.getString("Amount");
                    String date = rs.getString("Date");
                    String reason = rs.getString("ReasonForExpense");
-                   MonthlyModel monthlyDataModel = new MonthlyModel(month, amount, date, reason);
+                   otherMonthlyModel monthlyDataModel = new otherMonthlyModel(month, amount, date, reason);
                    monthlyData.add(monthlyDataModel);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
             }
+            System.out.println("Other");
         }
         return monthlyData;
     }
@@ -351,22 +512,54 @@ public class ME2Controller implements Initializable {
         }
     }
     
+    
     class MyEventHandler implements EventHandler<MouseEvent> {
-        
+
         @Override
         public void handle(MouseEvent t) {
-            TableCell c = (TableCell) t.getSource();
-            int index = c.getIndex();
-            try {
-                MonthlyModel item = getMonthlyDetails().get(index);
-                elecAmount.setText(item.getAmountPaidME());
-                elecDate.setValue(LocalDate.parse(item.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-                elecUnits.setText(item.getUnitsConsumedME());
-                System.out.println("Month = " + item.getMonthME());
-                System.out.println("Amount Paid = " + item.getAmountPaidME());
-                System.out.println("Date = " +item.getDatePaidME());
-                System.out.println("Units Consumed = " + item.getUnitsConsumedME());
-            } catch (Exception e) {
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2 && electricityExpense.isSelected()) {
+                TableCell c = (TableCell) t.getSource();
+                int index = c.getIndex();
+                try {
+                    MonthlyModel item = getElectricityMonthlyDetails().get(index);
+                    elecAmount.setText(item.getAmountPaidME());
+                    elecDate.setValue(LocalDate.parse(item.getDatePaidME(), DateTimeFormatter.ISO_DATE));
+                    elecUnits.setText(item.getUnitsConsumedME());
+                    System.out.println("Month = " + item.getMonthME());
+                    System.out.println("Amount Paid = " + item.getAmountPaidME());
+                    System.out.println("Date = " + item.getDatePaidME());
+                    System.out.println("Units Consumed = " + item.getUnitsConsumedME());
+                } catch (Exception e) {
+                }
+            } else if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2 && waterExpense.isSelected()) {
+                TableCell c = (TableCell) t.getSource();
+                int index = c.getIndex();
+                try {
+                    waterMonthlyModel item = getWaterMonthlyDetails().get(index);
+                    waterAmount.setText(item.getAmountPaidME());
+                    waterDate.setValue(LocalDate.parse(item.getDatePaidME(), DateTimeFormatter.ISO_DATE));
+                    waterUnits.setText(item.getUnitsConsumedME());
+                    System.out.println("Month = " + item.getMonthME());
+                    System.out.println("Amount Paid = " + item.getAmountPaidME());
+                    System.out.println("Date = " + item.getDatePaidME());
+                    System.out.println("Units Consumed = " + item.getUnitsConsumedME());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2 && otherExpenses.isSelected()){
+                TableCell c = (TableCell) t.getSource();
+                int index = c.getIndex();
+                try {
+                    otherMonthlyModel item = getOtherMonthlyDetails().get(index);
+                    otherAmount.setText(item.getAmountPaidME());
+                    otherDate.setValue(LocalDate.parse(item.getDatePaidME(), DateTimeFormatter.ISO_DATE));
+                    expenseReason.setText(item.getUnitsConsumedME());
+                    System.out.println("Month = " + item.getMonthME());
+                    System.out.println("Amount Paid = " + item.getAmountPaidME());
+                    System.out.println("Date = " + item.getDatePaidME());
+                    System.out.println("Reason For Expense = " + item.getUnitsConsumedME());
+                } catch (Exception e) {
+                }
             }
         }
     }
@@ -408,7 +601,8 @@ public class ME2Controller implements Initializable {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                monthlyExpenseTable.setItems(getMonthlyDetails());
+                tabCheck = "Electricity";
+                monthlyElectricExpenseTable.setItems(getElectricityMonthlyDetails());
             });
         });
         
@@ -436,7 +630,8 @@ public class ME2Controller implements Initializable {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                monthlyExpenseTable.setItems(getMonthlyDetails());
+                tabCheck = "Water";
+                waterExpenseTable.setItems(getWaterMonthlyDetails());
             });
         });
         
@@ -456,13 +651,14 @@ public class ME2Controller implements Initializable {
                         do {
                             otherAmount.setText(rs.getString("Amount"));
                             otherDate.setValue(LocalDate.parse(rs.getString("Date"), DateTimeFormatter.ISO_DATE));
-                            expenseReason.setText(rs.getString(rs.getString("ReasonForExpense")));
+                            expenseReason.setText((rs.getString("ReasonForExpense")));
                         } while (rs.next());
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                monthlyExpenseTable.setItems(getMonthlyDetails());
+                tabCheck = "Other";
+                otherExpenseTable.setItems(getOtherMonthlyDetails());
             });
         });
         
@@ -476,24 +672,107 @@ public class ME2Controller implements Initializable {
             }
         };
         
+        electricVbox.setPrefHeight(405);
+        electricVbox.setPrefWidth(502);
+        electricVbox.setLayoutX(2);
+        electricVbox.setLayoutY(194);
+        electricVbox.prefHeightProperty().bind(electricityAnchor.heightProperty());
+        electricVbox.prefWidthProperty().bind(electricityAnchor.widthProperty());
+        
+        waterVbox.setPrefHeight(405);
+        waterVbox.setPrefWidth(502);
+        waterVbox.setLayoutX(2);
+        waterVbox.setLayoutY(194);
+        waterVbox.prefHeightProperty().bind(waterAnchor.heightProperty());
+        waterVbox.prefWidthProperty().bind(waterAnchor.widthProperty());
+        
+        otherVbox.setPrefHeight(405);
+        otherVbox.setPrefWidth(502);
+        otherVbox.setLayoutX(2);
+        otherVbox.setLayoutY(194);
+        otherVbox.prefHeightProperty().bind(otherAnchor.heightProperty());
+        otherVbox.prefWidthProperty().bind(otherAnchor.widthProperty());
+        
         TableColumn monthCol = new TableColumn("Month");
+        monthCol.setPrefWidth(tabWidth);
         monthCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("monthME"));
         monthCol.setCellFactory(stringCellFactory);
         TableColumn amountCol = new TableColumn("Amount Paid");
+        amountCol.setPrefWidth(120);
         amountCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("amountPaidME"));
         amountCol.setCellFactory(stringCellFactory);
         TableColumn dateCol = new TableColumn("Date");
+        dateCol.setPrefWidth(tabWidth);
         dateCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("datePaidME"));
         dateCol.setCellFactory(stringCellFactory);
         TableColumn unitsCol = new TableColumn("Units Consumed");
+        unitsCol.setPrefWidth(205);
         unitsCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("unitsConsumedME"));
         unitsCol.setCellFactory(stringCellFactory);
         
-        monthlyExpenseTable.getColumns().addAll(monthCol, amountCol, dateCol, unitsCol);
+        TableColumn monthWaterCol = new TableColumn("Month");
+        monthWaterCol.setPrefWidth(tabWidth);
+        monthWaterCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("monthME"));
+        monthWaterCol.setCellFactory(stringCellFactory);
+        TableColumn amountWaterCol = new TableColumn("Amount Paid");
+        amountWaterCol.setPrefWidth(120);
+        amountWaterCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("amountPaidME"));
+        amountWaterCol.setCellFactory(stringCellFactory);
+        TableColumn dateWaterCol = new TableColumn("Date");
+        dateWaterCol.setPrefWidth(tabWidth);
+        dateWaterCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("datePaidME"));
+        dateWaterCol.setCellFactory(stringCellFactory);
+        TableColumn unitsWaterCol = new TableColumn("Units Consumed");
+        unitsWaterCol.setPrefWidth(205);
+        unitsWaterCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("unitsConsumedME"));
+        unitsWaterCol.setCellFactory(stringCellFactory);
+        
+        TableColumn monthOtherCol = new TableColumn("Month");
+        monthOtherCol.setPrefWidth(tabWidth);
+        monthOtherCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("monthME"));
+        monthOtherCol.setCellFactory(stringCellFactory);
+        TableColumn amountOtherCol = new TableColumn("Amount Paid");
+        amountOtherCol.setPrefWidth(120);
+        amountOtherCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("amountPaidME"));
+        amountOtherCol.setCellFactory(stringCellFactory);
+        TableColumn dateOtherCol = new TableColumn("Date");
+        dateOtherCol.setPrefWidth(tabWidth);
+        dateOtherCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("datePaidME"));
+        dateOtherCol.setCellFactory(stringCellFactory);
+        TableColumn reasonOtherCol = new TableColumn("Reason For Expense");
+        reasonOtherCol.setPrefWidth(205);
+        reasonOtherCol.setCellValueFactory(
+                new PropertyValueFactory<waterMonthlyModel, String>("unitsConsumedME"));
+        reasonOtherCol.setCellFactory(stringCellFactory);
+        
+        
+        monthlyElectricExpenseTable.getColumns().addAll(monthCol, amountCol, dateCol, unitsCol);
+        waterExpenseTable.getColumns().addAll(monthWaterCol, amountWaterCol, dateWaterCol, unitsWaterCol);
+        otherExpenseTable.getColumns().addAll(monthOtherCol, amountOtherCol, dateOtherCol, reasonOtherCol);
+        
+        savePane.prefWidthProperty().bind(monthGridPane.widthProperty());
+        deletePane.prefWidthProperty().bind(monthGridPane.widthProperty());
+        deletePane.prefHeightProperty().bind(monthGridPane.heightProperty());
+        monthlyElectricExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
+        waterExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
+        otherExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
+        electricVbox.getChildren().add(monthlyElectricExpenseTable);
+        waterVbox.getChildren().add(waterExpenseTable);
+        otherVbox.getChildren().add(otherExpenseTable);
+        electricityAnchor.getChildren().add(electricVbox);
+        waterAnchor.getChildren().add(waterVbox);
+        otherAnchor.getChildren().add(otherVbox);
     }
 
 }
