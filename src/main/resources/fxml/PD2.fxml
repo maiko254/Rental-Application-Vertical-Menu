@@ -9,13 +9,14 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="PDAnchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
-   <children>
-      <VBox prefHeight="600.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: #dedede;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
+   <center>
+      <VBox spacing="15.0" style="-fx-background-color: #dedede;">
          <children>
             <HBox prefHeight="34.0" prefWidth="600.0" spacing="10.0">
                <children>
@@ -38,11 +39,6 @@
                         <Insets top="20.0" />
                      </HBox.margin>
                   </TitledPane>
-                  <JFXButton fx:id="viewHistory" buttonType="RAISED" onAction="#viewHistoryButtonAction" prefHeight="0.0" prefWidth="171.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="View Payment History">
-                     <font>
-                        <Font name="System Bold" size="13.0" />
-                     </font>
-                  </JFXButton>
                </children>
                <VBox.margin>
                   <Insets />
@@ -80,22 +76,25 @@
                   <JFXTreeView fx:id="paymentMethodPD" prefHeight="150.0" prefWidth="218.0" />
                </children>
             </HBox>
-            <HBox layoutX="10.0" layoutY="232.0" prefHeight="74.0" prefWidth="60.0">
-               <children>
-                  <JFXButton fx:id="saveButtonPD" buttonType="RAISED" onAction="#saveButtonActionPD" prefHeight="30.0" prefWidth="70.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
-                     <font>
-                        <Font name="System Bold" size="13.0" />
-                     </font>
-                  </JFXButton>
-               </children>
-               <VBox.margin>
-                  <Insets left="200.0" right="330.0" top="30.0" />
-               </VBox.margin>
-            </HBox>
          </children>
          <padding>
             <Insets left="10.0" top="10.0" />
          </padding>
       </VBox>
-   </children>
-</AnchorPane>
+   </center>
+   <right>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <AnchorPane prefHeight="469.0" prefWidth="100.0">
+               <children>
+                  <JFXButton fx:id="saveButtonPD" buttonType="RAISED" layoutX="14.0" layoutY="14.0" onAction="#saveButtonActionPD" prefHeight="30.0" prefWidth="70.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </JFXButton>
+               </children>
+            </AnchorPane>
+         </children>
+      </VBox>
+   </right>
+</BorderPane>

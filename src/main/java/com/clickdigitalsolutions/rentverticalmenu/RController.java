@@ -9,9 +9,6 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
-import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,18 +19,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import jfxtras.styles.jmetro8.JMetro;
 
 /**
@@ -66,10 +66,10 @@ public class RController implements Initializable {
     @FXML
     private JFXButton saveButtonR;
     @FXML
-    private JFXButton viewRepairsHistoryButton;
+    private BorderPane RAnchor;
+    public TableView<RModel> repairsTable = new TableView<>();
     @FXML
-    private AnchorPane RAnchor;
-    
+    public VBox repairsVbox;    
     private JMetro.Style STYLE = JMetro.Style.DARK;
     
     private String comboboxRCheck = "Empty";
@@ -177,29 +177,38 @@ public class RController implements Initializable {
         return repairsData;
     }
     
-    @FXML
-    public void viewRepairsHistoryButton() throws IOException {
-        if (comboboxRCheck.equals("Empty")) {
-            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
-            emptyAlert.setTitle("Error Dialog");
-            emptyAlert.setHeaderText("Empty Field");
-            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
-            emptyAlert.showAndWait();
-        } else {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("/fxml/RTableView.fxml"));
-            RTableViewController controller = new RTableViewController(this);
-            loader.setController(controller);
-            Parent root = loader.load();
-            Scene viewRepairsScene = new Scene(root);
-            new JMetro(STYLE).applyTheme(viewRepairsScene);
-            Stage window = new Stage();
-            viewRepairsHistoryButton.disableProperty().bind(window.showingProperty());
-            window.setScene(viewRepairsScene);
-            window.show();
+    
+    
+    class MyStringTableCell extends TableCell<RModel, String> {
+
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(empty ? null : getString());
+        }
+
+        private String getString() {
+            return getItem() == null ? "" : getItem().toString();
         }
     }
     
+    Callback<TableColumn, TableCell> stringCellFactory
+                = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn param) {
+                MyStringTableCell cell = new MyStringTableCell();
+                cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+                return cell;
+            }
+        };
+    
+    class MyEventHandler implements EventHandler<MouseEvent> {
+
+        @Override
+        public void handle(MouseEvent t) {
+            
+        }
+    }
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockAComboR.setItems(blockA);
@@ -239,6 +248,7 @@ public class RController implements Initializable {
                 houseComboTitledPaneR.setText("");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
+                repairsTable.setItems(getRepairsDetails());
             });
             blockBComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
@@ -269,6 +279,7 @@ public class RController implements Initializable {
                 label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
+                repairsTable.setItems(getRepairsDetails());
             });
             blockCComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
@@ -299,6 +310,7 @@ public class RController implements Initializable {
                 label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
+                repairsTable.setItems(getRepairsDetails());
             });
             nasraBlockR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
@@ -329,15 +341,52 @@ public class RController implements Initializable {
                 label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPaneR.setGraphic(label);
                 houseComboTitledPaneR.setExpanded(false);
+                repairsTable.setItems(getRepairsDetails());
             });
         });
-        
-        viewRepairsHistoryButton.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.TABLE_LARGE, "View Repairs History"));
-        viewRepairsHistoryButton.setPadding(Insets.EMPTY);
         
         RAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPaneR.setExpanded(false);
         });
-    }    
+        
+        
+        TableColumn houseNo = new TableColumn("House Number");
+        houseNo.setPrefWidth(120);
+        houseNo.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("houseNumberTableR"));
+        houseNo.setCellFactory(stringCellFactory);
+        TableColumn tenantName = new TableColumn("Tenant Name");
+        tenantName.setPrefWidth(120);
+        tenantName.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("tenantNameTableR"));
+        tenantName.setCellFactory(stringCellFactory);
+        TableColumn repairDone = new TableColumn("Repairs");
+        repairDone.setPrefWidth(90);
+        repairDone.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("repairsDoneTableR"));
+        TableColumn costOfRepair = new TableColumn("Repair cost");
+        houseNo.setPrefWidth(90);
+        houseNo.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("costofRepairsTableR"));
+        houseNo.setCellFactory(stringCellFactory);
+        TableColumn dateOfRepair = new TableColumn("Repair date");
+        houseNo.setPrefWidth(90);
+        houseNo.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("dateofRepairsTableR"));
+        houseNo.setCellFactory(stringCellFactory);
+        TableColumn miscExpenses = new TableColumn("Miscellaneous Expenses");
+        houseNo.setPrefWidth(120);
+        houseNo.setCellValueFactory(
+                new PropertyValueFactory<RModel, String>("miscellaneousTableR"));
+        houseNo.setCellFactory(stringCellFactory);
+        
+        repairsTable.getColumns().addAll(houseNo, tenantName, repairDone, costOfRepair, dateOfRepair, miscExpenses);
+        
+        repairsTable.prefWidthProperty().bind(RAnchor.widthProperty());
+        RAnchor.setBottom(repairsTable);
+        
+        
+    }
+    
     
 }

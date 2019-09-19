@@ -35,6 +35,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -47,13 +48,19 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import jfxtras.styles.jmetro8.JMetro;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -102,10 +109,7 @@ public class PDController implements Initializable {
     private Label rentArrears;
     
     @FXML
-    private JFXButton viewHistory;
-    
-    @FXML
-    public AnchorPane PDAnchor;
+    public BorderPane PDAnchor;
     
     @FXML
     public JFXButton updatePDAmount;
@@ -113,6 +117,7 @@ public class PDController implements Initializable {
     @FXML
     private JFXButton saveButtonPD;
     
+    public TableView<PDModel> paymentsTable = new TableView<>();
     private static JMetro.Style STYLE = JMetro.Style.DARK;
     
     String paymentMode;
@@ -319,28 +324,34 @@ public class PDController implements Initializable {
         return PDTableData;
     }
     
+    class MyStringTableCell extends TableCell<PDModel, String> {
+        
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(empty ? null : getString());
+        }
+        
+        private String getString(){
+            return getItem() == null ? "" : getItem().toString();
+        }
+    }
     
+    Callback<TableColumn, TableCell> stringCellFactory
+            = new Callback<TableColumn, TableCell>() {
+        @Override
+        public TableCell call(TableColumn param) {
+            MyStringTableCell cell = new MyStringTableCell();
+            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+            return cell;
+        }
+    };
     
-    @FXML
-    private void viewHistoryButtonAction() throws IOException {
-        if (comboboxPDCheck.equals("Empty")) {
-            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
-            emptyAlert.setTitle("Error Dialog");
-            emptyAlert.setHeaderText("Empty Field");
-            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
-            emptyAlert.showAndWait();
-        } else {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("/fxml/PDTableView.fxml"));
-            PDTableViewController subcontroller = new PDTableViewController(this);
-            loader.setController(subcontroller);
-            Parent root = loader.load();
-            Scene viewHistoryScene = new Scene(root);
-            new JMetro(STYLE).applyTheme(viewHistoryScene);
-            Stage window = new Stage();
-            viewHistory.disableProperty().bind(window.showingProperty());
-            window.setScene(viewHistoryScene);
-            window.show();
+    class  MyEventHandler implements EventHandler<MouseEvent> {
+        
+        @Override
+        public void handle(MouseEvent t){
+            
         }
     }
     
@@ -521,6 +532,7 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
+                paymentsTable.setItems(getPaymentDetails());
             });
             blockBComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -612,6 +624,7 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
+                paymentsTable.setItems(getPaymentDetails());
             });
             blockCComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -702,6 +715,7 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
+                paymentsTable.setItems(getPaymentDetails());
             });
             nasraBlockPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -793,7 +807,7 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                System.out.print((String)blockAComboPD.getSelectionModel().getSelectedItem());
+                paymentsTable.setItems(getPaymentDetails());
             });
         });
         
@@ -964,11 +978,8 @@ public class PDController implements Initializable {
         
         rentArrears.setVisible(false);
         
-        viewHistory.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.TABLE_LARGE, "View Payment History"));
-        viewHistory.setPadding(Insets.EMPTY);
         
-        
-       updatePDAmount.setVisible(false);
+        updatePDAmount.setVisible(false);
         addCheck.addListener((observable, oldValue, newValue) -> {
             if (newValue.equals("Occupied")) {
                 updatePDAmount.setGraphic(GlyphsDude.createIconButton(MaterialIcon.ADD, "", "20", "12", ContentDisplay.GRAPHIC_ONLY));
@@ -1053,6 +1064,37 @@ public class PDController implements Initializable {
             editMenu.hide();
         });
         
+        TableColumn houseNoCol = new TableColumn("House Number");
+        houseNoCol.setPrefWidth(90);
+        houseNoCol.setCellValueFactory(
+                new PropertyValueFactory<PDModel, String>("houseNumberTablePD"));
+        houseNoCol.setCellFactory(stringCellFactory);
+        TableColumn tenantNameCol = new TableColumn("Tenant Name");
+        tenantNameCol.setPrefWidth(120);
+        tenantNameCol.setCellValueFactory(
+                new PropertyValueFactory<PDModel, String>("tenantNameTablePD"));
+        tenantNameCol.setCellFactory(stringCellFactory);
+        TableColumn amountCol = new TableColumn("Amount Paid");
+        amountCol.setPrefWidth(90);
+        amountCol.setCellValueFactory(
+                new PropertyValueFactory<PDModel, String>("amountTablePD"));
+        amountCol.setCellFactory(stringCellFactory);
+        TableColumn monthCol = new TableColumn("Month");
+        monthCol.setPrefWidth(90);
+        monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("monthTablePD"));
+        monthCol.setCellFactory(stringCellFactory);
+        TableColumn dateCol = new TableColumn("Payment Date");
+        dateCol.setPrefWidth(90);
+        dateCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentDateTablePD"));
+        dateCol.setCellFactory(stringCellFactory);
+        TableColumn methodCol = new TableColumn("Payment Method");
+        methodCol.setPrefWidth(120);
+        methodCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentMethodPD"));
+        methodCol.setCellFactory(stringCellFactory);
+        
+        paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
+        monthCol.prefWidthProperty().bind(PDAnchor.widthProperty());
+        PDAnchor.setBottom(paymentsTable);
     }
     
 }

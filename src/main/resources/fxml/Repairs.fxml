@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXComboBox?>
 <?import com.jfoenix.controls.JFXDatePicker?>
 <?import com.jfoenix.controls.JFXTextField?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -14,9 +15,9 @@
 
 <BorderPane fx:id="RAnchor" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.RController">
    <center>
-      <VBox prefHeight="600.0" prefWidth="600.0" spacing="10.0" style="-fx-background-color: #dedede;">
+      <VBox prefHeight="397.6" prefWidth="518.4" spacing="10.0" style="-fx-background-color: #dedede;">
          <children>
-            <HBox prefHeight="41.0" prefWidth="600.0" spacing="15.0">
+            <HBox prefHeight="41.0" prefWidth="508.0" spacing="15.0">
                <children>
                   <Label prefHeight="18.0" prefWidth="121.0" text="House Number">
                      <HBox.margin>
@@ -28,7 +29,7 @@
                         <Font size="13.0" />
                      </font>
                      <content>
-                        <VBox prefHeight="200.0" prefWidth="218.0" style="-fx-border-color: black;">
+                        <VBox style="-fx-border-color: black;">
                            <children>
                               <JFXComboBox fx:id="blockAComboR" prefHeight="27.0" prefWidth="218.0" promptText="Block A" stylesheets="@../styles/combobox%20css.css" />
                               <JFXComboBox fx:id="blockBComboR" prefHeight="27.0" prefWidth="218.0" promptText="Block B" stylesheets="@../styles/combobox%20css.css" />
@@ -79,22 +80,21 @@
                   <JFXTextField fx:id="miscellaneousR" prefHeight="26.0" prefWidth="218.0" />
                </children>
             </HBox>
-            <HBox layoutX="10.0" layoutY="225.0" prefHeight="30.0" prefWidth="600.0">
-               <children>
-                  <JFXButton fx:id="saveButtonR" buttonType="RAISED" onAction="#saveButtonActionR" prefHeight="26.0" prefWidth="135.0" ripplerFill="#000000f5" style="-fx-background-color: grey;" text="Save">
-                     <font>
-                        <Font name="System Bold" size="13.0" />
-                     </font>
-                  </JFXButton>
-               </children>
-               <VBox.margin>
-                  <Insets left="160.0" right="300.0" />
-               </VBox.margin>
-            </HBox>
          </children>
          <padding>
-            <Insets left="10.0" />
+            <Insets left="10.0" top="10.0" />
          </padding>
       </VBox>
    </center>
+   <right>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <AnchorPane prefHeight="398.0" prefWidth="100.0">
+               <children>
+                  <Button layoutX="24.0" layoutY="14.0" mnemonicParsing="false" text="Save" />
+               </children>
+            </AnchorPane>
+         </children>
+      </VBox>
+   </right>
 </BorderPane>

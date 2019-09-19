@@ -10,6 +10,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -29,6 +31,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
@@ -50,31 +53,31 @@ public class FXMLController implements Initializable {
     private Tab tenantDetailsTab;
 
     @FXML
-    private AnchorPane tenantDetailsContainer;
+    private GridPane tenantDetailsContainer;
 
     @FXML
     private Tab repairsTab;
 
     @FXML
-    private AnchorPane repairsContainer;
+    private GridPane repairsContainer;
 
     @FXML
     private Tab paymentDetailsTab;
 
     @FXML
-    private AnchorPane paymentContainer;
+    private GridPane paymentContainer;
 
     @FXML
     private Tab monthlyExpensesTab;
 
     @FXML
-    private AnchorPane monthlyContainer;
+    private GridPane monthlyContainer;
 
     @FXML
     private MenuBar rentalMenu;
 
     @FXML
-    private AnchorPane motherAnchor;
+    private BorderPane motherAnchor;
 
     @FXML
     private MenuItem editTable;
@@ -119,13 +122,13 @@ public class FXMLController implements Initializable {
         };
 
         configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
-        configureTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", repairsContainer, getClass().getResource("/fxml/R2.fxml"), replaceBackgroundColorHandler);
-        configureTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", paymentContainer, getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
-        configureTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", monthlyContainer, getClass().getResource("/fxml/ME4.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", getClass().getResource("/fxml/Repairs.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", getClass().getResource("/fxml/ME4.fxml"), replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
 
-    private void configureTab(Tab tab, String title, String iconPath, AnchorPane containerPane, URL resourceURL, EventHandler<Event> onSelectionChangedEvent) {
+    private void configureTab(Tab tab, String title, String iconPath, GridPane containerPane, URL resourceURL, EventHandler<Event> onSelectionChangedEvent) {
         double imageWidth = 40.0;
 
         ImageView imageView = new ImageView(new Image(iconPath));
@@ -152,6 +155,7 @@ public class FXMLController implements Initializable {
         if (containerPane != null && resourceURL != null) {
             try {
                 Parent contentView = FXMLLoader.load(resourceURL);
+                
                 containerPane.getChildren().add(contentView);
                 AnchorPane.setTopAnchor(contentView, 0.0);
                 AnchorPane.setBottomAnchor(contentView, 0.0);
@@ -161,6 +165,41 @@ public class FXMLController implements Initializable {
                 e.printStackTrace();
             }
         }
+    }
+    
+    private void configureViewTab(Tab tab, String title, String iconPath, URL resourceURL, EventHandler<Event> onSelectionChangedEvent){
+        double imageWidth = 40.0;
+
+        ImageView imageView = new ImageView(new Image(iconPath));
+        imageView.setFitHeight(imageWidth);
+        imageView.setFitWidth(imageWidth);
+
+        Label label = new Label(title);
+        label.setMaxWidth(tabWidth - 20);
+        label.setPadding(new Insets(5, 0, 0, 0));
+        label.setStyle("-fx-text-fill: black; -fx-font-size: 8pt; -fx-font-weight: normal;");
+        label.setTextAlignment(TextAlignment.CENTER);
+
+        BorderPane tabPane = new BorderPane();
+        tabPane.setRotate(90.0);
+        tabPane.setMaxWidth(tabWidth);
+        tabPane.setCenter(imageView);
+        tabPane.setBottom(label);
+
+        tab.setText("");
+        tab.setGraphic(tabPane);
+
+        tab.setOnSelectionChanged(onSelectionChangedEvent);
+        
+        if (resourceURL != null) {
+            try {
+                Parent contentView = FXMLLoader.load(resourceURL);
+                tab.setContent(contentView);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     private JFXButton createIconButton(double iconXLayout, double iconYLayout) {
