@@ -8,10 +8,10 @@ package com.clickdigitalsolutions.rentverticalmenu;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.controls.JFXTextField;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -28,19 +28,26 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 
 /**
@@ -50,8 +57,8 @@ import javafx.util.Callback;
  */
 public class ME2Controller implements Initializable {
 
-    public JFXTabPane tabContainer1;
-    public GridPane monthGridPane;
+    public TabPane tabContainer1;
+    public BorderPane monthGridPane;
     public Tab electricityExpense;
     public Tab waterExpense;
     public Tab otherExpenses;
@@ -67,19 +74,14 @@ public class ME2Controller implements Initializable {
     public JFXTextField elecUnits;
     public JFXTextField waterUnits;
     public JFXTextField expenseReason;
-    public JFXButton saveMonthlyExpense;
-    public JFXButton deleteMonthlyExpense;
+    public Button saveMonthlyExpense;
     public TableView<MonthlyModel> monthlyElectricExpenseTable = new TableView<>();
     public TableView<waterMonthlyModel> waterExpenseTable = new TableView<>();
     public TableView<otherMonthlyModel> otherExpenseTable = new TableView<>();
-    public AnchorPane electricityAnchor;
-    public AnchorPane waterAnchor;
-    public AnchorPane otherAnchor;
-    public VBox electricVbox = new VBox();
-    public VBox waterVbox = new VBox();
-    public VBox otherVbox = new VBox();
+    public BorderPane electricityAnchor;
+    public BorderPane waterAnchor;
+    public BorderPane otherAnchor;
     public AnchorPane savePane;
-    public AnchorPane deletePane;
     
     
     private double tabWidth = 90.0;
@@ -409,6 +411,41 @@ public class ME2Controller implements Initializable {
         tab.setOnSelectionChanged(onSelectionChangedEvent);
     }
     
+    private void configureViewTab(Tab tab, String title, String iconPath, URL resourceURL, EventHandler<Event> onSelectionChangedEvent){
+        double imageWidth = 40.0;
+
+        ImageView imageView = new ImageView(new Image(iconPath));
+        imageView.setFitHeight(imageWidth);
+        imageView.setFitWidth(imageWidth);
+
+        Label label = new Label(title);
+        label.setMaxWidth(tabWidth - 20);
+        label.setPadding(new Insets(5, 0, 0, 0));
+        label.setStyle("-fx-text-fill: black; -fx-font-size: 8pt; -fx-font-weight: normal;");
+        label.setTextAlignment(TextAlignment.CENTER);
+
+        BorderPane tabPane = new BorderPane();
+        tabPane.setRotate(90.0);
+        tabPane.setMaxWidth(tabWidth);
+        tabPane.setCenter(imageView);
+        tabPane.setBottom(label);
+
+        tab.setText("");
+        tab.setGraphic(tabPane);
+
+        tab.setOnSelectionChanged(onSelectionChangedEvent);
+        
+        if (resourceURL != null) {
+            try {
+                Parent contentView = FXMLLoader.load(resourceURL);
+                tab.setContent(contentView);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+    
     public String getDateValueAsString(LocalDate dateConvert){
         String repairsDateString = null;
         if (dateConvert == null) {
@@ -571,12 +608,7 @@ public class ME2Controller implements Initializable {
        elecCombo.setItems(months);
        waterCombo.setItems(months);
        otherCombo.setItems(months);
-       
-       saveMonthlyExpense.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Save  ", "20", "14", ContentDisplay.TEXT_ONLY));
-       saveMonthlyExpense.setPadding(Insets.EMPTY);
-       deleteMonthlyExpense.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Delete", "20", "14", ContentDisplay.TEXT_ONLY));
-       deleteMonthlyExpense.setPadding(Insets.EMPTY);
-       
+   
         elecCombo.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             elecCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
@@ -672,27 +704,6 @@ public class ME2Controller implements Initializable {
             }
         };
         
-        electricVbox.setPrefHeight(405);
-        electricVbox.setPrefWidth(502);
-        electricVbox.setLayoutX(2);
-        electricVbox.setLayoutY(194);
-        electricVbox.prefHeightProperty().bind(electricityAnchor.heightProperty());
-        electricVbox.prefWidthProperty().bind(electricityAnchor.widthProperty());
-        
-        waterVbox.setPrefHeight(405);
-        waterVbox.setPrefWidth(502);
-        waterVbox.setLayoutX(2);
-        waterVbox.setLayoutY(194);
-        waterVbox.prefHeightProperty().bind(waterAnchor.heightProperty());
-        waterVbox.prefWidthProperty().bind(waterAnchor.widthProperty());
-        
-        otherVbox.setPrefHeight(405);
-        otherVbox.setPrefWidth(502);
-        otherVbox.setLayoutX(2);
-        otherVbox.setLayoutY(194);
-        otherVbox.prefHeightProperty().bind(otherAnchor.heightProperty());
-        otherVbox.prefWidthProperty().bind(otherAnchor.widthProperty());
-        
         TableColumn monthCol = new TableColumn("Month");
         monthCol.setPrefWidth(tabWidth);
         monthCol.setCellValueFactory(
@@ -756,23 +767,18 @@ public class ME2Controller implements Initializable {
                 new PropertyValueFactory<waterMonthlyModel, String>("unitsConsumedME"));
         reasonOtherCol.setCellFactory(stringCellFactory);
         
-        
         monthlyElectricExpenseTable.getColumns().addAll(monthCol, amountCol, dateCol, unitsCol);
         waterExpenseTable.getColumns().addAll(monthWaterCol, amountWaterCol, dateWaterCol, unitsWaterCol);
         otherExpenseTable.getColumns().addAll(monthOtherCol, amountOtherCol, dateOtherCol, reasonOtherCol);
-        
-        savePane.prefWidthProperty().bind(monthGridPane.widthProperty());
-        deletePane.prefWidthProperty().bind(monthGridPane.widthProperty());
-        deletePane.prefHeightProperty().bind(monthGridPane.heightProperty());
+
+        savePane.prefHeightProperty().bind(monthGridPane.heightProperty());
         monthlyElectricExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
         waterExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
         otherExpenseTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
-        electricVbox.getChildren().add(monthlyElectricExpenseTable);
-        waterVbox.getChildren().add(waterExpenseTable);
-        otherVbox.getChildren().add(otherExpenseTable);
-        electricityAnchor.getChildren().add(electricVbox);
-        waterAnchor.getChildren().add(waterVbox);
-        otherAnchor.getChildren().add(otherVbox);
+        
+        electricityAnchor.setBottom(monthlyElectricExpenseTable);
+        waterAnchor.setBottom(waterExpenseTable);
+        otherAnchor.setBottom(otherExpenseTable);
     }
 
 }

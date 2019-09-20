@@ -29,6 +29,7 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
@@ -95,7 +96,7 @@ public class TDController implements Initializable {
     private Label houseStateLabel;
     
     @FXML
-    private AnchorPane TDAnchor;
+    private BorderPane TDAnchor;
     
     @FXML
     private TitledPane houseComboTitledPane;

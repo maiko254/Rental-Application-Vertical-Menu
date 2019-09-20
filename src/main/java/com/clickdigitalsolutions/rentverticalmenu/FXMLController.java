@@ -121,10 +121,10 @@ public class FXMLController implements Initializable {
             }
         };
 
-        configureTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", tenantDetailsContainer, getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
         configureViewTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", getClass().getResource("/fxml/Repairs.fxml"), replaceBackgroundColorHandler);
         configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
-        configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", getClass().getResource("/fxml/ME4.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", getClass().getResource("/fxml/Monthly Expense.fxml"), replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
 

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXTabPane?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="monthGridPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.ME2Controller">
+   <right>
+      <VBox BorderPane.alignment="CENTER">
+         <children>
+            <AnchorPane fx:id="savePane" prefHeight="401.0" prefWidth="100.0" style="-fx-background-color: #dedede;">
+               <children>
+                  <Button fx:id="saveMonthlyExpense" layoutX="30.0" layoutY="5.0" mnemonicParsing="false" text="Save" />
+               </children>
+            </AnchorPane>
+         </children>
+      </VBox>
+   </right>
+   <center>
+      <JFXTabPane fx:id="tabContainer1" BorderPane.alignment="CENTER">
+         <tabs>
+            <Tab fx:id="electricityExpense" style="-fx-background-color: #ababab;" text="Electricity Expense">
+               <content>
+                  <BorderPane fx:id="electricityAnchor" prefHeight="303.0" prefWidth="407.0">
+                     <center>
+                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="79.0" text="Month">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                    </Label>
+                                    <JFXComboBox fx:id="elecCombo" labelFloat="true" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="78.0" text="Amount" />
+                                    <JFXTextField fx:id="elecAmount" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="18.0" prefWidth="80.0" text="Date Paid" />
+                                    <JFXDatePicker fx:id="elecDate" prefHeight="28.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="62.0" prefWidth="485.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="61.0" prefWidth="79.0" text="Units &#10;Consumed&#10;in kWh" />
+                                    <JFXTextField fx:id="elecUnits" prefHeight="40.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                           </children>
+                           <padding>
+                              <Insets left="5.0" />
+                           </padding>
+                        </VBox>
+                     </center>
+                  </BorderPane>
+               </content>
+            </Tab>
+            <Tab fx:id="waterExpense" style="-fx-background-color: #ababab;" text="Water Expense">
+               <content>
+                  <BorderPane fx:id="waterAnchor" prefHeight="200.0" prefWidth="200.0">
+                     <center>
+                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="78.0" text="Month">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                    </Label>
+                                    <JFXComboBox fx:id="waterCombo" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="78.0" text="Amount" />
+                                    <JFXTextField fx:id="waterAmount" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="18.0" prefWidth="80.0" text="Date Paid" />
+                                    <JFXDatePicker fx:id="waterDate" prefHeight="28.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="63.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="61.0" prefWidth="79.0" text="Units &#10;Consumed&#10;in m3" />
+                                    <JFXTextField fx:id="waterUnits" prefHeight="40.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                           </children>
+                           <padding>
+                              <Insets left="5.0" />
+                           </padding>
+                        </VBox>
+                     </center>
+                  </BorderPane>
+               </content>
+            </Tab>
+            <Tab fx:id="otherExpenses" style="-fx-background-color: ababab;" text="Other Expenses">
+               <content>
+                  <BorderPane fx:id="otherAnchor" prefHeight="200.0" prefWidth="200.0">
+                     <center>
+                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="79.0" text="Month">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                    </Label>
+                                    <JFXComboBox fx:id="otherCombo" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="30.0" prefWidth="78.0" text="Amount" />
+                                    <JFXTextField fx:id="otherAmount" prefHeight="26.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="31.0" prefWidth="591.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="18.0" prefWidth="80.0" text="Date Paid" />
+                                    <JFXDatePicker fx:id="otherDate" prefHeight="28.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                              <HBox prefHeight="53.0" prefWidth="485.0" spacing="10.0">
+                                 <children>
+                                    <Label prefHeight="40.0" prefWidth="79.0" text="Reason for &#10;Expense" />
+                                    <JFXTextField fx:id="expenseReason" prefHeight="30.0" prefWidth="208.0" />
+                                 </children>
+                              </HBox>
+                           </children>
+                           <padding>
+                              <Insets left="5.0" />
+                           </padding>
+                        </VBox>
+                     </center>
+                  </BorderPane>
+               </content>
+            </Tab>
+         </tabs>
+      </JFXTabPane>
+   </center>
+</BorderPane>
