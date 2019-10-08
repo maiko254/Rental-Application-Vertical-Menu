@@ -1,5 +1,6 @@
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\MainApp.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$cellEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\PDModel.class
 com\clickdigitalsolutions\rentverticalmenu\PDTableViewController.class
 com\clickdigitalsolutions\rentverticalmenu\RController.class
@@ -9,11 +10,13 @@ com\clickdigitalsolutions\rentverticalmenu\RController$MyStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$otherMonthlyModel.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$waterMonthlyModel.class
 com\clickdigitalsolutions\rentverticalmenu\RController$1.class
+com\clickdigitalsolutions\rentverticalmenu\EditCell$1.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$1.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$MyStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\TDController.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\RModel.class
+com\clickdigitalsolutions\rentverticalmenu\EditCell.class
 com\clickdigitalsolutions\rentverticalmenu\PDController.class
 com\clickdigitalsolutions\rentverticalmenu\RController$MyEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller.class

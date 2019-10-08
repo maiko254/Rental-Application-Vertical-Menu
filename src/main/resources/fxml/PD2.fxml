@@ -16,7 +16,7 @@
 
 <BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
    <center>
-      <VBox spacing="15.0" style="-fx-background-color: #dedede;">
+      <VBox fx:id="paymentVbox" spacing="15.0" style="-fx-background-color: #dedede;">
          <children>
             <HBox prefHeight="34.0" prefWidth="600.0" spacing="10.0">
                <children>

@@ -383,6 +383,7 @@ public class RController implements Initializable {
         repairsTable.getColumns().addAll(houseNo, tenantName, repairDone, costOfRepair, dateOfRepair, miscExpenses);
         
         repairsTable.prefWidthProperty().bind(RAnchor.widthProperty());
+        repairsTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
         RAnchor.setBottom(repairsTable);
         
         

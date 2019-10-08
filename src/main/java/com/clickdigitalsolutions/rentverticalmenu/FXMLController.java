@@ -291,5 +291,8 @@ public class FXMLController implements Initializable {
             jasperViewer.setTitle("Rent Receipt");
             jasperViewer.setVisible(true);
         });
+        
+        motherAnchor.setPrefWidth(750);
+        motherAnchor.setPrefHeight(800);
     }
 }

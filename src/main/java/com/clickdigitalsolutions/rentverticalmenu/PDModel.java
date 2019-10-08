@@ -26,11 +26,14 @@ public class PDModel {
         amountTablePD = new SimpleStringProperty(rentAmount);
         monthTablePD = new SimpleStringProperty(monthPaid);
         paymentDateTablePD = new SimpleStringProperty(paymentDate);
+        paymentMethodPD = new SimpleStringProperty(paymentMethod);
     }
     
     @Override
     public String toString(){
-        return tenantNameTablePD.get();
+        return houseNumberTablePD.get() +","+ tenantNameTablePD.get() +","+ amountTablePD.get() +","+ monthTablePD.get() +","+ paymentDateTablePD.get() +","+ paymentMethodPD.get();
+        
+        
     }
     
     public PDModel(){

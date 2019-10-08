@@ -15,7 +15,6 @@ import com.jfoenix.controls.JFXTreeView;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
-import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,10 +26,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -40,8 +41,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
@@ -50,16 +49,18 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import jfxtras.styles.jmetro8.JMetro;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -67,7 +68,7 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
-
+import javafx.scene.control.TableColumn.CellEditEvent;
 /**
  * FXML Controller class
  *
@@ -116,6 +117,16 @@ public class PDController implements Initializable {
     
     @FXML
     private JFXButton saveButtonPD;
+    
+    @FXML
+    private VBox paymentVbox;
+    
+    private TableColumn houseNoCol = new TableColumn("House Number");
+    private TableColumn tenantNameCol = new TableColumn("Tenant Name");
+    private TableColumn<PDModel, String> amountCol = new TableColumn<>("Amount");
+    private TableColumn<PDModel, String> monthCol = new TableColumn<>("Month");
+    private TableColumn dateCol = new TableColumn<>("Payment Date");
+    private TableColumn<PDModel, String> methodCol = new TableColumn<>("Payment Method");
     
     public TableView<PDModel> paymentsTable = new TableView<>();
     private static JMetro.Style STYLE = JMetro.Style.DARK;
@@ -347,14 +358,142 @@ public class PDController implements Initializable {
         }
     };
     
-    class  MyEventHandler implements EventHandler<MouseEvent> {
-        
+    class cellEventHandler implements EventHandler<MouseEvent> {
         @Override
-        public void handle(MouseEvent t){
-            
+        public void handle(MouseEvent t) {
+            TableCell c = (TableCell) t.getSource();
+                int index = c.getIndex();
+                try {
+                    PDModel item = getPaymentDetails().get(index);
+                    tenantNamePD.setText(item.gettenantNameTablePD());
+                    amountPD.setText(item.getamountTablePD());
+                    monthComboPD.setValue(item.getmonthTablePD());
+                    rentPaymentDatePD.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+                    String payModeString = item.getpaymentMethodPD();
+                    if (payModeString == null) {
+                        cash.setValue("Cash recieved by:");
+                        root3.setExpanded(false);
+                        mpesa.setValue("Enter mpesa transaction code");
+                        root1.setExpanded(false);
+                        bank.setValue("Enter cheque no.");
+                        root2.setExpanded(false);
+                    } else {
+                        String[] paymentModeCheck = payModeString.split(":");
+                        switch (paymentModeCheck[0]) {
+                            case "Cash payment received by":
+                                payMethodCheck = "Paid in cash";
+                                cash.setValue(payModeString);
+                                root3.setExpanded(true);
+                                break;
+                            case "Mpesa transaction code is":
+                                payMethodCheck = "Paid via mpesa";
+                                mpesa.setValue(payModeString);
+                                root1.setExpanded(true);
+                                break;
+                            case "Banker's cheque no":
+                                payMethodCheck = "Paid via banker's cheque";
+                                bank.setValue(payModeString);
+                                root2.setExpanded(true);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
         }
     }
     
+    class MyEventHandler implements EventHandler<MouseEvent> {
+
+        @Override
+        public void handle(MouseEvent t) {
+            ContextMenu editTable = new ContextMenu();
+            MenuItem edit = new MenuItem("Edit Record");
+            MenuItem delete = new MenuItem("Delete Record");
+            delete.setOnAction((event) -> {
+                try {
+                    String deleteRecord = "DELETE FROM PaymentDetails WHERE HouseNumber = ? AND PaymentDate = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(deleteRecord);
+                    TablePosition cellPos = paymentsTable.getSelectionModel().getSelectedCells().get(0);
+                    int row = cellPos.getRow();
+                    pstmt.setString(1, paymentsTable.getItems().get(row).gethouseNumberTablePD());
+                    pstmt.setString(2, paymentsTable.getItems().get(row).getpaymentDateTablePD());
+                    pstmt.executeUpdate();
+                    PDModel selectedItem = paymentsTable.getSelectionModel().getSelectedItem();
+                    paymentsTable.getItems().remove(selectedItem);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
+            });
+            
+            
+            /*Getting value in selected cell
+            TablePosition cellPos = paymentsTable.getSelectionModel().getSelectedCells().get(0);
+            int row = cellPos.getRow();
+            PDModel payitem = paymentsTable.getItems().get(row);
+            TableColumn col = cellPos.getTableColumn();
+            String payData = (String) col.getCellObservableValue(payitem).getValue();
+            System.out.println(payData);*/
+            
+            
+            paymentsTable.setOnContextMenuRequested((event) -> {
+                editTable.getItems().addAll(edit, delete);
+                editTable.show(paymentsTable, event.getScreenX(), event.getScreenY());
+            });
+            paymentsTable.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+                editTable.hide(); 
+            });
+
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+                TableCell c = (TableCell) t.getSource();
+                int index = c.getIndex();
+                try {
+                    PDModel item = getPaymentDetails().get(index);
+                    tenantNamePD.setText(item.gettenantNameTablePD());
+                    amountPD.setText(item.getamountTablePD());
+                    monthComboPD.setValue(item.getmonthTablePD());
+                    rentPaymentDatePD.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+                    String payModeString = item.getpaymentMethodPD();
+                    if (payModeString == null) {
+                        cash.setValue("Cash recieved by:");
+                        root3.setExpanded(false);
+                        mpesa.setValue("Enter mpesa transaction code");
+                        root1.setExpanded(false);
+                        bank.setValue("Enter cheque no.");
+                        root2.setExpanded(false);
+                    } else {
+                        String[] paymentModeCheck = payModeString.split(":");
+                        switch (paymentModeCheck[0]) {
+                            case "Cash payment received by":
+                                payMethodCheck = "Paid in cash";
+                                cash.setValue(payModeString);
+                                root3.setExpanded(true);
+                                break;
+                            case "Mpesa transaction code is":
+                                payMethodCheck = "Paid via mpesa";
+                                mpesa.setValue(payModeString);
+                                root1.setExpanded(true);
+                                break;
+                            case "Banker's cheque no":
+                                payMethodCheck = "Paid via banker's cheque";
+                                bank.setValue(payModeString);
+                                root2.setExpanded(true);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     public void rentAmountPDUpdate(String rentAmount, String hNumber, String tName, String paymentDate){
         try {
             String rentUpdate = "UPDATE PaymentDetails SET Amount = ? WHERE HouseNumber = ? AND TenantName = ? AND PaymentDate = ?";
@@ -427,6 +566,214 @@ public class PDController implements Initializable {
         return map;
     }
     
+    @SuppressWarnings("unchecked")
+    private void editFocusedCell(){
+        final TablePosition<PDModel, String> focusedCell = paymentsTable
+                .focusModelProperty().get().focusedCellProperty().get();
+        paymentsTable.edit(focusedCell.getRow(), focusedCell.getTableColumn());
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void selectPrevious() {
+        if (paymentsTable.getSelectionModel().isCellSelectionEnabled()) {
+            TablePosition<PDModel, ?> pos = paymentsTable.getFocusModel().getFocusedCell();
+            if (pos.getColumn() - 1 >= 0) {
+                paymentsTable.getSelectionModel().select(pos.getRow(), getTableColumn(pos.getTableColumn(), -1));
+            } else if (pos.getRow() < paymentsTable.getItems().size()) {
+                paymentsTable.getSelectionModel().select(pos.getRow() - 1, 
+                        paymentsTable.getVisibleLeafColumn(
+                                paymentsTable.getVisibleLeafColumns().size() - 1));
+            }       
+        } else {
+            int focusindex = paymentsTable.getFocusModel().getFocusedIndex();
+            if (focusindex == -1) {
+                paymentsTable.getSelectionModel().select(paymentsTable.getItems().size() - 1);
+            } else if (focusindex > 0) {
+                paymentsTable.getSelectionModel().select(focusindex - 1);
+            }
+        }
+    }
+    
+    private TableColumn<PDModel, ?> getTableColumn (final TableColumn<PDModel, ?> column, int offset) {
+        int columnIndex = paymentsTable.getVisibleLeafIndex(column);
+        int newColumnIndex = columnIndex + offset;
+        return paymentsTable.getVisibleLeafColumn(newColumnIndex);
+    }
+    
+    private void setupHouseNumberColumn() {
+        houseNoCol.setPrefWidth(90);
+        houseNoCol.setCellValueFactory(
+                new PropertyValueFactory<PDModel, String>("houseNumberTablePD"));
+        houseNoCol.setCellFactory(stringCellFactory);
+        paymentsTable.refresh();
+    }
+
+    private void setupTenantNameColumn() {
+        tenantNameCol.setPrefWidth(120);
+        tenantNameCol.setCellValueFactory(
+                new PropertyValueFactory<PDModel, String>("tenantNameTablePD"));
+        tenantNameCol.setCellFactory(stringCellFactory);
+    }
+    
+    private void setupAmountColumn() {
+        amountCol.setPrefWidth(90);
+        amountCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("amountTablePD"));
+        amountCol.setCellFactory(column -> EditCell.createStringEditCell());
+        amountCol.setOnEditStart((event) -> {
+            PDModel amount = event.getRowValue();
+            amountPD.setText(amount.getamountTablePD());
+            monthComboPD.setValue(amount.getmonthTablePD());
+            rentPaymentDatePD.setValue(LocalDate.parse(amount.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+            String payModeString = amount.getpaymentMethodPD();
+            if (payModeString == null) {
+                cash.setValue("Cash recieved by:");
+                root3.setExpanded(false);
+                mpesa.setValue("Enter mpesa transaction code");
+                root1.setExpanded(false);
+                bank.setValue("Enter cheque no.");
+                root2.setExpanded(false);
+            } else {
+                String[] paymentModeCheck = payModeString.split(":");
+                switch (paymentModeCheck[0]) {
+                    case "Cash payment received by":
+                        payMethodCheck = "Paid in cash";
+                        cash.setValue(payModeString);
+                        root3.setExpanded(true);
+                        break;
+                    case "Mpesa transaction code is":
+                        payMethodCheck = "Paid via mpesa";
+                        mpesa.setValue(payModeString);
+                        root1.setExpanded(true);
+                        break;
+                    case "Banker's cheque no":
+                        payMethodCheck = "Paid via banker's cheque";
+                        bank.setValue(payModeString);
+                        root2.setExpanded(true);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        amountCol.setOnEditCommit((event) -> {
+            PDModel amount = event.getRowValue();
+            amount.setamountTablePD(event.getNewValue());
+            updateData("Amount", event.getNewValue(), amount.gethouseNumberTablePD(), amount.getpaymentDateTablePD());
+        });
+    }
+    
+    private void updateData(String column, String newValue, String houseNumber, String paymentDate) {
+        try {
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement("UPDATE PaymentDetails SET " + column + " = ? WHERE HouseNumber = ? AND PaymentDate = ?");
+            pstmt.setString(1, newValue);
+            pstmt.setString(2, houseNumber);
+            pstmt.setString(3, paymentDate);
+            pstmt.execute();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void setupMonthColumn() {
+        monthCol.setPrefWidth(90);
+        monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("monthTablePD"));
+        monthCol.setCellFactory(column -> EditCell.createStringEditCell());
+        monthCol.setOnEditStart((event) -> {
+            PDModel month = event.getRowValue();
+            amountPD.setText(month.getamountTablePD());
+            monthComboPD.setValue(month.getmonthTablePD());
+            rentPaymentDatePD.setValue(LocalDate.parse(month.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+            String payModeString = month.getpaymentMethodPD();
+                    if (payModeString == null) {
+                        cash.setValue("Cash recieved by:");
+                        root3.setExpanded(false);
+                        mpesa.setValue("Enter mpesa transaction code");
+                        root1.setExpanded(false);
+                        bank.setValue("Enter cheque no.");
+                        root2.setExpanded(false);
+                    } else {
+                        String[] paymentModeCheck = payModeString.split(":");
+                        switch (paymentModeCheck[0]) {
+                            case "Cash payment received by":
+                                payMethodCheck = "Paid in cash";
+                                cash.setValue(payModeString);
+                                root3.setExpanded(true);
+                                break;
+                            case "Mpesa transaction code is":
+                                payMethodCheck = "Paid via mpesa";
+                                mpesa.setValue(payModeString);
+                                root1.setExpanded(true);
+                                break;
+                            case "Banker's cheque no":
+                                payMethodCheck = "Paid via banker's cheque";
+                                bank.setValue(payModeString);
+                                root2.setExpanded(true);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+        });
+        monthCol.setOnEditCommit((event) -> {
+            PDModel month = event.getRowValue();
+            month.setmonthTablePD(event.getNewValue());
+            updateData("Month", event.getNewValue(), month.gethouseNumberTablePD(), month.getpaymentDateTablePD());
+        });
+    }
+    private void setupPaymentDateColumn() {
+        dateCol.setPrefWidth(90);
+        dateCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentDateTablePD"));
+        dateCol.setCellFactory(stringCellFactory);
+    }
+    private void setupPaymentMethodColumn() {
+        methodCol.setPrefWidth(120);
+        methodCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentMethodPD"));
+        methodCol.setCellFactory(column -> EditCell.createStringEditCell());
+        methodCol.setOnEditStart((event) -> {
+            PDModel method = event.getRowValue();
+            amountPD.setText(method.getamountTablePD());
+            monthComboPD.setValue(method.getmonthTablePD());
+            rentPaymentDatePD.setValue(LocalDate.parse(method.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+            String payModeString = method.getpaymentMethodPD();
+                    if (payModeString == null) {
+                        cash.setValue("Cash recieved by:");
+                        root3.setExpanded(false);
+                        mpesa.setValue("Enter mpesa transaction code");
+                        root1.setExpanded(false);
+                        bank.setValue("Enter cheque no.");
+                        root2.setExpanded(false);
+                    } else {
+                        String[] paymentModeCheck = payModeString.split(":");
+                        switch (paymentModeCheck[0]) {
+                            case "Cash payment received by":
+                                payMethodCheck = "Paid in cash";
+                                cash.setValue(payModeString);
+                                root3.setExpanded(true);
+                                break;
+                            case "Mpesa transaction code is":
+                                payMethodCheck = "Paid via mpesa";
+                                mpesa.setValue(payModeString);
+                                root1.setExpanded(true);
+                                break;
+                            case "Banker's cheque no":
+                                payMethodCheck = "Paid via banker's cheque";
+                                bank.setValue(payModeString);
+                                root2.setExpanded(true);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+        });
+        methodCol.setOnEditCommit((event) -> {
+            PDModel method = event.getRowValue();
+            method.setpaymentMethodPD(event.getNewValue());
+            updateData("PaymentMethod", event.getNewValue(), method.gethouseNumberTablePD(), method.getpaymentDateTablePD());
+        });
+    }
+    
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockAComboPD.setItems(blockA);
@@ -435,6 +782,13 @@ public class PDController implements Initializable {
         nasraBlockPD.setItems(nasraBlock);
         
         monthComboPD.setItems(months);
+       
+       setupHouseNumberColumn();
+       setupTenantNameColumn();
+       setupAmountColumn();
+       setupMonthColumn();
+       setupPaymentDateColumn();
+       setupPaymentMethodColumn();
         
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1056,44 +1410,30 @@ public class PDController implements Initializable {
         });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         
-        PDAnchor.setOnContextMenuRequested((event) -> {
+        paymentVbox.setOnContextMenuRequested((event) -> {
             editMenu.getItems().addAll(edit, printReceipt);
             editMenu.show(PDAnchor, event.getScreenX(), event.getScreenY());
         });
-        PDAnchor.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+        paymentVbox.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             editMenu.hide();
         });
         
-        TableColumn houseNoCol = new TableColumn("House Number");
-        houseNoCol.setPrefWidth(90);
-        houseNoCol.setCellValueFactory(
-                new PropertyValueFactory<PDModel, String>("houseNumberTablePD"));
-        houseNoCol.setCellFactory(stringCellFactory);
-        TableColumn tenantNameCol = new TableColumn("Tenant Name");
-        tenantNameCol.setPrefWidth(120);
-        tenantNameCol.setCellValueFactory(
-                new PropertyValueFactory<PDModel, String>("tenantNameTablePD"));
-        tenantNameCol.setCellFactory(stringCellFactory);
-        TableColumn amountCol = new TableColumn("Amount Paid");
-        amountCol.setPrefWidth(90);
-        amountCol.setCellValueFactory(
-                new PropertyValueFactory<PDModel, String>("amountTablePD"));
-        amountCol.setCellFactory(stringCellFactory);
-        TableColumn monthCol = new TableColumn("Month");
-        monthCol.setPrefWidth(90);
-        monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("monthTablePD"));
-        monthCol.setCellFactory(stringCellFactory);
-        TableColumn dateCol = new TableColumn("Payment Date");
-        dateCol.setPrefWidth(90);
-        dateCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentDateTablePD"));
-        dateCol.setCellFactory(stringCellFactory);
-        TableColumn methodCol = new TableColumn("Payment Method");
-        methodCol.setPrefWidth(120);
-        methodCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentMethodPD"));
-        methodCol.setCellFactory(stringCellFactory);
+        paymentsTable.setEditable(true);
+        paymentsTable.getSelectionModel().cellSelectionEnabledProperty().set(true);
+        paymentsTable.setOnKeyPressed((event) -> {
+            TablePosition<PDModel, ?> pos = paymentsTable.getFocusModel().getFocusedCell();
+            if (pos != null && event.getCode().isLetterKey()){
+                paymentsTable.edit(pos.getRow(), pos.getTableColumn());
+            } else if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.TAB) {
+                paymentsTable.getSelectionModel().selectNext();
+                event.consume();
+            } else if (event.getCode() == KeyCode.LEFT){
+                selectPrevious();
+                event.consume();
+            } 
+        });
         
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
-        monthCol.prefWidthProperty().bind(PDAnchor.widthProperty());
         PDAnchor.setBottom(paymentsTable);
     }
     
