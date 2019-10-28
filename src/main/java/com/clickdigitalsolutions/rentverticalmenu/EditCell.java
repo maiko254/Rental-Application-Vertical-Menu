@@ -18,10 +18,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 
-/**
- *
- * @author bonyo
- */
+
 public class EditCell<S, T> extends TableCell<S, T>{
     // Text field for editing
     // TODO: allow this to be a plugable control.
@@ -29,6 +26,8 @@ public class EditCell<S, T> extends TableCell<S, T>{
     
     // Converter for converting the text in the text field to the user type, and vice-versa:
     private final StringConverter<T> converter ;
+    
+   
     
     public EditCell(StringConverter<T> converter) {
         this.converter = converter ;
@@ -46,11 +45,7 @@ public class EditCell<S, T> extends TableCell<S, T>{
         textField.setOnAction(evt -> {
             commitEdit(this.converter.fromString(textField.getText()));
         });
-        textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (! isNowFocused) {
-                commitEdit(this.converter.fromString(textField.getText()));
-            }
-        });
+        
         textField.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 textField.setText(converter.toString(getItem()));

@@ -23,14 +23,18 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -64,10 +68,18 @@ public class RController implements Initializable {
     @FXML
     private JFXTextField miscellaneousR;
     @FXML
-    private JFXButton saveButtonR;
+    private Button saveButtonR;
     @FXML
     private BorderPane RAnchor;
+    
+    public TableColumn houseNo = new TableColumn("House Number");
+    public TableColumn tenantName = new TableColumn("Tenant Name");
+    public TableColumn<RModel, String> repairDone = new TableColumn("Repairs");
+    public TableColumn<RModel, String> costOfRepair = new TableColumn<>("Repair Cost");
+    public TableColumn dateOfRepair = new TableColumn("Repair Date");
+    public TableColumn<RModel, String> miscExpenses = new TableColumn<>("Miscellaneous Expenses");
     public TableView<RModel> repairsTable = new TableView<>();
+    
     @FXML
     public VBox repairsVbox;    
     private JMetro.Style STYLE = JMetro.Style.DARK;
@@ -161,16 +173,18 @@ public class RController implements Initializable {
                 pstmt.setString(1, (String) blockAComboR.getSelectionModel().getSelectedItem());
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {                    
-                    String houseNo = rs.getString("HouseNumber");
-                    String tenantName = rs.getString("Tenantname");
-                    String repairsDone = rs.getString("Repairs");
-                    String costOfRepair = rs.getString("CostOfRepairs");
-                    String dateOfRepair = rs.getString("DateOfRepairs");
+                    String houseNo1 = rs.getString("HouseNumber");
+                    String tenantName1 = rs.getString("Tenantname");
+                    String repairsDone1 = rs.getString("Repairs");
+                    String costOfRepair1 = rs.getString("CostOfRepairs");
+                    String dateOfRepair1 = rs.getString("DateOfRepairs");
                     String miscellaneous = rs.getString("MiscellaneousExpenses");
                     
-                    RModel repairsInfo = new RModel(houseNo, tenantName, repairsDone, costOfRepair, dateOfRepair, miscellaneous);
+                    RModel repairsInfo = new RModel(houseNo1, tenantName1, repairsDone1, costOfRepair1, dateOfRepair1, miscellaneous);
                     repairsData.add(repairsInfo);
                 }
+                pstmt.close();
+                conn.close();
             } catch (Exception e) {
             }
         }
@@ -206,9 +220,165 @@ public class RController implements Initializable {
 
         @Override
         public void handle(MouseEvent t) {
-            
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+                TableCell cell = (TableCell) t.getSource();
+                int index = cell.getIndex();
+                try {
+                    RModel item = getRepairsDetails().get(index);
+                    tenantNameR.setText(item.gettenantNameTableR());
+                    repairsDoneR.setText(item.getrepairsDoneTableR());
+                    costOfRepairR.setText(item.getcostofRepairsTableR());
+                    repairDateR.setValue(LocalDate.parse(item.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+                    miscellaneousR.setText(item.getmiscellaneousTableR());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    private void editFocusedCell(){
+        final TablePosition<RModel, String> focusedCell = repairsTable
+                .focusModelProperty().get().focusedCellProperty().get();
+        repairsTable.edit(focusedCell.getRow(), focusedCell.getTableColumn());
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void selectPrevious() {
+        if (repairsTable.getSelectionModel().isCellSelectionEnabled()) {
+            TablePosition<RModel, ?> pos = repairsTable.getFocusModel().getFocusedCell();
+            if (pos.getColumn() - 1 >= 0) {
+                repairsTable.getSelectionModel().select(pos.getRow(), getTableColumn(pos.getTableColumn(), -1));
+            } else if (pos.getRow() < repairsTable.getItems().size()) {
+                repairsTable.getSelectionModel().select(pos.getRow() - 1, 
+                        repairsTable.getVisibleLeafColumn(
+                                repairsTable.getVisibleLeafColumns().size() - 1));
+            }       
+        } else {
+            int focusindex = repairsTable.getFocusModel().getFocusedIndex();
+            if (focusindex == -1) {
+                repairsTable.getSelectionModel().select(repairsTable.getItems().size() - 1);
+            } else if (focusindex > 0) {
+                repairsTable.getSelectionModel().select(focusindex - 1);
+            }
+        }
+    }
+    
+    private TableColumn<RModel, ?> getTableColumn (final TableColumn<RModel, ?> column, int offset) {
+        int columnIndex = repairsTable.getVisibleLeafIndex(column);
+        int newColumnIndex = columnIndex + offset;
+        return repairsTable.getVisibleLeafColumn(newColumnIndex);
+    }
+    
+    
+    private void setupHouseNoColumn() {
+        houseNo.setCellValueFactory(new PropertyValueFactory<RModel, String>("houseNumberTableR"));
+        houseNo.setCellFactory(stringCellFactory);
+    }
+    
+    private void setupTenantNameColumn() {
+        tenantName.setCellValueFactory(new PropertyValueFactory<RModel, String>("tenantNameTableR"));
+        tenantName.setCellFactory(stringCellFactory);
+    }
+    
+    private void setupRepairsDoneColumn() {
+        repairDone.setCellValueFactory(new PropertyValueFactory<RModel, String>("repairsDoneTableR"));
+        repairDone.setCellFactory(column -> EditCell.createStringEditCell());
+        repairDone.setOnEditStart((event) -> {
+            RModel repDone = event.getRowValue();
+            repairsDoneR.setText(repDone.getrepairsDoneTableR());
+            costOfRepairR.setText(repDone.getcostofRepairsTableR());
+            repairDateR.setValue(LocalDate.parse(repDone.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            miscellaneousR.setText(repDone.getmiscellaneousTableR());
+        });
+        repairDone.setOnEditCommit((event) -> {
+            RModel repDone = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit RepairsDone column for "+repDone.gethouseNumberTableR()+" on "+repDone.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Repairs Done field for " + repDone.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    repDone.setrepairsDoneTableR(event.getNewValue());
+                    updateRepairsTableData("Repairs", event.getNewValue(), repDone.gethouseNumberTableR(), repDone.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                   int index = repairsTable.getSelectionModel().getSelectedIndex();
+                   repairsTable.getItems().set(index, repDone);
+                }
+            });
+        });
+    }
+    
+    private void setupRepairCostColumn() {
+        costOfRepair.setCellValueFactory(new PropertyValueFactory<RModel, String>("costofRepairsTableR"));
+        costOfRepair.setCellFactory(column -> EditCell.createStringEditCell());
+        costOfRepair.setOnEditStart((event) -> {
+            RModel repairCost = event.getRowValue();
+            repairsDoneR.setText(repairCost.getrepairsDoneTableR());
+            costOfRepairR.setText(repairCost.getcostofRepairsTableR());
+            repairDateR.setValue(LocalDate.parse(repairCost.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            miscellaneousR.setText(repairCost.getmiscellaneousTableR());
+        });
+        costOfRepair.setOnEditCommit((event) -> {
+            RModel repairCost = event.getRowValue();
+            RModel repDone = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit CostOfRepairs column for "+repDone.gethouseNumberTableR()+" on "+repDone.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Cost Of Repairs field for " + repDone.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    repairCost.setcostofRepairsTableR(event.getNewValue());
+                    updateRepairsTableData("CostOfRepairs", event.getNewValue(), repairCost.gethouseNumberTableR(), repairCost.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                    int index = repairsTable.getSelectionModel().getSelectedIndex();
+                    repairsTable.getItems().set(index, repDone);
+                }
+            });
+        });
+    }
+    
+    private void setupRepairsDateColumn() {
+        dateOfRepair.setCellValueFactory(new PropertyValueFactory<RModel, String>("dateofRepairsTableR"));
+        dateOfRepair.setCellFactory(stringCellFactory);
+    }
+    
+    private void setupMiscellaneousColumn() {
+        miscExpenses.setCellValueFactory(new PropertyValueFactory<RModel, String>("miscellaneousTableR"));
+        miscExpenses.setCellFactory(column -> EditCell.createStringEditCell());
+        miscExpenses.setOnEditStart((event) -> {
+            RModel miscellaneous = event.getRowValue();
+            repairsDoneR.setText(miscellaneous.getrepairsDoneTableR());
+            costOfRepairR.setText(miscellaneous.getcostofRepairsTableR());
+            repairDateR.setValue(LocalDate.parse(miscellaneous.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            miscellaneousR.setText(miscellaneous.getmiscellaneousTableR());
+        });
+        miscExpenses.setOnEditCommit((event) -> {
+            RModel misc = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit Miscellaneous Expenses column for "+misc.gethouseNumberTableR()+" on "+misc.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Cost Of Repairs field for " + misc.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    misc.setmiscellaneousTableR(event.getNewValue());
+                    updateRepairsTableData("MiscellaneousExpenses", event.getNewValue(), misc.gethouseNumberTableR(), misc.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                    int index = repairsTable.getSelectionModel().getSelectedIndex();
+                    repairsTable.getItems().set(index, misc);
+                }
+            });
+        });
+    }
+    
+    private void updateRepairsTableData(String column, String newValue, String houseNumber, String repairsDate) {
+        try {
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement("UPDATE RepairsTable SET " + column + " = ? WHERE HouseNumber = ? AND DateOfRepairs = ?");
+            pstmt.setString(1, newValue);
+            pstmt.setString(2, houseNumber);
+            pstmt.setString(3, repairsDate);
+            pstmt.execute();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockAComboR.setItems(blockA);
@@ -216,6 +386,12 @@ public class RController implements Initializable {
         blockCComboR.setItems(blockC);
         nasraBlockR.setItems(nasraBlock);
         
+        setupHouseNoColumn();
+        setupTenantNameColumn();
+        setupRepairsDoneColumn();
+        setupRepairCostColumn();
+        setupRepairsDateColumn();
+        setupMiscellaneousColumn();
         
         houseComboTitledPaneR.setOnMouseClicked((event) -> {
             blockAComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -228,7 +404,8 @@ public class RController implements Initializable {
                     if (!rs.next()){
                         setEmpty();
                     }else 
-                        do {                            
+                        do {
+                            System.out.println(rs.getString("HouseNumber"));
                             tenantNameR.setText(rs.getString("TenantName"));
                             repairsDoneR.setText(rs.getString("Repairs"));
                             costOfRepairR.setText(rs.getString("CostOfRepairs"));
@@ -350,40 +527,26 @@ public class RController implements Initializable {
         });
         
         
-        TableColumn houseNo = new TableColumn("House Number");
-        houseNo.setPrefWidth(120);
-        houseNo.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("houseNumberTableR"));
-        houseNo.setCellFactory(stringCellFactory);
-        TableColumn tenantName = new TableColumn("Tenant Name");
-        tenantName.setPrefWidth(120);
-        tenantName.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("tenantNameTableR"));
-        tenantName.setCellFactory(stringCellFactory);
-        TableColumn repairDone = new TableColumn("Repairs");
-        repairDone.setPrefWidth(90);
-        repairDone.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("repairsDoneTableR"));
-        TableColumn costOfRepair = new TableColumn("Repair cost");
-        houseNo.setPrefWidth(90);
-        houseNo.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("costofRepairsTableR"));
-        houseNo.setCellFactory(stringCellFactory);
-        TableColumn dateOfRepair = new TableColumn("Repair date");
-        houseNo.setPrefWidth(90);
-        houseNo.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("dateofRepairsTableR"));
-        houseNo.setCellFactory(stringCellFactory);
-        TableColumn miscExpenses = new TableColumn("Miscellaneous Expenses");
-        houseNo.setPrefWidth(120);
-        houseNo.setCellValueFactory(
-                new PropertyValueFactory<RModel, String>("miscellaneousTableR"));
-        houseNo.setCellFactory(stringCellFactory);
+       
         
+        
+        repairsTable.setEditable(true);
+        repairsTable.getSelectionModel().setCellSelectionEnabled(true);
+        repairsTable.setOnKeyPressed((event) -> {
+            TablePosition<RModel, ?> pos = repairsTable.getFocusModel().getFocusedCell();
+            if (pos != null && event.getCode().isLetterKey()){
+                repairsTable.edit(pos.getRow(), pos.getTableColumn());
+            } else if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.TAB) {
+                repairsTable.getSelectionModel().selectNext();
+                event.consume();
+            } else if (event.getCode() == KeyCode.LEFT){
+                selectPrevious();
+                event.consume();
+            } 
+        });
         repairsTable.getColumns().addAll(houseNo, tenantName, repairDone, costOfRepair, dateOfRepair, miscExpenses);
         
         repairsTable.prefWidthProperty().bind(RAnchor.widthProperty());
-        repairsTable.getStylesheets().add(getClass().getResource("/styles/JfxTableView_CSS.css").toExternalForm());
         RAnchor.setBottom(repairsTable);
         
         

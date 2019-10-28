@@ -26,12 +26,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -42,6 +40,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
@@ -62,13 +62,13 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 import jfxtras.styles.jmetro8.JMetro;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
-import javafx.scene.control.TableColumn.CellEditEvent;
 /**
  * FXML Controller class
  *
@@ -116,7 +116,7 @@ public class PDController implements Initializable {
     public JFXButton updatePDAmount;
     
     @FXML
-    private JFXButton saveButtonPD;
+    private Button saveButtonPD;
     
     @FXML
     private VBox paymentVbox;
@@ -358,52 +358,30 @@ public class PDController implements Initializable {
         }
     };
     
-    class cellEventHandler implements EventHandler<MouseEvent> {
+    public static final StringConverter<String> IDENTITY_CONVERTER = new StringConverter<String>() {
+
         @Override
-        public void handle(MouseEvent t) {
-            TableCell c = (TableCell) t.getSource();
-                int index = c.getIndex();
-                try {
-                    PDModel item = getPaymentDetails().get(index);
-                    tenantNamePD.setText(item.gettenantNameTablePD());
-                    amountPD.setText(item.getamountTablePD());
-                    monthComboPD.setValue(item.getmonthTablePD());
-                    rentPaymentDatePD.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
-                    String payModeString = item.getpaymentMethodPD();
-                    if (payModeString == null) {
-                        cash.setValue("Cash recieved by:");
-                        root3.setExpanded(false);
-                        mpesa.setValue("Enter mpesa transaction code");
-                        root1.setExpanded(false);
-                        bank.setValue("Enter cheque no.");
-                        root2.setExpanded(false);
-                    } else {
-                        String[] paymentModeCheck = payModeString.split(":");
-                        switch (paymentModeCheck[0]) {
-                            case "Cash payment received by":
-                                payMethodCheck = "Paid in cash";
-                                cash.setValue(payModeString);
-                                root3.setExpanded(true);
-                                break;
-                            case "Mpesa transaction code is":
-                                payMethodCheck = "Paid via mpesa";
-                                mpesa.setValue(payModeString);
-                                root1.setExpanded(true);
-                                break;
-                            case "Banker's cheque no":
-                                payMethodCheck = "Paid via banker's cheque";
-                                bank.setValue(payModeString);
-                                root2.setExpanded(true);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        public String toString(String object) {
+            return object;
         }
-    }
+
+        @Override
+        public String fromString(String string) {
+            return string;
+        }
+        
+    };
+    
+    Callback<TableColumn<PDModel, String>, TableCell<PDModel, String>> customCellFactory
+            = new Callback<TableColumn<PDModel, String>, TableCell<PDModel, String>>() {
+        @Override
+        public TableCell call(TableColumn param) {
+            EditCell cell = new EditCell(IDENTITY_CONVERTER);
+            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+            return cell;
+        }
+    };
+    
     
     class MyEventHandler implements EventHandler<MouseEvent> {
 
@@ -618,7 +596,7 @@ public class PDController implements Initializable {
     private void setupAmountColumn() {
         amountCol.setPrefWidth(90);
         amountCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("amountTablePD"));
-        amountCol.setCellFactory(column -> EditCell.createStringEditCell());
+        amountCol.setCellFactory(customCellFactory);
         amountCol.setOnEditStart((event) -> {
             PDModel amount = event.getRowValue();
             amountPD.setText(amount.getamountTablePD());
@@ -657,12 +635,21 @@ public class PDController implements Initializable {
         });
         amountCol.setOnEditCommit((event) -> {
             PDModel amount = event.getRowValue();
-            amount.setamountTablePD(event.getNewValue());
-            updateData("Amount", event.getNewValue(), amount.gethouseNumberTablePD(), amount.getpaymentDateTablePD());
+            Alert commitWarning = new Alert(AlertType.WARNING, "This will edit the Amount column for "+amount.gethouseNumberTablePD()+" on "+amount.getpaymentDateTablePD()+" in PaymentDetails Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Payment Record for " + amount.gethouseNumberTablePD());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    amount.setamountTablePD(event.getNewValue());
+                    updatePaymentTableData("Amount", event.getNewValue(), amount.gethouseNumberTablePD(), amount.getpaymentDateTablePD());
+                } else if (response == ButtonType.NO) {
+                   int index = paymentsTable.getSelectionModel().getSelectedIndex();
+                   paymentsTable.getItems().set(index, amount);
+                }
+            });
         });
     }
-    
-    private void updateData(String column, String newValue, String houseNumber, String paymentDate) {
+
+    private void updatePaymentTableData(String column, String newValue, String houseNumber, String paymentDate) {
         try {
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement("UPDATE PaymentDetails SET " + column + " = ? WHERE HouseNumber = ? AND PaymentDate = ?");
@@ -678,7 +665,7 @@ public class PDController implements Initializable {
     private void setupMonthColumn() {
         monthCol.setPrefWidth(90);
         monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("monthTablePD"));
-        monthCol.setCellFactory(column -> EditCell.createStringEditCell());
+        monthCol.setCellFactory(customCellFactory);
         monthCol.setOnEditStart((event) -> {
             PDModel month = event.getRowValue();
             amountPD.setText(month.getamountTablePD());
@@ -717,10 +704,20 @@ public class PDController implements Initializable {
         });
         monthCol.setOnEditCommit((event) -> {
             PDModel month = event.getRowValue();
-            month.setmonthTablePD(event.getNewValue());
-            updateData("Month", event.getNewValue(), month.gethouseNumberTablePD(), month.getpaymentDateTablePD());
+            Alert commitWarning = new Alert(AlertType.WARNING, "This will edit Month column for "+month.gethouseNumberTablePD()+" on "+month.getpaymentDateTablePD()+" in PaymentDetails Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Payment Record for " + month.gethouseNumberTablePD());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    month.setamountTablePD(event.getNewValue());
+                    updatePaymentTableData("Month", event.getNewValue(), month.gethouseNumberTablePD(), month.getpaymentDateTablePD());
+                } else if (response == ButtonType.NO) {
+                   int index = paymentsTable.getSelectionModel().getSelectedIndex();
+                   paymentsTable.getItems().set(index, month);
+                }
+            });
         });
     }
+    
     private void setupPaymentDateColumn() {
         dateCol.setPrefWidth(90);
         dateCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentDateTablePD"));
@@ -728,8 +725,11 @@ public class PDController implements Initializable {
     }
     private void setupPaymentMethodColumn() {
         methodCol.setPrefWidth(120);
+        methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
         methodCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentMethodPD"));
-        methodCol.setCellFactory(column -> EditCell.createStringEditCell());
+        methodCol.setCellFactory(customCellFactory);
+        
+        
         methodCol.setOnEditStart((event) -> {
             PDModel method = event.getRowValue();
             amountPD.setText(method.getamountTablePD());
@@ -768,8 +768,17 @@ public class PDController implements Initializable {
         });
         methodCol.setOnEditCommit((event) -> {
             PDModel method = event.getRowValue();
-            method.setpaymentMethodPD(event.getNewValue());
-            updateData("PaymentMethod", event.getNewValue(), method.gethouseNumberTablePD(), method.getpaymentDateTablePD());
+            Alert commitWarning = new Alert(AlertType.WARNING, "This will edit PaymentMethod column for "+method.gethouseNumberTablePD()+" on "+method.getpaymentDateTablePD()+" in PaymentDetails Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Payment Record for " + method.gethouseNumberTablePD());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    method.setamountTablePD(event.getNewValue());
+                    updatePaymentTableData("PaymentMethod", event.getNewValue(), method.gethouseNumberTablePD(), method.getpaymentDateTablePD());
+                } else if (response == ButtonType.NO) {
+                   int index = paymentsTable.getSelectionModel().getSelectedIndex();
+                   paymentsTable.getItems().set(index, method);
+                }
+            });
         });
     }
     
@@ -881,7 +890,6 @@ public class PDController implements Initializable {
                 Label label = new Label();
                 label.setText((String)blockAComboPD.getSelectionModel().getSelectedItem());
                 houseComboSelect = (String)blockAComboPD.getSelectionModel().getSelectedItem();
-                System.out.println(houseComboSelect);
                 label.setStyle("-fx-text-fill: #fdfdfd;");
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
