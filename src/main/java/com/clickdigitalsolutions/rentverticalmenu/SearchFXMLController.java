@@ -51,7 +51,7 @@ public class SearchFXMLController implements Initializable {
     
     private FXMLController scontroller = new FXMLController();
     
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:E:\\Win Old\\Old documents\\NetbeansProjects\\SQLite\\RVM.db";
     
     String vboxLayout = "-fx-border-color: #d9dadb;\n" +
                         "-fx-border-insets: 5;\n" +
