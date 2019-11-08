@@ -11,6 +11,8 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.sql.Connection;
@@ -189,63 +191,104 @@ public class TDController implements Initializable {
         return cellstyle;
     }
     
-    public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
-        HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet sheet = workbook.createSheet("Tenant Data");
-        
-        Font boldFont = workbook.createFont();
-        boldFont.setBold(true);
-        CellStyle headerRowStyle = workbook.createCellStyle();
-        headerRowStyle.setFont(boldFont);
-        
-        CellStyle style = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setFontHeightInPoints((short) 11);
-        font.setFontName(HSSFFont.FONT_ARIAL);
-        font.setBold(true);
-        style.setFont(font);
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+        File tenantDataExists = new File("jatom tenants.xls");
+        if (tenantDataExists.exists()) {
+            try {
+                FileInputStream inputStream = new FileInputStream(tenantDataExists);
+                Workbook workbookExists = WorkbookFactory.create(inputStream);
 
-        Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
-        tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "Monthly Rent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
-        tenantData.put("2", new Object[]{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate});
+                Sheet sheet = workbookExists.getSheetAt(0);
+                
+                Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
 
-        Set<String> keyset = tenantData.keySet();
-        int rownum = 0;
-        for (String key : keyset) {
-            Row row = sheet.createRow(rownum++);
-            if (rownum == 1) row.setRowStyle(headerRowStyle);
-            Object[] objArr = tenantData.get(key);
-            int cellnum = 0;
-            for (Object obj : objArr) {
-                Cell cell = row.createCell(cellnum++);
-                cell.setCellStyle(getPrefferedCellStyle(cell));
-                if (obj instanceof String) {
-                    cell.setCellValue((String) obj);
-                } else if (obj instanceof Integer) {
-                    cell.setCellValue((Integer) obj);
+                int rowCount = sheet.getPhysicalNumberOfRows();
+                System.out.println(rowCount);
+
+                for (Object[] tBook : tData) {
+                    Row row = sheet.createRow(rowCount++);
+
+                    int columnCount = 0;
+
+                    for (Object obj : tBook) {
+                        Cell cell = row.createCell(columnCount++);
+                        if (obj instanceof String) {
+                            cell.setCellValue((String) obj);
+                        } else if (obj instanceof Integer) {
+                            cell.setCellValue((Integer) obj);
+                        }
+                    }
+                }
+                inputStream.close();
+
+                FileOutputStream outputStream = new FileOutputStream(tenantDataExists);
+                workbookExists.write(outputStream);
+                workbookExists.close();
+                outputStream.close();
+            } catch (Exception e) {
+            }
+
+        } else {
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet sheet = workbook.createSheet("Tenant Data");
+
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            CellStyle headerRowStyle = workbook.createCellStyle();
+            headerRowStyle.setFont(boldFont);
+
+            CellStyle style = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setFontHeightInPoints((short) 11);
+            font.setFontName(HSSFFont.FONT_ARIAL);
+            font.setBold(true);
+            style.setFont(font);
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
+            tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "Monthly Rent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
+            tenantData.put("2", new Object[]{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate});
+
+            Set<String> keyset = tenantData.keySet();
+            int rownum = 0;
+            for (String key : keyset) {
+                Row row = sheet.createRow(rownum++);
+                if (rownum == 1) {
+                    row.setRowStyle(headerRowStyle);
+                }
+                Object[] objArr = tenantData.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr) {
+                    Cell cell = row.createCell(cellnum++);
+                    cell.setCellStyle(getPrefferedCellStyle(cell));
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    }
                 }
             }
+
+            for (int c = 0; c < tenantData.get("1").length; c++) {
+                sheet.autoSizeColumn(c); //autosize, merged cells should be ignored
+                //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
+            }
+
+            try {
+                FileOutputStream out = new FileOutputStream(new File("jatom tenants.xls"));
+                workbook.write(out);
+                out.close();
+                workbook.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        
-        for (int c = 0; c < tenantData.get("1").length; c++) {
-            sheet.autoSizeColumn(c); //autosize, merged cells should be ignored
-            //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
-        }
-        
-        try {
-            FileOutputStream out = new FileOutputStream(new File("jatom tenants.xlsx"));
-            workbook.write(out);
-            out.close();
-            workbook.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
     }
         
     
     @FXML
-    private void saveButtonActionTD(){
+    private void saveButtonActionTD() throws FileNotFoundException{
         if (comboboxTDCheck.equals("Block A")){
             createTenantDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             subcontroller.createPaymentDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
