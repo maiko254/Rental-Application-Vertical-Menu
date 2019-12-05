@@ -6,7 +6,9 @@
 <?import com.jfoenix.controls.JFXTextField?>
 <?import com.jfoenix.controls.JFXTreeView?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -14,7 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
+<BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
    <center>
       <VBox fx:id="paymentVbox" spacing="15.0" style="-fx-background-color: #dedede;">
          <children>
@@ -52,16 +54,16 @@
             </HBox>
             <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Amount Paid" />
-                  <JFXTextField fx:id="amountPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" />
-                  <Label fx:id="rentArrears" prefHeight="18.0" prefWidth="158.0" text="Label" />
-                  <JFXButton id="updateAmountButton" fx:id="updatePDAmount" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Month " />
+                  <JFXComboBox fx:id="monthComboPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" stylesheets="@../styles/combobox%20css.css" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="60.0" prefHeight="28.0" prefWidth="600.0">
                <children>
-                  <Label prefHeight="18.0" prefWidth="129.0" text="Month " />
-                  <JFXComboBox fx:id="monthComboPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" stylesheets="@../styles/combobox%20css.css" />
+                  <Label prefHeight="18.0" prefWidth="129.0" text="Amount Paid" />
+                  <JFXTextField fx:id="amountPD" focusColor="#fdfdfd" prefHeight="26.0" prefWidth="218.0" />
+                  <Label fx:id="rentArrears" prefHeight="18.0" prefWidth="158.0" text="Label" />
+                  <JFXButton id="updateAmountButton" fx:id="updatePDAmount" onAction="#rentUpdatePDButton" prefHeight="26.0" prefWidth="28.0" style="-fx-background-color: grey;" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="146.0" prefHeight="28.0" prefWidth="600.0">
@@ -75,6 +77,18 @@
                   <Label alignment="BOTTOM_LEFT" prefHeight="18.0" prefWidth="126.0" text="Payment Method" />
                   <JFXTreeView fx:id="paymentMethodPD" prefHeight="150.0" prefWidth="218.0" />
                </children>
+            </HBox>
+            <HBox layoutX="20.0" layoutY="155.0" prefHeight="28.0" prefWidth="600.0" spacing="10.0">
+               <children>
+                  <TextField fx:id="payRecordsFilter" prefHeight="31.0" prefWidth="239.0" />
+                  <Button fx:id="clearButton" mnemonicParsing="false" text="Clear Filters" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
             </HBox>
          </children>
          <padding>

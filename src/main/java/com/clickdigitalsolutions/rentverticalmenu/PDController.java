@@ -34,6 +34,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -43,6 +45,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -51,6 +54,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -98,7 +102,7 @@ public class PDController implements Initializable {
     public JFXTextField amountPD;
     
     @FXML
-    public JFXComboBox monthComboPD;
+    public JFXComboBox<PDModel.Strings> monthComboPD;
     
     @FXML
     private JFXDatePicker rentPaymentDatePD;
@@ -124,7 +128,7 @@ public class PDController implements Initializable {
     private TableColumn houseNoCol = new TableColumn("House Number");
     private TableColumn tenantNameCol = new TableColumn("Tenant Name");
     private TableColumn<PDModel, String> amountCol = new TableColumn<>("Amount");
-    private TableColumn<PDModel, String> monthCol = new TableColumn<>("Month");
+    private TableColumn<PDModel, PDModel.Strings> monthCol = new TableColumn<>("Month");
     private TableColumn dateCol = new TableColumn<>("Payment Date");
     private TableColumn<PDModel, String> methodCol = new TableColumn<>("Payment Method");
     
@@ -147,6 +151,12 @@ public class PDController implements Initializable {
     
     int rentAmountPDPaid = 0;
     
+    @FXML
+    private TextField payRecordsFilter;
+    
+    @FXML
+    private Button clearButton;
+    
     public PDController(){
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/PD2.fxml"));
         fxmlLoader.setRoot(this);
@@ -159,8 +169,8 @@ public class PDController implements Initializable {
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
-    
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    ObservableList<PDModel> filteringmonths = FXCollections.observableArrayList();
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
     
     public String getComboSelect(){
         return houseComboSelect;
@@ -169,7 +179,7 @@ public class PDController implements Initializable {
         return monthComboSelect;
     }
     
-    public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, String Month, String PaymentDate, String PaymentMethod){
+    public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod){
         try {
             String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text, PRIMARY KEY(HouseNumber, PaymentDate), FOREIGN KEY(HouseNumber) REFERENCES TenantDetails(HouseNumber) ON DELETE CASCADE)";
             Connection conn = DriverManager.getConnection(databaseURL);
@@ -188,7 +198,7 @@ public class PDController implements Initializable {
             pstmt.setString(1, HouseNumber);
             pstmt.setString(2, TenantName);
             pstmt.setString(3, Amount);
-            pstmt.setString(4, Month);
+            pstmt.setString(4, Month.name());
             pstmt.setString(5, PaymentDate);
             pstmt.setString(6, PaymentMethod);
             pstmt.execute();
@@ -226,19 +236,19 @@ public class PDController implements Initializable {
             amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
             amountEmptyAlert.showAndWait();
         } else if (comboboxPDCheck.equals("Block A")){
-            createPaymentDetailsTable((String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
+            createPaymentDetailsTable((String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
             setEmpty();
             blockAComboPD.setValue(null);
         }else if (comboboxPDCheck.equals("Block B")){
-            createPaymentDetailsTable((String)blockBComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
+            createPaymentDetailsTable((String)blockBComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
             setEmpty();
             blockBComboPD.setValue(null);
         }else if (comboboxPDCheck.equals("Block C")){
-            createPaymentDetailsTable((String)blockCComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
+            createPaymentDetailsTable((String)blockCComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
             setEmpty();
             blockCComboPD.setValue(null);
         }else if (comboboxPDCheck.equals("Nasra Block")){
-            createPaymentDetailsTable((String)nasraBlockPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), (String)monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
+            createPaymentDetailsTable((String)nasraBlockPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()), paymentMode);
             setEmpty();
             nasraBlockPD.setValue(null);
         }else if(comboboxPDCheck.equals("Empty")){
@@ -306,9 +316,10 @@ public class PDController implements Initializable {
         root2.setExpanded(false);
         rentArrears.setVisible(false);
     }
+    ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
     
     public ObservableList<PDModel> getPaymentDetails(){
-        ObservableList<PDModel> PDTableData = FXCollections.observableArrayList();
+        ObservableList<PDModel> rentPaymentList = FXCollections.observableArrayList();
         if (comboboxPDCheck.equals("Block A")){
             try {
                 String tableDataQuery = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
@@ -320,11 +331,13 @@ public class PDController implements Initializable {
                     String houseNo = rs.getString("HouseNumber");
                     String tenantName = rs.getString("TenantName");
                     String rentAmount = rs.getString("Amount");
-                    String month = rs.getString("Month");
+                    System.out.println(rs.getString("Month"));
+                    PDModel.Strings month = PDModel.Strings.valueOf(rs.getString("Month"));
+                    
                     String paymentDate = rs.getString("PaymentDate");
                     String paymentMethod = rs.getString("PaymentMethod");
                     PDModel paymentData = new PDModel(houseNo, tenantName, rentAmount, month, paymentDate, paymentMethod);
-                    PDTableData.add(paymentData);
+                    rentPaymentList.add(paymentData);
                 }
                 pstmt.close();
                 conn.close();
@@ -332,7 +345,7 @@ public class PDController implements Initializable {
                 e.printStackTrace();
             }
         }
-        return PDTableData;
+        return rentPaymentList;
     }
     
     class MyStringTableCell extends TableCell<PDModel, String> {
@@ -382,6 +395,15 @@ public class PDController implements Initializable {
         }
     };
     
+    Callback<TableColumn<PDModel, PDModel.Strings>, TableCell<PDModel, PDModel.Strings>> customComboCellFactory
+            = new Callback<TableColumn<PDModel, PDModel.Strings>, TableCell<PDModel, PDModel.Strings>>() {
+        @Override
+        public TableCell call(TableColumn param) {
+            EditCell cell = new EditCell(IDENTITY_CONVERTER);
+            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+            return cell;
+        }
+    };
     
     class MyEventHandler implements EventHandler<MouseEvent> {
 
@@ -539,7 +561,7 @@ public class PDController implements Initializable {
         }else if (comboboxPDCheck.equals("Nasra Block")){
             map.put("houseNumber", (String) nasraBlockPD.getSelectionModel().getSelectedItem());
         }
-        map.put("PayMonth", (String) monthComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMonth", monthComboPD.getSelectionModel().getSelectedItem());
         map.put("PayMethod", payMethodCheck);
         return map;
     }
@@ -664,58 +686,8 @@ public class PDController implements Initializable {
     
     private void setupMonthColumn() {
         monthCol.setPrefWidth(90);
-        monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("monthTablePD"));
-        monthCol.setCellFactory(customCellFactory);
-        monthCol.setOnEditStart((event) -> {
-            PDModel month = event.getRowValue();
-            amountPD.setText(month.getamountTablePD());
-            monthComboPD.setValue(month.getmonthTablePD());
-            rentPaymentDatePD.setValue(LocalDate.parse(month.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
-            String payModeString = month.getpaymentMethodPD();
-                    if (payModeString == null) {
-                        cash.setValue("Cash recieved by:");
-                        root3.setExpanded(false);
-                        mpesa.setValue("Enter mpesa transaction code");
-                        root1.setExpanded(false);
-                        bank.setValue("Enter cheque no.");
-                        root2.setExpanded(false);
-                    } else {
-                        String[] paymentModeCheck = payModeString.split(":");
-                        switch (paymentModeCheck[0]) {
-                            case "Cash payment received by":
-                                payMethodCheck = "Paid in cash";
-                                cash.setValue(payModeString);
-                                root3.setExpanded(true);
-                                break;
-                            case "Mpesa transaction code is":
-                                payMethodCheck = "Paid via mpesa";
-                                mpesa.setValue(payModeString);
-                                root1.setExpanded(true);
-                                break;
-                            case "Banker's cheque no":
-                                payMethodCheck = "Paid via banker's cheque";
-                                bank.setValue(payModeString);
-                                root2.setExpanded(true);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-        });
-        monthCol.setOnEditCommit((event) -> {
-            PDModel month = event.getRowValue();
-            Alert commitWarning = new Alert(AlertType.WARNING, "This will edit Month column for "+month.gethouseNumberTablePD()+" on "+month.getpaymentDateTablePD()+" in PaymentDetails Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Payment Record for " + month.gethouseNumberTablePD());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    month.setamountTablePD(event.getNewValue());
-                    updatePaymentTableData("Month", event.getNewValue(), month.gethouseNumberTablePD(), month.getpaymentDateTablePD());
-                } else if (response == ButtonType.NO) {
-                   int index = paymentsTable.getSelectionModel().getSelectedIndex();
-                   paymentsTable.getItems().set(index, month);
-                }
-            });
-        });
+        monthCol.setCellValueFactory(new PropertyValueFactory<PDModel, PDModel.Strings>("monthTablePD"));
+        
     }
     
     private void setupPaymentDateColumn() {
@@ -789,16 +761,15 @@ public class PDController implements Initializable {
         blockBComboPD.setItems(blockB);
         blockCComboPD.setItems(blockC);
         nasraBlockPD.setItems(nasraBlock);
-        
-        monthComboPD.setItems(months);
-       
-       setupHouseNumberColumn();
-       setupTenantNameColumn();
-       setupAmountColumn();
-       setupMonthColumn();
-       setupPaymentDateColumn();
-       setupPaymentMethodColumn();
-        
+
+        monthComboPD.getItems().addAll(PDModel.Strings.values());
+        setupHouseNumberColumn();
+        setupTenantNameColumn();
+        setupAmountColumn();
+        setupMonthColumn();
+        setupPaymentDateColumn();
+        setupPaymentMethodColumn();
+
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -832,7 +803,8 @@ public class PDController implements Initializable {
                             }
                             
                             amountPD.setText(rs.getString("Amount"));
-                            monthComboPD.setValue(rs.getString("Month"));
+                            System.out.println(rs.getString("Month"));
+                            monthComboPD.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
                             if (rs.getString("PaymentDate") != null){
                                 rentPaymentDatePD.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
                             }else
@@ -894,7 +866,8 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                paymentsTable.setItems(getPaymentDetails());
+                payTenantDetails = getPaymentDetails();
+                paymentsTable.setItems(payTenantDetails);
             });
             blockBComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -927,7 +900,7 @@ public class PDController implements Initializable {
                             }
                             
                             amountPD.setText(rs.getString("Amount"));
-                            monthComboPD.setValue(rs.getString("Month"));
+                            monthComboPD.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
                             if (rs.getString("PaymentDate") != null){
                                 rentPaymentDatePD.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
                             }else
@@ -986,7 +959,8 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                paymentsTable.setItems(getPaymentDetails());
+                payTenantDetails = getPaymentDetails();
+                paymentsTable.setItems(payTenantDetails);
             });
             blockCComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -1018,7 +992,7 @@ public class PDController implements Initializable {
                                 rentArrears.setVisible(false);
                             }
                             amountPD.setText(rs.getString("Amount"));
-                            monthComboPD.setValue(rs.getString("Month"));
+                            monthComboPD.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
                             if (rs.getString("PaymentDate") != null){
                                 rentPaymentDatePD.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
                             }else
@@ -1077,7 +1051,8 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                paymentsTable.setItems(getPaymentDetails());
+                payTenantDetails = getPaymentDetails();
+                paymentsTable.setItems(payTenantDetails);
             });
             nasraBlockPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 String paymentModeString;
@@ -1110,7 +1085,7 @@ public class PDController implements Initializable {
                             }
                             
                             amountPD.setText(rs.getString("Amount"));
-                            monthComboPD.setValue(rs.getString("Month"));
+                            monthComboPD.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
                             if (rs.getString("PaymentDate") != null){
                                 rentPaymentDatePD.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
                             }else
@@ -1169,7 +1144,8 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setText("");
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
-                paymentsTable.setItems(getPaymentDetails());
+                payTenantDetails = getPaymentDetails();
+                paymentsTable.setItems(payTenantDetails);
             });
         });
         
@@ -1207,7 +1183,7 @@ public class PDController implements Initializable {
                        default:
                            break;
                    }
-                   pstmt.setString(2, (String)monthComboPD.getSelectionModel().getSelectedItem());
+                   pstmt.setString(2, monthComboPD.getSelectionModel().getSelectedItem().name());
                    ResultSet rs = pstmt.executeQuery();
                    ResultSet rs1 = pstmt1.executeQuery();
                    if (!rs.next()){
@@ -1284,7 +1260,7 @@ public class PDController implements Initializable {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                monthComboSelect = (String)monthComboPD.getSelectionModel().getSelectedItem();
+                monthComboSelect = (String)monthComboPD.getSelectionModel().getSelectedItem().name();
             });
         });
         
@@ -1439,6 +1415,29 @@ public class PDController implements Initializable {
                 selectPrevious();
                 event.consume();
             } 
+        });
+        
+        payRecordsFilter.textProperty().addListener((observable, oldValue, newValue) -> {
+            FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
+            filteredList.setPredicate((t) -> {
+                if (payRecordsFilter.getText() == null || payRecordsFilter.getText().isEmpty()) {
+                    return true;
+                }
+                
+                String lowerCaseFilter = newValue.toLowerCase();
+                if (t.gettenantNameTablePD().toLowerCase().contains(lowerCaseFilter)) {
+                    return true;
+                }
+                return false;
+            });
+            SortedList<PDModel> sortedData = new SortedList<>(filteredList);
+            sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
+            paymentsTable.setItems(sortedData);
+        });
+        
+        
+        clearButton.setOnAction((event) -> {
+            payRecordsFilter.clear();
         });
         
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);

@@ -15,10 +15,16 @@ import java.sql.ResultSet;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -35,33 +41,20 @@ public class SearchFXMLController implements Initializable {
     @FXML
     private HBox searchHbox;
     @FXML
-    private VBox searchVbox;
-    @FXML
-    private VBox textAreaVbox;
-    @FXML
-    private JFXRadioButton houseNumberButton;
-    @FXML
-    private JFXRadioButton tenantNameButton;
-    @FXML
     private TextField searchText;
     @FXML
-    private ListView<TDModel> searchResultArea;
-    
+    private Button clearButton;
+    @FXML
+    private TableView<TDModel> searchTable;
+    @FXML
+    private TableColumn<TDModel, String> houseNoCol;
+    @FXML
+    private TableColumn<TDModel, String> tenantNameCol;
     private TDController controller;
     
     private FXMLController scontroller = new FXMLController();
     
-    String databaseURL = "jdbc:sqlite:E:\\Win Old\\Old documents\\NetbeansProjects\\SQLite\\RVM.db";
-    
-    String vboxLayout = "-fx-border-color: #d9dadb;\n" +
-                        "-fx-border-insets: 5;\n" +
-                        "-fx-border-width: 2;\n" +
-                        "-fx-border-style: solid;\n";
-    
-    String vboxLayout1 = "-fx-border-color: #d9dadb;\n"
-                         + "-fx-border-insets: 5;\n"
-                         + "-fx-border-width: 2;\n"
-                         + "-fx-border-style: solid;\n";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
     
     public SearchFXMLController(TDController subcontroller){
         controller = subcontroller;
@@ -72,7 +65,6 @@ public class SearchFXMLController implements Initializable {
     }
     
     public ObservableList<TDModel> initializeList() {
-        ObservableList<TDModel> tdSearchList = FXCollections.observableArrayList();
         try {
             String searchTDTable = "SELECT * FROM TenantDetails";
             Connection conn = DriverManager.getConnection(databaseURL);
@@ -84,40 +76,46 @@ public class SearchFXMLController implements Initializable {
                 do {
                     String HNo = rs.getString("HouseNumber");
                     String TName = rs.getString("TenantName");
-                    TDModel data = new TDModel(TName);
-                    tdSearchList.add(data);
+                    TDModel data = new TDModel(HNo, TName);
+                    tenantList.add(data);
                 } while (rs.next());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return tdSearchList;
+        return tenantList;
     }
-    
-    ObservableList<TDModel> tenanList = FXCollections.observableArrayList(new TDModel("Michael Odhiambo"), new TDModel("Akello Aggie"), new TDModel("Vincentia Fiona Akinyi"), new TDModel("Atieno Beryl"), new TDModel("Mathew Onguti"), new TDModel("Athieno"));
-    public void filterTenantList(String oldValue, String newValue) {
-        ObservableList<TDModel> filteredList = FXCollections.observableArrayList();
-        if (searchText == null || newValue == null || newValue.isEmpty() ) {
-            searchResultArea.setItems(initializeList());
-        } else {
-            newValue = newValue.toUpperCase();
-            for (TDModel Person : searchResultArea.getItems()) {
-                String filterText = Person.getTenantNameTD();
-                if (filterText.contains(newValue)) {
-                    filteredList.add(Person);
-                    searchResultArea.setItems(filteredList);
-                } else if (newValue.length() < oldValue.length()) {
-                    searchResultArea.setItems(filteredList);
-                }
-            }
-        }
-    }
+
+    ObservableList<TDModel> tenantList = FXCollections.observableArrayList();
+    FilteredList<TDModel> filteredList = new FilteredList<>(tenantList);
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        searchResultArea.setItems(initializeList());
+        houseNoCol.setCellValueFactory(cellData -> cellData.getValue().houseNumberTableTDProperty());
+        tenantNameCol.setCellValueFactory(cellData -> cellData.getValue().tenantNameTableTDProperty());
+        initializeList();
         searchText.textProperty().addListener((observable, oldValue, newValue) -> {
-            filterTenantList(oldValue, newValue);
+            filteredList.setPredicate((t) -> {
+                if (searchText.getText() == null || searchText.getText().isEmpty()) {
+                    return true;
+                }
+                String lowerCaseFilter = newValue.toLowerCase();
+                if (t.gettenantNameTableTD().toLowerCase().contains(lowerCaseFilter)) {
+                    return true;
+                } else if (t.gethouseNumberTableTD().toLowerCase().contains(lowerCaseFilter)) {
+                    return true;
+                }
+                return false;
+            });
+            SortedList<TDModel> sortedData =new SortedList<>(filteredList);
+            sortedData.comparatorProperty().bind(searchTable.comparatorProperty());
+            searchTable.setItems(sortedData);
+        });
+        
+        searchTable.setItems(filteredList);
+        
+        clearButton.setOnAction((event) -> {
+            searchText.clear();
         });
     }    
     

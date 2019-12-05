@@ -114,7 +114,7 @@ public class TDController implements Initializable {
     
     private String comboboxTDCheck = "Empty";
     
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
     
     private void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate){
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(HouseNumber text PRIMARY KEY, TenantName text, TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text)";
@@ -160,7 +160,7 @@ public class TDController implements Initializable {
             while (rs.next()) {
                 String houseNo = rs.getString("HouseNumber");
                 String tenantName = rs.getString("TenantName");
-                TDModel tenantData = new TDModel(tenantName);
+                TDModel tenantData = new TDModel(houseNo, tenantName);
                 TDTableData.add(tenantData);
             }
             pstmt.close();

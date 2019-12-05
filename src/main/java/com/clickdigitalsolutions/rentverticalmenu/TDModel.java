@@ -5,25 +5,45 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 /**
  *
  * @author bonyo
  */
 public class TDModel {
-
-    public String tenantNameTD;
-
-    public TDModel(String tenantName) {
-        this.tenantNameTD = tenantName;
+    
+    public StringProperty houseNumberTablePD;
+    public StringProperty tenantNameTablePD;
+    
+    public TDModel(String houseNumber, String tenantName) {
+        houseNumberTablePD = new SimpleStringProperty(houseNumber);
+        tenantNameTablePD = new SimpleStringProperty(tenantName);
     }
 
     
     public String toString() {
-        return this.getTenantNameTD();
+        return this.gettenantNameTableTD();
     }
 
-    public String getTenantNameTD() {
-        return tenantNameTD;
+    public String gethouseNumberTableTD(){
+        return houseNumberTablePD.get();
     }
-
+    public void sethouseNumberTableTD(String value){
+        houseNumberTablePD.set(value);
+    }
+    public StringProperty houseNumberTableTDProperty(){
+        return houseNumberTablePD;
+    }
+    
+    public String gettenantNameTableTD(){
+        return tenantNameTablePD.get();
+    }
+    public void settenantNameTableTD(String value){
+        tenantNameTablePD.set(value);
+    }
+    public StringProperty tenantNameTableTDProperty(){
+        return tenantNameTablePD;
+    }
 }

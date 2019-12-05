@@ -235,7 +235,7 @@ public class FXMLController implements Initializable {
     private Map getReceiptParameters(){
         HashMap map = new HashMap();
         map.put("houseNumber", (String)subcontroller.blockAComboPD.getSelectionModel().getSelectedItem());
-        map.put("PayMonth", (String)subcontroller.monthComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMonth", subcontroller.monthComboPD.getSelectionModel().getSelectedItem());
         return map;
     }
     

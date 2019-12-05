@@ -34,7 +34,7 @@ public class PDTableViewController implements Initializable {
     @FXML
     public TableColumn<PDModel, String> rentPaidCol;
     @FXML
-    public TableColumn<PDModel, String> monthCol;
+    public TableColumn<PDModel, PDModel.Strings> monthCol;
     @FXML
     public TableColumn<PDModel, String> paymentDateCol;
     @FXML

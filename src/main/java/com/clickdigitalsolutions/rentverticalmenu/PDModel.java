@@ -5,6 +5,8 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -13,18 +15,45 @@ import javafx.beans.property.StringProperty;
  * @author Mike254
  */
 public class PDModel {
+    
+    public enum Strings{
+        JANUARY("January"),
+        FEBRUARY("February"),
+        MARCH("March"),
+        APRIL("April"),
+        MAY("May"),
+        JUNE("June"),
+        JULY("July"),
+        AUGUST("August"),
+        SEPTEMBER("September"),
+        OCTOBER("October"),
+        NOVEMBER("November"),
+        DECEMBER("December");
+        
+        private final String text;
+
+        Strings(final String text) {
+            this.text = text;
+        }
+        
+        public String getMonth() {
+            return text;
+        }
+        
+    }
+    
     public StringProperty houseNumberTablePD;
     public StringProperty tenantNameTablePD;
     public StringProperty amountTablePD;
-    public StringProperty monthTablePD;
+    public ObjectProperty<Strings> monthTablePD;
     public StringProperty paymentDateTablePD;
     public StringProperty paymentMethodPD;
     
-    public PDModel(String houseNumber, String tenantName, String rentAmount, String monthPaid, String paymentDate, String paymentMethod){
+    public PDModel(String houseNumber, String tenantName, String rentAmount, Strings monthPaid, String paymentDate, String paymentMethod){
         houseNumberTablePD = new SimpleStringProperty(houseNumber);
         tenantNameTablePD = new SimpleStringProperty(tenantName);
         amountTablePD = new SimpleStringProperty(rentAmount);
-        monthTablePD = new SimpleStringProperty(monthPaid);
+        monthTablePD = new SimpleObjectProperty<Strings>(monthPaid);
         paymentDateTablePD = new SimpleStringProperty(paymentDate);
         paymentMethodPD = new SimpleStringProperty(paymentMethod);
     }
@@ -69,13 +98,13 @@ public class PDModel {
         return amountTablePD;
     }
     
-    public String getmonthTablePD(){
+    public Strings getmonthTablePD(){
         return monthTablePD.get();
     }
-    public void setmonthTablePD(String value){
+    public void setmonthTablePD(Strings value){
         monthTablePD.set(value);
     }
-    public StringProperty monthTablePDProperty(){
+    public ObjectProperty<Strings> monthTablePDProperty(){
         return monthTablePD;
     }
     

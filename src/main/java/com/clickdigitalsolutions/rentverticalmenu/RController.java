@@ -91,7 +91,7 @@ public class RController implements Initializable {
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
 
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
     
     public void createRepairsTable(String HouseNumber, String TenantName, String Repairs, String CostOfRepairs, String DateOfRepairs, String Miscellaneous){
         try {
