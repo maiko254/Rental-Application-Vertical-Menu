@@ -79,7 +79,7 @@ public class PDModel {
     }
     
     public String gettenantNameTablePD(){
-        return tenantNameTablePD.get();
+        return this.tenantNameTablePD.get();
     }
     public void settenantNameTablePD(String value){
         tenantNameTablePD.set(value);
@@ -99,7 +99,7 @@ public class PDModel {
     }
     
     public Strings getmonthTablePD(){
-        return monthTablePD.get();
+        return this.monthTablePD.get();
     }
     public void setmonthTablePD(Strings value){
         monthTablePD.set(value);

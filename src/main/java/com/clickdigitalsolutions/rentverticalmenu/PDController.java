@@ -26,12 +26,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -169,8 +175,9 @@ public class PDController implements Initializable {
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
     ObservableList<String>nasraBlock = FXCollections.observableArrayList("Top House", "Bottom House");
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
-    ObservableList<PDModel> filteringmonths = FXCollections.observableArrayList();
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
+    ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
+    FilteredList<PDModel> filteredItems = new FilteredList<>(FXCollections.observableArrayList()); 
+    String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
     
     public String getComboSelect(){
         return houseComboSelect;
@@ -316,7 +323,7 @@ public class PDController implements Initializable {
         root2.setExpanded(false);
         rentArrears.setVisible(false);
     }
-    ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
+    
     
     public ObservableList<PDModel> getPaymentDetails(){
         ObservableList<PDModel> rentPaymentList = FXCollections.observableArrayList();
@@ -574,22 +581,22 @@ public class PDController implements Initializable {
     }
     
     @SuppressWarnings("unchecked")
-    private void selectPrevious() {
-        if (paymentsTable.getSelectionModel().isCellSelectionEnabled()) {
-            TablePosition<PDModel, ?> pos = paymentsTable.getFocusModel().getFocusedCell();
+    private void selectPrevious(TableView rentPaymentTable) {
+        if (rentPaymentTable.getSelectionModel().isCellSelectionEnabled()) {
+            TablePosition<PDModel, ?> pos = rentPaymentTable.getFocusModel().getFocusedCell();
             if (pos.getColumn() - 1 >= 0) {
-                paymentsTable.getSelectionModel().select(pos.getRow(), getTableColumn(pos.getTableColumn(), -1));
-            } else if (pos.getRow() < paymentsTable.getItems().size()) {
-                paymentsTable.getSelectionModel().select(pos.getRow() - 1, 
-                        paymentsTable.getVisibleLeafColumn(
-                                paymentsTable.getVisibleLeafColumns().size() - 1));
+                rentPaymentTable.getSelectionModel().select(pos.getRow(), getTableColumn(pos.getTableColumn(), -1));
+            } else if (pos.getRow() < rentPaymentTable.getItems().size()) {
+                rentPaymentTable.getSelectionModel().select(pos.getRow() - 1, 
+                        rentPaymentTable.getVisibleLeafColumn(
+                                rentPaymentTable.getVisibleLeafColumns().size() - 1));
             }       
         } else {
-            int focusindex = paymentsTable.getFocusModel().getFocusedIndex();
+            int focusindex = rentPaymentTable.getFocusModel().getFocusedIndex();
             if (focusindex == -1) {
-                paymentsTable.getSelectionModel().select(paymentsTable.getItems().size() - 1);
+                rentPaymentTable.getSelectionModel().select(rentPaymentTable.getItems().size() - 1);
             } else if (focusindex > 0) {
-                paymentsTable.getSelectionModel().select(focusindex - 1);
+                rentPaymentTable.getSelectionModel().select(focusindex - 1);
             }
         }
     }
@@ -598,6 +605,12 @@ public class PDController implements Initializable {
         int columnIndex = paymentsTable.getVisibleLeafIndex(column);
         int newColumnIndex = columnIndex + offset;
         return paymentsTable.getVisibleLeafColumn(newColumnIndex);
+    }
+    
+     private static <S,T> TableColumn<S,T> column(String title, Function<S, ObservableValue<T>> property) {
+        TableColumn<S,T> col = new TableColumn<>(title);
+        col.setCellValueFactory(cellData -> property.apply(cellData.getValue()));
+        return col ;
     }
     
     private void setupHouseNumberColumn() {
@@ -754,6 +767,8 @@ public class PDController implements Initializable {
         });
     }
     
+    ObjectProperty<Predicate<PDModel>> nameFilter = new SimpleObjectProperty<>();
+    ObjectProperty<Predicate<PDModel>> monthFilter = new SimpleObjectProperty<>();
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -761,14 +776,16 @@ public class PDController implements Initializable {
         blockBComboPD.setItems(blockB);
         blockCComboPD.setItems(blockC);
         nasraBlockPD.setItems(nasraBlock);
-
-        monthComboPD.getItems().addAll(PDModel.Strings.values());
+        
         setupHouseNumberColumn();
         setupTenantNameColumn();
         setupAmountColumn();
         setupMonthColumn();
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
+        
+        monthComboPD.getItems().addAll(PDModel.Strings.values());
+        
 
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -867,6 +884,7 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 payTenantDetails = getPaymentDetails();
+                
                 paymentsTable.setItems(payTenantDetails);
             });
             blockBComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1402,20 +1420,6 @@ public class PDController implements Initializable {
             editMenu.hide();
         });
         
-        paymentsTable.setEditable(true);
-        paymentsTable.getSelectionModel().cellSelectionEnabledProperty().set(true);
-        paymentsTable.setOnKeyPressed((event) -> {
-            TablePosition<PDModel, ?> pos = paymentsTable.getFocusModel().getFocusedCell();
-            if (pos != null && event.getCode().isLetterKey()){
-                paymentsTable.edit(pos.getRow(), pos.getTableColumn());
-            } else if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.TAB) {
-                paymentsTable.getSelectionModel().selectNext();
-                event.consume();
-            } else if (event.getCode() == KeyCode.LEFT){
-                selectPrevious();
-                event.consume();
-            } 
-        });
         
         payRecordsFilter.textProperty().addListener((observable, oldValue, newValue) -> {
             FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
@@ -1435,11 +1439,41 @@ public class PDController implements Initializable {
             paymentsTable.setItems(sortedData);
         });
         
+        monthComboPD.valueProperty().addListener((observable, oldValue, newValue) -> {
+            FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
+            filteredList.setPredicate((t) -> {
+                if (monthComboPD.getValue() == null || monthComboPD.getSelectionModel().isEmpty()) {
+                    return true;
+                }
+                PDModel.Strings comboFilter = newValue;
+                if (t.getmonthTablePD().equals(newValue)) {
+                    return true;
+                }
+                return false;
+            });
+            SortedList<PDModel> sortedData = new SortedList<>(filteredList);
+            sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
+            paymentsTable.setItems(sortedData);
+        });
         
         clearButton.setOnAction((event) -> {
             payRecordsFilter.clear();
+            monthComboPD.setValue(null);
         });
         
+        paymentsTable.setEditable(true);
+        paymentsTable.getSelectionModel().cellSelectionEnabledProperty().set(true);
+        paymentsTable.setOnKeyPressed((event) -> {
+            TablePosition<PDModel, ?> pos = paymentsTable.getFocusModel().getFocusedCell();
+            if (pos != null && event.getCode().isLetterKey()) {
+                paymentsTable.edit(pos.getRow(), pos.getTableColumn());
+            } else if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.TAB) {
+                paymentsTable.getSelectionModel().selectNext();
+                event.consume();
+            } else if (event.getCode() == KeyCode.LEFT) {
+                selectPrevious(paymentsTable);
+            }
+        });
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
         PDAnchor.setBottom(paymentsTable);
     }

@@ -5,12 +5,9 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
-import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
-import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
@@ -35,7 +32,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -104,7 +100,7 @@ public class ME2Controller implements Initializable {
     
     
     private double tabWidth = 90.0;
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\NetbeansProjects\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
     String tabCheck = null;
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
