@@ -7,6 +7,7 @@ package com.clickdigitalsolutions.rentverticalmenu;
  */
 
 
+import static com.clickdigitalsolutions.rentverticalmenu.TDController.getPrefferedCellStyle;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
@@ -15,6 +16,11 @@ import com.jfoenix.controls.JFXTreeView;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,17 +30,16 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
@@ -51,7 +56,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -79,6 +83,17 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 /**
  * FXML Controller class
  *
@@ -217,7 +232,7 @@ public class PDController implements Initializable {
     }
     
     @FXML
-    private void saveButtonActionPD(){
+    private void saveButtonActionPD() throws FileNotFoundException{
         if (comboboxPDCheck.equals("Block A") && amountPD.getText().isEmpty()){
             Alert amountEmptyAlert = new Alert(Alert.AlertType.INFORMATION);
             amountEmptyAlert.setTitle("Information Dialog");
@@ -244,6 +259,7 @@ public class PDController implements Initializable {
             amountEmptyAlert.showAndWait();
         } else if (comboboxPDCheck.equals("Block A")){
             createPaymentDetailsTable((String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
+            createAndWriteExcelSheet((String)blockAComboPD.getSelectionModel().getSelectedItem(), tenantNamePD.getText() , amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem().name(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
             setEmpty();
             blockAComboPD.setValue(null);
         }else if (comboboxPDCheck.equals("Block B")){
@@ -313,7 +329,7 @@ public class PDController implements Initializable {
     private void setEmpty(){
         tenantNamePD.setText("");
         amountPD.setText("");
-        monthComboPD.setValue(null);
+        monthComboPD.setValue(PDModel.Strings.NONE);
         rentPaymentDatePD.setValue(null);
         cash.setValue("Cash recieved by:");
         root3.setExpanded(false);
@@ -767,8 +783,136 @@ public class PDController implements Initializable {
         });
     }
     
-    ObjectProperty<Predicate<PDModel>> nameFilter = new SimpleObjectProperty<>();
-    ObjectProperty<Predicate<PDModel>> monthFilter = new SimpleObjectProperty<>();
+    
+    
+    
+    public void createAndWriteExcelSheet(String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
+        File tenantDataExists = new File("jatom tenants.xls");
+        HSSFWorkbook workbook;
+        
+        if (tenantDataExists.exists() == false) {
+            workbook = new HSSFWorkbook();
+        } else {
+            try {
+                FileInputStream inputStream = new FileInputStream(tenantDataExists);
+                Workbook workbookExists = WorkbookFactory.create(inputStream);
+                
+                Sheet spreadSheet = workbookExists.getSheet("Payment Details");
+                
+                Font boldFont = workbookExists.createFont();
+                boldFont.setBold(true);
+                CellStyle headerRowStyle = workbookExists.createCellStyle();
+                headerRowStyle.setFont(boldFont);
+                
+                Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
+                tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Amount", "MonthlyRent", "Payment Date", "Payment Method"});
+                tenantData.put("2", new Object[]{hNo, tName, amount, monthlyRent, paymentDate, paymentMethod});
+                
+                Set<String> keyset = tenantData.keySet();
+                int rownum = 0;
+                if (spreadSheet == null) {
+                    spreadSheet = workbookExists.createSheet("Payment Details");
+                    for (String key : keyset) {
+                        Row row = spreadSheet.createRow(rownum++);
+                        if (rownum == 1) {
+                            row.setRowStyle(headerRowStyle);
+                        }
+                        Object[] objArr = tenantData.get(key);
+                        int cellnum = 0;
+                        for (Object obj : objArr) {
+                            Cell cell = row.createCell(cellnum++);
+                            cell.setCellStyle(getPrefferedCellStyle(cell));
+                            if (obj instanceof String) {
+                                cell.setCellValue((String) obj);
+                            } else if (obj instanceof Integer) {
+                                cell.setCellValue((Integer) obj);
+                            }
+                        }
+                    }
+                    for (int c = 0; c < tenantData.get("1").length; c++) {
+                        spreadSheet.autoSizeColumn(c); //autosize, merged cells should be ignored
+                        //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
+                    }
+                } else {
+                    Object[][] tData = {{hNo, tName, amount, monthlyRent, paymentDate, paymentMethod}};
+
+                    int rowCount = spreadSheet.getPhysicalNumberOfRows();
+
+                    for (Object[] tBook : tData) {
+                        Row row = spreadSheet.createRow(rowCount++);
+
+                        int columnCount = 0;
+
+                        for (Object obj : tBook) {
+                            Cell cell = row.createCell(columnCount++);
+                            if (obj instanceof String) {
+                                cell.setCellValue((String) obj);
+                            } else if (obj instanceof Integer) {
+                                cell.setCellValue((Integer) obj);
+                            }
+                        }
+                    }
+                }
+                inputStream.close();
+
+                FileOutputStream outputStream = new FileOutputStream(tenantDataExists);
+                workbookExists.write(outputStream);
+                workbookExists.close();
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+    }
+
+    
+    
+    public void readExcelFile(File tenantDataExists) throws FileNotFoundException {
+        String hNo = null;
+        String tName = null;
+        String amount = null;
+        String month = null;
+        String payDate = null;
+        String payMethod = null;
+        try {
+            FileInputStream excelInputStream = new FileInputStream(tenantDataExists);
+            Workbook workbook = WorkbookFactory.create(excelInputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            Iterator<Row> rowIterator = sheet.iterator();
+            
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                if (row.getRowNum() == 0) {
+                    continue;
+                } else {
+                    Iterator<Cell> cellIterator = row.cellIterator();
+                    while (cellIterator.hasNext()) {
+                        Cell cell = cellIterator.next();
+                        
+                    }
+                    
+                    hNo = row.getCell(0).getStringCellValue();
+                    tName = row.getCell(1).getStringCellValue();
+                    amount = row.getCell(2).getStringCellValue();
+                    month = row.getCell(3).getStringCellValue();
+                    payDate = row.getCell(4).getStringCellValue();
+                    payMethod = row.getCell(5).getStringCellValue();
+                    System.out.println(hNo);
+                    System.out.println(tName);
+                    System.out.println(amount);
+                    System.out.println(month);
+                    System.out.println(payDate);
+                    System.out.println(payMethod);
+                }
+
+            }
+            excelInputStream.close();
+        } catch (Exception e) {
+        }
+        createPaymentDetailsTable(hNo, tName, amount, PDModel.Strings.valueOf(month), payDate, payMethod);
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -783,6 +927,7 @@ public class PDController implements Initializable {
         setupMonthColumn();
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
+        
         
         monthComboPD.getItems().addAll(PDModel.Strings.values());
         
@@ -884,7 +1029,6 @@ public class PDController implements Initializable {
                 houseComboTitledPanePD.setGraphic(label);
                 houseComboTitledPanePD.setExpanded(false);
                 payTenantDetails = getPaymentDetails();
-                
                 paymentsTable.setItems(payTenantDetails);
             });
             blockBComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1224,6 +1368,7 @@ public class PDController implements Initializable {
                            
                            rentPayMethodPD = rs.getString("PaymentMethod");
                            paidRent = getStringNumber(rs.getString("Amount"));
+                           System.out.println(paidRent);
                            expectedRent = getStringNumber(rs1.getString("RentAmount"));
                            int arrears = expectedRent - paidRent;
                            if (!rs1.next() || arrears == 0){
@@ -1458,7 +1603,7 @@ public class PDController implements Initializable {
         
         clearButton.setOnAction((event) -> {
             payRecordsFilter.clear();
-            monthComboPD.setValue(null);
+            monthComboPD.setValue(PDModel.Strings.NONE);
         });
         
         paymentsTable.setEditable(true);
@@ -1477,5 +1622,6 @@ public class PDController implements Initializable {
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
         PDAnchor.setBottom(paymentsTable);
     }
+   
     
 }

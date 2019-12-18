@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -203,7 +204,6 @@ public class TDController implements Initializable {
                 Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
 
                 int rowCount = sheet.getPhysicalNumberOfRows();
-                System.out.println(rowCount);
 
                 for (Object[] tBook : tData) {
                     Row row = sheet.createRow(rowCount++);
@@ -226,6 +226,7 @@ public class TDController implements Initializable {
                 workbookExists.close();
                 outputStream.close();
             } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -246,7 +247,7 @@ public class TDController implements Initializable {
             style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
-            tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "Monthly Rent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
+            tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "MonthlyRent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
             tenantData.put("2", new Object[]{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate});
 
             Set<String> keyset = tenantData.keySet();
@@ -285,13 +286,13 @@ public class TDController implements Initializable {
         }
 
     }
-        
+    
     
     @FXML
     private void saveButtonActionTD() throws FileNotFoundException{
         if (comboboxTDCheck.equals("Block A")){
             createTenantDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            subcontroller.createPaymentDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
+            subcontroller.createPaymentDetailsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
             repairscontroller.createRepairsTable((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             createExcelSheet((String)blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             setEmpty();

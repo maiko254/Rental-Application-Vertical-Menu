@@ -4,6 +4,8 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTabPane;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -34,6 +36,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -290,6 +293,21 @@ public class FXMLController implements Initializable {
             JasperViewer jasperViewer = new JasperViewer(jasperPrint, false);
             jasperViewer.setTitle("Rent Receipt");
             jasperViewer.setVisible(true);
+        });
+        
+        Import.setOnAction((event) -> {
+            FileChooser excelFileChooser = new FileChooser();
+            excelFileChooser.setTitle("Import Excel File");
+            File file = excelFileChooser.showOpenDialog(motherAnchor.getScene().getWindow());
+            
+            if (file != null) {
+                try {
+                    subcontroller.readExcelFile(file);
+                    
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         });
         
         motherAnchor.setPrefWidth(750);
