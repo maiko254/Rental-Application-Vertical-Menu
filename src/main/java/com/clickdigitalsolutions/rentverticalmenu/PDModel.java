@@ -55,7 +55,7 @@ public class PDModel {
         houseNumberTablePD = new SimpleStringProperty(houseNumber);
         tenantNameTablePD = new SimpleStringProperty(tenantName);
         amountTablePD = new SimpleStringProperty(rentAmount);
-        monthTablePD = new SimpleObjectProperty<Strings>(monthPaid);
+        monthTablePD = new SimpleObjectProperty<>(monthPaid);
         paymentDateTablePD = new SimpleStringProperty(paymentDate);
         paymentMethodPD = new SimpleStringProperty(paymentMethod);
     }

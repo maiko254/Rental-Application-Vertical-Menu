@@ -25,7 +25,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
@@ -38,7 +40,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import jfxtras.styles.jmetro8.JMetro;
+
 
 /**
  * FXML Controller class
@@ -81,8 +83,7 @@ public class RController implements Initializable {
     public TableView<RModel> repairsTable = new TableView<>();
     
     @FXML
-    public VBox repairsVbox;    
-    private JMetro.Style STYLE = JMetro.Style.DARK;
+    public VBox repairsVbox;
     
     private String comboboxRCheck = "Empty";
     
@@ -220,6 +221,35 @@ public class RController implements Initializable {
 
         @Override
         public void handle(MouseEvent t) {
+            ContextMenu editTable = new ContextMenu();
+            MenuItem edit = new MenuItem("Edit Record");
+            MenuItem delete = new MenuItem("Delete Record");
+            delete.setOnAction((event) -> {
+                try {
+                    String deleteRecord = "DELETE FROM RepairsTable WHERE HouseNumber = ? AND DateOfRepairs = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(deleteRecord);
+                    TablePosition cellPos = repairsTable.getSelectionModel().getSelectedCells().get(0);
+                    int row = cellPos.getRow();
+                    pstmt.setString(1, repairsTable.getItems().get(row).gethouseNumberTableR());
+                    pstmt.setString(2, repairsTable.getItems().get(row).getdateofRepairsTableR());
+                    pstmt.executeUpdate();
+                    RModel selectedItem = repairsTable.getSelectionModel().getSelectedItem();
+                    repairsTable.getItems().remove(selectedItem);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                setEmpty();
+            });
+            
+            repairsTable.setOnContextMenuRequested((event) -> {
+                editTable.getItems().addAll(edit, delete);
+                editTable.show(repairsTable, event.getScreenX(), event.getScreenY());
+            });
+            repairsTable.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+                editTable.hide();
+            });
+            
             if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
                 TableCell cell = (TableCell) t.getSource();
                 int index = cell.getIndex();

@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -77,18 +76,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import jfxtras.styles.jmetro8.JMetro;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -154,7 +149,6 @@ public class PDController implements Initializable {
     private TableColumn<PDModel, String> methodCol = new TableColumn<>("Payment Method");
     
     public TableView<PDModel> paymentsTable = new TableView<>();
-    private static JMetro.Style STYLE = JMetro.Style.DARK;
     
     String paymentMode;
 
@@ -450,7 +444,7 @@ public class PDController implements Initializable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                
+                setEmpty();
             });
             
             
@@ -878,7 +872,7 @@ public class PDController implements Initializable {
         try {
             FileInputStream excelInputStream = new FileInputStream(tenantDataExists);
             Workbook workbook = WorkbookFactory.create(excelInputStream);
-            Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet = workbook.getSheet("Payment Details");
             
             Iterator<Row> rowIterator = sheet.iterator();
             
