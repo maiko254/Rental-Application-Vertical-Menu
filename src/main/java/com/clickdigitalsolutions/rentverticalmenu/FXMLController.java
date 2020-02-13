@@ -1,17 +1,25 @@
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import static com.clickdigitalsolutions.rentverticalmenu.TDController.getPrefferedCellStyle;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTabPane;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.Event;
@@ -35,6 +43,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -43,6 +52,18 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.export.oasis.Utility;
 import net.sf.jasperreports.view.JasperViewer;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.eclipse.jdt.internal.compiler.batch.Main;
 
 public class FXMLController implements Initializable {
 
@@ -90,22 +111,46 @@ public class FXMLController implements Initializable {
 
     @FXML
     private MenuItem Import;
-
+    
+    @FXML
+    private MenuItem Save;
+    
+    @FXML
+    private MenuItem SaveAs;
+    
     @FXML
     private MenuItem print;
 
     @FXML
     private MenuItem about;
-
+    
     private double tabWidth = 90.0;
     public static int lastSelectedTabIndex = 0;
 
     String fxmlCheck;
 
     JFXButton addButton;
-
+    
     private SearchFXMLController searchController;
-
+    
+    
+    private BorderPane td;
+    
+    private BorderPane pd;
+    
+    private BorderPane rd;
+    
+    private BorderPane me;
+    
+    private TDController tdController;
+    
+    private RController rController;
+    
+    private PDController subcontroller;
+    
+    private ME2Controller expensesController;
+    
+    
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
         tabContainer.setTabMaxWidth(tabWidth);
@@ -124,53 +169,14 @@ public class FXMLController implements Initializable {
             }
         };
 
-        configureViewTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", getClass().getResource("/fxml/TD2.fxml"), replaceBackgroundColorHandler);
-        configureViewTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", getClass().getResource("/fxml/Repairs.fxml"), replaceBackgroundColorHandler);
-        configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", getClass().getResource("/fxml/PD2.fxml"), replaceBackgroundColorHandler);
-        configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", getClass().getResource("/fxml/Monthly Expense.fxml"), replaceBackgroundColorHandler);
+        configureViewTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", replaceBackgroundColorHandler);
+        configureViewTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", replaceBackgroundColorHandler);
+        configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", replaceBackgroundColorHandler);
+        configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", replaceBackgroundColorHandler);
         tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
-
-    private void configureTab(Tab tab, String title, String iconPath, GridPane containerPane, URL resourceURL, EventHandler<Event> onSelectionChangedEvent) {
-        double imageWidth = 40.0;
-
-        ImageView imageView = new ImageView(new Image(iconPath));
-        imageView.setFitHeight(imageWidth);
-        imageView.setFitWidth(imageWidth);
-
-        Label label = new Label(title);
-        label.setMaxWidth(tabWidth - 20);
-        label.setPadding(new Insets(5, 0, 0, 0));
-        label.setStyle("-fx-text-fill: black; -fx-font-size: 8pt; -fx-font-weight: normal;");
-        label.setTextAlignment(TextAlignment.CENTER);
-
-        BorderPane tabPane = new BorderPane();
-        tabPane.setRotate(90.0);
-        tabPane.setMaxWidth(tabWidth);
-        tabPane.setCenter(imageView);
-        tabPane.setBottom(label);
-
-        tab.setText("");
-        tab.setGraphic(tabPane);
-
-        tab.setOnSelectionChanged(onSelectionChangedEvent);
-
-        if (containerPane != null && resourceURL != null) {
-            try {
-                Parent contentView = FXMLLoader.load(resourceURL);
-                
-                containerPane.getChildren().add(contentView);
-                AnchorPane.setTopAnchor(contentView, 0.0);
-                AnchorPane.setBottomAnchor(contentView, 0.0);
-                AnchorPane.setRightAnchor(contentView, 0.0);
-                AnchorPane.setLeftAnchor(contentView, 0.0);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
     
-    private void configureViewTab(Tab tab, String title, String iconPath, URL resourceURL, EventHandler<Event> onSelectionChangedEvent){
+    private void configureViewTab(Tab tab, String title, String iconPath, EventHandler<Event> onSelectionChangedEvent){
         double imageWidth = 40.0;
 
         ImageView imageView = new ImageView(new Image(iconPath));
@@ -193,16 +199,6 @@ public class FXMLController implements Initializable {
         tab.setGraphic(tabPane);
 
         tab.setOnSelectionChanged(onSelectionChangedEvent);
-        
-        if (resourceURL != null) {
-            try {
-                Parent contentView = FXMLLoader.load(resourceURL);
-                tab.setContent(contentView);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     private JFXButton createIconButton(double iconXLayout, double iconYLayout) {
@@ -232,8 +228,16 @@ public class FXMLController implements Initializable {
         window.initModality(Modality.APPLICATION_MODAL);
         window.show();
     }
-
-    PDController subcontroller = new PDController();
+    
+    public String getDateValueAsString(LocalDate dateConvert){
+        String repairsDateString = null;
+        if (dateConvert == null) {
+            repairsDateString = null;
+        } else if (dateConvert != null) {
+            repairsDateString = dateConvert.format(DateTimeFormatter.ISO_DATE);
+        }
+        return repairsDateString;
+    }
     
     private Map getReceiptParameters(){
         HashMap map = new HashMap();
@@ -242,10 +246,141 @@ public class FXMLController implements Initializable {
         return map;
     }
     
+    public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+        File tenantDataExists = new File("jatom tenants.xls");
+        if (tenantDataExists.exists()) {
+            try {
+                FileInputStream inputStream = new FileInputStream(tenantDataExists);
+                Workbook workbookExists = WorkbookFactory.create(inputStream);
+
+                Sheet sheet = workbookExists.getSheetAt(0);
+                
+                Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
+
+                int rowCount = sheet.getPhysicalNumberOfRows();
+
+                for (Object[] tBook : tData) {
+                    Row row = sheet.createRow(rowCount++);
+
+                    int columnCount = 0;
+
+                    for (Object obj : tBook) {
+                        Cell cell = row.createCell(columnCount++);
+                        if (obj instanceof String) {
+                            cell.setCellValue((String) obj);
+                        } else if (obj instanceof Integer) {
+                            cell.setCellValue((Integer) obj);
+                        }
+                    }
+                }
+                inputStream.close();
+
+                FileOutputStream outputStream = new FileOutputStream(tenantDataExists);
+                workbookExists.write(outputStream);
+                workbookExists.close();
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet sheet = workbook.createSheet("Tenant Data");
+
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            CellStyle headerRowStyle = workbook.createCellStyle();
+            headerRowStyle.setFont(boldFont);
+
+            CellStyle style = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setFontHeightInPoints((short) 11);
+            font.setFontName(HSSFFont.FONT_ARIAL);
+            font.setBold(true);
+            style.setFont(font);
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
+            tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "MonthlyRent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
+            tenantData.put("2", new Object[]{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate});
+
+            Set<String> keyset = tenantData.keySet();
+            int rownum = 0;
+            for (String key : keyset) {
+                Row row = sheet.createRow(rownum++);
+                if (rownum == 1) {
+                    row.setRowStyle(headerRowStyle);
+                }
+                Object[] objArr = tenantData.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr) {
+                    Cell cell = row.createCell(cellnum++);
+                    cell.setCellStyle(getPrefferedCellStyle(cell));
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    }
+                }
+            }
+
+            for (int c = 0; c < tenantData.get("1").length; c++) {
+                sheet.autoSizeColumn(c); //autosize, merged cells should be ignored
+                //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
+            }
+
+            try {
+                FileOutputStream out = new FileOutputStream(new File("jatom tenants.xls"));
+                workbook.write(out);
+                out.close();
+                workbook.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configureView();
-
+        
+        FXMLLoader tdLoader  = new FXMLLoader();
+        try {
+            td = tdLoader.load(getClass().getResourceAsStream("/fxml/TD2.fxml"));
+            tenantDetailsTab.setContent(td);
+            tdController = (TDController)tdLoader.getController();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        FXMLLoader pdLoader  = new FXMLLoader();
+        try {
+            pd = pdLoader.load(getClass().getResourceAsStream("/fxml/PD2.fxml"));
+            paymentDetailsTab.setContent(pd);
+            subcontroller = (PDController)pdLoader.getController();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        FXMLLoader rLoader  = new FXMLLoader();
+        try {
+            rd = rLoader.load(getClass().getResourceAsStream("/fxml/Repairs.fxml"));
+            repairsTab.setContent(rd);
+            rController = (RController)rLoader.getController();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        FXMLLoader meLoader  = new FXMLLoader();
+        try {
+            me = meLoader.load(getClass().getResourceAsStream("/fxml/Monthly Expense.fxml"));
+            monthlyExpensesTab.setContent(me);
+            expensesController = (ME2Controller)meLoader.getController();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
 
         tabContainer.setOnMouseClicked((event) -> {
@@ -259,10 +394,9 @@ public class FXMLController implements Initializable {
                 fxmlCheck = "MEfxml";
             }
         });
-        String hNo = "A1";
-        String Month = "July";
+        
         print.setOnAction((event) -> {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PD2.fxml"));
+            
             PDModel pdmodel = new PDModel();
             Map map = null;
 
@@ -307,6 +441,15 @@ public class FXMLController implements Initializable {
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
+        });
+        
+        Save.setOnAction((event) -> {
+            try {
+                tdController.createExcelSheet((String)tdController.blockACombo.getSelectionModel().getSelectedItem(), tdController.tenantName.getText() , tdController.tenantPhoneNumber.getText(), tdController.monthlyRent.getText(), tdController.houseDeposit.getText(), tdController.dueDate.getText(), getDateValueAsString(tdController.moveInDate.getValue()), getDateValueAsString(tdController.moveOutDate.getValue()), getDateValueAsString(tdController.leaseStartDate.getValue()), getDateValueAsString(tdController.leaseEndDate.getValue()));
+                tdController.setEmpty();
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
             }
         });
         

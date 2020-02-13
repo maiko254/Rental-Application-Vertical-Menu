@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -98,12 +99,12 @@ public class ME2Controller implements Initializable {
     public BorderPane otherAnchor;
     public AnchorPane savePane;
     
-    
     private double tabWidth = 90.0;
     String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
     String tabCheck = null;
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
+    
     
     public static class MonthlyModel {
 
@@ -829,7 +830,8 @@ public class ME2Controller implements Initializable {
     }
     
     private void setupUnitsConsumedCol() {
-        unitsCol.setPrefWidth(150.0);
+        DoubleBinding usedWidth = monthCol.widthProperty().add(amountCol.widthProperty()).add(dateCol.widthProperty());
+        unitsCol.prefWidthProperty().bind(monthlyElectricExpenseTable.widthProperty().subtract(usedWidth));
         unitsCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("unitsConsumedME"));
         unitsCol.setCellFactory(customStringCellFactory);
@@ -896,7 +898,8 @@ public class ME2Controller implements Initializable {
     }
     
     private void setupWaterUnitColumn() {
-        unitsWaterCol.setPrefWidth(150.0);
+        DoubleBinding usedWidth = monthWaterCol.widthProperty().add(amountWaterCol.widthProperty()).add(dateWaterCol.widthProperty());
+        unitsWaterCol.prefWidthProperty().bind(waterExpenseTable.widthProperty().subtract(usedWidth));
         unitsWaterCol.setCellValueFactory(new PropertyValueFactory<waterMonthlyModel, String>("unitsConsumedME"));
         unitsWaterCol.setCellFactory(customWaterColCellFactory);
         unitsWaterCol.setOnEditStart((event) -> {
@@ -960,7 +963,8 @@ public class ME2Controller implements Initializable {
     }
     
     private void setupOtherExpenseReasonColumn() {
-        reasonOtherCol.setPrefWidth(150.0);
+        DoubleBinding usedWidth = monthOtherCol.widthProperty().add(amountOtherCol.widthProperty()).add(dateOtherCol.widthProperty());
+        reasonOtherCol.prefWidthProperty().bind(otherExpenseTable.widthProperty().subtract(usedWidth));
         reasonOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("expenseReasonME"));
         reasonOtherCol.setCellFactory(customOtherColCellFactory);
         reasonOtherCol.setOnEditStart((event) -> {
@@ -987,6 +991,7 @@ public class ME2Controller implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+      
         configureView();
         
         setupMonthColumn();

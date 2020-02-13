@@ -13,6 +13,7 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
+import com.sun.javafx.scene.control.skin.TableViewSkin;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
@@ -20,6 +21,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -34,15 +37,19 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.application.Platform;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -172,13 +179,7 @@ public class PDController implements Initializable {
     @FXML
     private Button clearButton;
     
-    public PDController(){
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/PD2.fxml"));
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setController(this);
-        
-    }
-     
+    
     ObservableList<String>blockB = FXCollections.observableArrayList("B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12");
     ObservableList<String>blockA = FXCollections.observableArrayList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12");
     ObservableList<String>blockC = FXCollections.observableArrayList("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10");
@@ -633,6 +634,7 @@ public class PDController implements Initializable {
 
     private void setupTenantNameColumn() {
         tenantNameCol.setPrefWidth(120);
+        tenantNameCol.setStyle("-fx-alignment: CENTER RIGHT");
         tenantNameCol.setCellValueFactory(
                 new PropertyValueFactory<PDModel, String>("tenantNameTablePD"));
         tenantNameCol.setCellFactory(stringCellFactory);
@@ -719,7 +721,9 @@ public class PDController implements Initializable {
         dateCol.setCellFactory(stringCellFactory);
     }
     private void setupPaymentMethodColumn() {
-        methodCol.setPrefWidth(120);
+        
+        DoubleBinding usedWidth = amountCol.widthProperty().add(monthCol.widthProperty()).add(dateCol.widthProperty());
+        methodCol.prefWidthProperty().bind(paymentsTable.widthProperty().subtract(usedWidth));
         methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
         methodCol.setCellValueFactory(new PropertyValueFactory<PDModel, String>("paymentMethodPD"));
         methodCol.setCellFactory(customCellFactory);
@@ -908,12 +912,29 @@ public class PDController implements Initializable {
         createPaymentDetailsTable(hNo, tName, amount, PDModel.Strings.valueOf(month), payDate, payMethod);
     }
     
+    public void customResize(TableView<?> tView) {
+        AtomicLong width = new AtomicLong();
+        tView.getColumns().forEach(col -> {
+            width.addAndGet((long) col.getWidth());
+        });
+        double tableWidth = tView.getWidth();
+        
+        if (tableWidth > width.get()) {
+            tView.getColumns().forEach(col -> {
+                col.setPrefWidth(col.getWidth()+((tableWidth-width.get())/tView.getColumns().size()));
+            });
+        }
+    }
+    
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockAComboPD.setItems(blockA);
         blockBComboPD.setItems(blockB);
         blockCComboPD.setItems(blockC);
         nasraBlockPD.setItems(nasraBlock);
+        
+        houseComboTitledPanePD.getStylesheets().add("/styles/newCascadeStyleSheet.css");
         
         setupHouseNumberColumn();
         setupTenantNameColumn();
@@ -922,9 +943,15 @@ public class PDController implements Initializable {
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
         
-        
         monthComboPD.getItems().addAll(PDModel.Strings.values());
         
+        houseComboTitledPanePD.setOnMouseClicked((event) -> {
+            blockAComboPD.getSelectionModel().clearSelection();
+            blockBComboPD.getSelectionModel().clearSelection();
+            blockCComboPD.getSelectionModel().clearSelection();
+            nasraBlockPD.getSelectionModel().clearSelection();
+            comboboxPDCheck = "Empty";
+        });
 
         houseComboTitledPanePD.setOnMouseClicked((event) -> {
             blockAComboPD.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1487,9 +1514,20 @@ public class PDController implements Initializable {
                 updatePDAmount.visibleProperty().unbind();
                 updatePDAmount.setVisible(false);
             }
-        });    
+        });
+        
         PDAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPanePD.setExpanded(false);
+        });
+        PDAnchor.setOnKeyPressed((event) -> {
+           if (event.getCode() == KeyCode.ESCAPE) {
+               blockAComboPD.setValue(null);
+               blockBComboPD.setValue(null);
+               blockCComboPD.setValue(null);
+               nasraBlockPD.setValue(null);
+               setEmpty();
+               event.consume();
+           } 
         });
         
         saveButtonPD.setGraphic(GlyphsDude.createIconButton(MaterialDesignIcon.CONTENT_SAVE, "Save", "20", "14", ContentDisplay.RIGHT));
@@ -1613,9 +1651,9 @@ public class PDController implements Initializable {
                 selectPrevious(paymentsTable);
             }
         });
+        
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
+        
         PDAnchor.setBottom(paymentsTable);
-    }
-   
-    
+    }   
 }

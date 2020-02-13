@@ -16,14 +16,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
+<BorderPane fx:id="PDAnchor" prefHeight="394.0" prefWidth="710.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
    <center>
       <VBox fx:id="paymentVbox" spacing="15.0" style="-fx-background-color: #dedede;">
          <children>
             <HBox prefHeight="34.0" prefWidth="600.0" spacing="10.0">
                <children>
                   <Label prefHeight="18.0" prefWidth="119.0" text="House Number" />
-                  <TitledPane fx:id="houseComboTitledPanePD" expanded="false" prefHeight="64.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
+                  <TitledPane fx:id="houseComboTitledPanePD" expanded="false" prefHeight="64.0" prefWidth="218.0" text="Select House" textFill="#fdfdfd">
                      <font>
                         <Font size="13.0" />
                      </font>

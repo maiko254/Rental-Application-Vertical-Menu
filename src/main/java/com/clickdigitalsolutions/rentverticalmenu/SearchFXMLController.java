@@ -54,7 +54,7 @@ public class SearchFXMLController implements Initializable {
     
     private FXMLController scontroller = new FXMLController();
     
-    String databaseURL = "jdbc:sqlite:C:\\Users\\bonyo\\Documents\\SQLite\\RVM.db";
+    String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
     
     public SearchFXMLController(TDController subcontroller){
         controller = subcontroller;
@@ -63,6 +63,7 @@ public class SearchFXMLController implements Initializable {
     public SearchFXMLController(FXMLController sbcontroller){
         scontroller = sbcontroller;
     }
+
     
     public ObservableList<TDModel> initializeList() {
         try {

@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import javafx.beans.binding.DoubleBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -371,6 +372,8 @@ public class RController implements Initializable {
     }
     
     private void setupMiscellaneousColumn() {
+        DoubleBinding usedWidth = houseNo.widthProperty().add(tenantName.widthProperty()).add(repairDone.widthProperty()).add(costOfRepair.widthProperty()).add(dateOfRepair.widthProperty());
+        miscExpenses.prefWidthProperty().bind(repairsTable.widthProperty().subtract(usedWidth));
         miscExpenses.setCellValueFactory(new PropertyValueFactory<RModel, String>("miscellaneousTableR"));
         miscExpenses.setCellFactory(column -> EditCell.createStringEditCell());
         miscExpenses.setOnEditStart((event) -> {
@@ -422,6 +425,13 @@ public class RController implements Initializable {
         setupRepairCostColumn();
         setupRepairsDateColumn();
         setupMiscellaneousColumn();
+        
+        houseComboTitledPaneR.setOnMouseClicked((event) -> {
+            blockAComboR.getSelectionModel().clearSelection();
+            blockBComboR.getSelectionModel().clearSelection();
+            blockCComboR.getSelectionModel().clearSelection();
+            comboboxRCheck = "Empty";
+        });
         
         houseComboTitledPaneR.setOnMouseClicked((event) -> {
             blockAComboR.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -555,7 +565,16 @@ public class RController implements Initializable {
         RAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPaneR.setExpanded(false);
         });
-        
+        RAnchor.setOnKeyPressed((event) -> {
+           if (event.getCode() == KeyCode.ESCAPE) {
+               blockAComboR.setValue(null);
+               blockBComboR.setValue(null);
+               blockCComboR.setValue(null);
+               nasraBlockR.setValue(null);
+               setEmpty();
+               event.consume();
+           } 
+        });
         
        
         

@@ -14,14 +14,17 @@ import javafx.beans.property.StringProperty;
  */
 public class TDModel {
     
-    public StringProperty houseNumberTablePD;
-    public StringProperty tenantNameTablePD;
+    public static StringProperty houseNumberTablePD = new SimpleStringProperty();
+    public static StringProperty tenantNameTablePD = new SimpleStringProperty();
+    
+    public TDModel(){
+        
+    }
     
     public TDModel(String houseNumber, String tenantName) {
         houseNumberTablePD = new SimpleStringProperty(houseNumber);
         tenantNameTablePD = new SimpleStringProperty(tenantName);
     }
-
     
     public String toString() {
         return this.gettenantNameTableTD();

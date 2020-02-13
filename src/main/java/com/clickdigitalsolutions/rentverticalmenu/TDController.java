@@ -20,14 +20,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -36,8 +36,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
@@ -46,7 +46,6 @@ import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.sqlite.SQLiteException;
 
 
 /**
@@ -63,49 +62,46 @@ public class TDController implements Initializable {
     
 
     @FXML
-    private JFXTextField tenantName;
+    public JFXTextField tenantName;
     
     @FXML
-    private JFXTextField tenantPhoneNumber;
+    public JFXTextField tenantPhoneNumber;
     
     @FXML
-    private JFXTextField monthlyRent;
+    public JFXTextField monthlyRent;
     
     @FXML
-    private JFXTextField houseDeposit;
+    public JFXTextField houseDeposit;
     
     @FXML
-    private JFXTextField dueDate;
+    public JFXTextField dueDate;
     
     @FXML
-    private JFXDatePicker moveInDate;
+    public JFXDatePicker moveInDate;
     
     @FXML
-    private JFXDatePicker moveOutDate;
+    public JFXDatePicker moveOutDate;
     
     @FXML
-    private JFXDatePicker leaseStartDate;
+    public JFXDatePicker leaseStartDate;
     
     @FXML
-    private JFXDatePicker leaseEndDate;
+    public JFXDatePicker leaseEndDate;
     
     @FXML
     private JFXButton saveButtonTD;
     
     @FXML
-    private AnchorPane houseComboAnchorPane;
+    public JFXComboBox blockACombo = new JFXComboBox(blockA);
     
     @FXML
-    private JFXComboBox blockACombo = new JFXComboBox(blockA);
+    public JFXComboBox blockBCombo = new JFXComboBox(blockB);
     
     @FXML
-    private JFXComboBox blockBCombo = new JFXComboBox(blockB);
+    public JFXComboBox blockCCombo = new JFXComboBox(blockC);
     
     @FXML
-    private JFXComboBox blockCCombo = new JFXComboBox(blockC);
-    
-    @FXML
-    private JFXComboBox nasraBlockCombo = new JFXComboBox(nasraBlock);
+    public JFXComboBox nasraBlockCombo = new JFXComboBox(nasraBlock);
     
     @FXML
     private Label houseStateLabel;
@@ -121,6 +117,10 @@ public class TDController implements Initializable {
     String tdTableConstraint = "Empty";
     
     String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
+    
+    public String getText() {
+        return tenantName.getText();
+    }
     
     private void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate){
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(HouseNumber text PRIMARY KEY, TenantName text, TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text)";
@@ -183,7 +183,7 @@ public class TDController implements Initializable {
         return TDTableData;
     }
     
-    private void setEmpty(){
+    public void setEmpty(){
        tenantName.setText("");
        tenantPhoneNumber.setText("");
        monthlyRent.setText("");
@@ -298,7 +298,6 @@ public class TDController implements Initializable {
 
     }
     
-    
     @FXML
     private void saveButtonActionTD() throws FileNotFoundException{
         if (comboboxTDCheck.equals("Block A")) {
@@ -353,9 +352,7 @@ public class TDController implements Initializable {
     
     PDController subcontroller = new PDController();
     RController repairscontroller = new RController();
-    
-    
-    
+   
     public String getDateValueAsString(LocalDate dateConvert){
         String repairsDateString = null;
         if (dateConvert == null) {
@@ -371,6 +368,8 @@ public class TDController implements Initializable {
         return S.matches(regex);
     } 
     
+    ObjectProperty<TitledPane> tProperty = new SimpleObjectProperty<>();
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         blockACombo.setItems(blockA);
@@ -378,9 +377,12 @@ public class TDController implements Initializable {
         blockCCombo.setItems(blockC);
         nasraBlockCombo.setItems(nasraBlock);
         
+        saveButtonTD.visibleProperty().bind(houseComboTitledPane.graphicProperty().isNotNull());
+        
         houseComboTitledPane.setAnimated(true);
         
         houseComboTitledPane.setOnMouseClicked((event) -> {
+            
             if (houseComboTitledPane.getGraphic() != null) {
                 blockACombo.getSelectionModel().clearSelection();
                 blockBCombo.getSelectionModel().clearSelection();
@@ -402,8 +404,7 @@ public class TDController implements Initializable {
                         houseStateLabel.setText("Vacant");
                         houseStateLabel.setTextFill(Color.web("#8B0618"));
                         houseStateLabel.setTextAlignment(TextAlignment.CENTER);
-                        houseStateLabel.setStyle("-fx-background-color: #122949");
-                        houseStateLabel.setVisible(true); 
+                        houseStateLabel.setStyle("-fx-background-color: #122949"); 
                     }else{
                         do {                            
                           tenantName.setText(rs.getString("TenantName"));
@@ -432,7 +433,6 @@ public class TDController implements Initializable {
                           houseStateLabel.setTextFill(Color.web("#66F7FE"));
                           houseStateLabel.setTextAlignment(TextAlignment.CENTER);
                           houseStateLabel.setStyle("-fx-background-color: #122949");
-                          houseStateLabel.setVisible(true);
                         } while (rs.next());
                     }
                     pstmt.close();
@@ -477,9 +477,19 @@ public class TDController implements Initializable {
             });
         });
         
-        houseStateLabel.setVisible(false); 
+         
         TDAnchor.setOnMouseClicked((event) -> {
             houseComboTitledPane.setExpanded(false);
+        });
+        TDAnchor.setOnKeyPressed((event) -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                blockACombo.setValue(null);
+                blockBCombo.setValue(null);
+                blockCCombo.setValue(null);
+                nasraBlockCombo.setValue(null);
+                setEmpty();
+                event.consume();
+            }
         });
         
         Tooltip v = new Tooltip("Only letters and whitespace is allowed");
@@ -496,6 +506,11 @@ public class TDController implements Initializable {
             });
         });
         v.setAutoHide(true);
-    }    
+        
+        
+        saveButtonTD.visibleProperty().bind(blockACombo.valueProperty().isNotNull().or(blockBCombo.valueProperty().isNotNull().or(blockCCombo.valueProperty().isNotNull().or(nasraBlockCombo.valueProperty().isNotNull()))));
+        houseStateLabel.visibleProperty().bind(blockACombo.valueProperty().isNotNull().or(blockBCombo.valueProperty().isNotNull().or(blockCCombo.valueProperty().isNotNull().or(nasraBlockCombo.valueProperty().isNotNull()))));
+    }
+    
     
 }

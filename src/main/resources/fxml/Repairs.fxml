@@ -24,7 +24,7 @@
                         <Insets top="-15.0" />
                      </HBox.margin>
                   </Label>
-                  <TitledPane fx:id="houseComboTitledPaneR" expanded="false" prefHeight="119.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
+                  <TitledPane fx:id="houseComboTitledPaneR" expanded="false" prefHeight="119.0" prefWidth="218.0" text="Select House" textFill="#fdfdfd">
                      <font>
                         <Font size="13.0" />
                      </font>
@@ -91,7 +91,7 @@
          <children>
             <AnchorPane prefHeight="398.0" prefWidth="100.0">
                <children>
-                  <Button fx:id="saveButtonR" layoutX="24.0" layoutY="14.0" onAction="#saveButtonActionR" mnemonicParsing="false" text="Save" />
+                  <Button fx:id="saveButtonR" layoutX="24.0" layoutY="14.0" mnemonicParsing="false" onAction="#saveButtonActionR" text="Save" />
                </children>
             </AnchorPane>
          </children>

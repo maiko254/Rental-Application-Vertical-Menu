@@ -30,7 +30,7 @@
                         <Insets />
                      </HBox.margin>
                   </HBox>
-                  <TitledPane fx:id="houseComboTitledPane" expanded="false" prefHeight="119.0" prefWidth="218.0" stylesheets="@../styles/newCascadeStyleSheet.css" text="Select House" textFill="#fdfdfd">
+                  <TitledPane fx:id="houseComboTitledPane" expanded="false" prefHeight="119.0" prefWidth="218.0" text="Select House" textFill="#fdfdfd">
                      <font>
                         <Font size="13.0" />
                      </font>
