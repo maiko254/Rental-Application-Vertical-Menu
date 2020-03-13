@@ -8,15 +8,13 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 
-<BorderPane fx:id="motherAnchor" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="703.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.FXMLController">
+<BorderPane fx:id="motherAnchor" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="696.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.FXMLController">
     <center>
       <StackPane fx:id="mainStack">
          <children>
             <JFXTabPane fx:id="tabContainer" prefHeight="128.0" prefWidth="308.0" side="LEFT" stylesheets="@../styles/tabSpacing.css" tabClosingPolicy="UNAVAILABLE">
                <tabs>
-                  <Tab fx:id="tenantDetailsTab" closable="false" text="User Profile" />
                   <Tab fx:id="paymentDetailsTab" closable="false" text="Logout" />
-                  <Tab fx:id="repairsTab" closable="false" text="Settings" />
                   <Tab fx:id="monthlyExpensesTab" text="Untitled Tab" />
                </tabs>
             </JFXTabPane>

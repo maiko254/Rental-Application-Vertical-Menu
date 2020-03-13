@@ -36,6 +36,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -74,13 +75,7 @@ public class FXMLController implements Initializable {
     private StackPane mainStack;
 
     @FXML
-    private Tab tenantDetailsTab;
-
-    @FXML
     private GridPane tenantDetailsContainer;
-
-    @FXML
-    private Tab repairsTab;
 
     @FXML
     private GridPane repairsContainer;
@@ -136,15 +131,13 @@ public class FXMLController implements Initializable {
     
     private BorderPane td;
     
-    private BorderPane pd;
+    private SplitPane pd;
     
     private BorderPane rd;
     
     private BorderPane me;
     
     private TDController tdController;
-    
-    private RController rController;
     
     private PDController subcontroller;
     
@@ -169,11 +162,8 @@ public class FXMLController implements Initializable {
             }
         };
 
-        configureViewTab(tenantDetailsTab, "Tenant\nDetails", "/images/icons8_user_48px.png", replaceBackgroundColorHandler);
-        configureViewTab(repairsTab, "Repairs", "/images/icons8_house_48px.png", replaceBackgroundColorHandler);
         configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", replaceBackgroundColorHandler);
         configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", replaceBackgroundColorHandler);
-        tenantDetailsTab.setStyle("-fx-background-color: -fx-focus-color;");
     }
     
     private void configureViewTab(Tab tab, String title, String iconPath, EventHandler<Event> onSelectionChangedEvent){
@@ -241,7 +231,7 @@ public class FXMLController implements Initializable {
     
     private Map getReceiptParameters(){
         HashMap map = new HashMap();
-        map.put("houseNumber", (String)subcontroller.blockAComboPD.getSelectionModel().getSelectedItem());
+        map.put("houseNumber", subcontroller.blockTreeView.getSelectionModel().getSelectedItem());
         map.put("PayMonth", subcontroller.monthComboPD.getSelectionModel().getSelectedItem());
         return map;
     }
@@ -345,15 +335,6 @@ public class FXMLController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         configureView();
         
-        FXMLLoader tdLoader  = new FXMLLoader();
-        try {
-            td = tdLoader.load(getClass().getResourceAsStream("/fxml/TD2.fxml"));
-            tenantDetailsTab.setContent(td);
-            tdController = (TDController)tdLoader.getController();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
         FXMLLoader pdLoader  = new FXMLLoader();
         try {
             pd = pdLoader.load(getClass().getResourceAsStream("/fxml/PD2.fxml"));
@@ -363,14 +344,6 @@ public class FXMLController implements Initializable {
             e.printStackTrace();
         }
         
-        FXMLLoader rLoader  = new FXMLLoader();
-        try {
-            rd = rLoader.load(getClass().getResourceAsStream("/fxml/Repairs.fxml"));
-            repairsTab.setContent(rd);
-            rController = (RController)rLoader.getController();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         
         FXMLLoader meLoader  = new FXMLLoader();
         try {
@@ -383,17 +356,6 @@ public class FXMLController implements Initializable {
         
         rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
 
-        tabContainer.setOnMouseClicked((event) -> {
-            if (tenantDetailsTab.isSelected()) {
-                fxmlCheck = "TDfxml";
-            } else if (repairsTab.isSelected()) {
-                fxmlCheck = "Rfxml";
-            } else if (paymentDetailsTab.isSelected()) {
-                fxmlCheck = "PDfxml";
-            } else if (monthlyExpensesTab.isSelected()) {
-                fxmlCheck = "MEfxml";
-            }
-        });
         
         print.setOnAction((event) -> {
             
@@ -453,7 +415,5 @@ public class FXMLController implements Initializable {
             }
         });
         
-        motherAnchor.setPrefWidth(750);
-        motherAnchor.setPrefHeight(800);
     }
 }

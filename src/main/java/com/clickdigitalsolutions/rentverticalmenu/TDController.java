@@ -306,7 +306,6 @@ public class TDController implements Initializable {
                 System.out.println("Record is already in Payments Table");
             } else {
                 subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-                repairscontroller.createRepairsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             }
             createExcelSheet((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
             setEmpty();
@@ -317,7 +316,6 @@ public class TDController implements Initializable {
                 System.out.println("Record is already in Payments Table");
             } else {
                 subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-                repairscontroller.createRepairsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             }
             setEmpty();
             blockBCombo.setValue(null);
@@ -327,7 +325,6 @@ public class TDController implements Initializable {
                 System.out.println("Record is already in Payments Table");
             } else {
                 subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-                repairscontroller.createRepairsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             }
             setEmpty();
             blockCCombo.setValue(null);
@@ -337,7 +334,6 @@ public class TDController implements Initializable {
                 System.out.println("Record is already in Payments Table");
             } else {
                 subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-                repairscontroller.createRepairsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, null, null, null);
             }
             setEmpty();
             nasraBlockCombo.setValue(null);
@@ -351,7 +347,6 @@ public class TDController implements Initializable {
     }
     
     PDController subcontroller = new PDController();
-    RController repairscontroller = new RController();
    
     public String getDateValueAsString(LocalDate dateConvert){
         String repairsDateString = null;
