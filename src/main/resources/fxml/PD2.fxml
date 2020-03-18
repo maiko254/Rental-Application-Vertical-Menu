@@ -3,7 +3,7 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-<SplitPane fx:id="sp1" orientation="VERTICAL" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
+<SplitPane fx:id="sp1" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="215.0" prefWidth="412.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.PDController">
   <items>
       <SplitPane fx:id="sp2" dividerPositions="0.2473159509202454" orientation="HORIZONTAL">
          <items>
