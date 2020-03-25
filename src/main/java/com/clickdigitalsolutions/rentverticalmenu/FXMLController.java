@@ -406,13 +406,21 @@ public class FXMLController implements Initializable {
             }
         });
         
-        Save.setOnAction((event) -> {
-            try {
-                tdController.createExcelSheet((String)tdController.blockACombo.getSelectionModel().getSelectedItem(), tdController.tenantName.getText() , tdController.tenantPhoneNumber.getText(), tdController.monthlyRent.getText(), tdController.houseDeposit.getText(), tdController.dueDate.getText(), getDateValueAsString(tdController.moveInDate.getValue()), getDateValueAsString(tdController.moveOutDate.getValue()), getDateValueAsString(tdController.leaseStartDate.getValue()), getDateValueAsString(tdController.leaseEndDate.getValue()));
-                tdController.setEmpty();
-            } catch (FileNotFoundException ex) {
-                ex.printStackTrace();
+        SaveAs.setOnAction((event) -> {
+            File payFile = FileChooserClass.showSaveDialog(motherAnchor.getScene().getWindow());
+            if (payFile != null) {
+                try {
+                    subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
+                    subcontroller.createAndWriteExcelSheet(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
+                    subcontroller.setEmpty();
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        });
+        
+        Save.setOnAction((event) -> {
+            
         });
         
     }

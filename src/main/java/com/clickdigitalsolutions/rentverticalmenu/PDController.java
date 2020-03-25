@@ -12,6 +12,7 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXRadioButton;
+import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
 import com.sun.javafx.scene.control.skin.TableViewSkin;
@@ -46,6 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
@@ -83,6 +85,8 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
@@ -269,27 +273,46 @@ public class PDController implements Initializable {
     Label l13 = new Label("Payment Date");
     Label l14 = new Label("Payment Option");
     
-    private JFXTextField tdName = new JFXTextField();
-    private JFXTextField tdPhone = new JFXTextField();
-    private JFXTextField tdAmount = new JFXTextField();
-    private JFXTextField tdDeposit = new JFXTextField();
-    private JFXTextField tdDueDate = new JFXTextField();
-    private JFXDatePicker tdMoveInDate = new JFXDatePicker();
-    private JFXDatePicker tdMoveOutDate = new JFXDatePicker();
-    private JFXDatePicker tdLeaseStartDate = new JFXDatePicker();
-    private JFXDatePicker tdLeaseEndDate = new JFXDatePicker();
+    Label l15 = new Label("Tenant Name");
+    Label l16 = new Label("Repairs Done");
+    Label l17 = new Label("Repairs Costs");
+    Label l18 = new Label("Date of\nRepairs");
+    Label l19 = new Label("Miscellaneous\nCosts");
     
-    private JFXTextField pdName = new JFXTextField();
-    private JFXComboBox<PDModel.Strings> pdMonthCombo = new JFXComboBox<>();
-    private JFXTextField pdAmount = new JFXTextField();
-    private JFXDatePicker pdPaymentDate = new JFXDatePicker();
-    private TitledPane pdPaymentOption = new TitledPane("Choose Option", pdTitledPaneVbox);
-    private JFXButton pdTableViewButton = new JFXButton("Show detailed view");
-    private JFXButton pdTableViewHide = new JFXButton("Hide detaild view");
-    private JFXRadioButton cashRadioButton = new JFXRadioButton("Cash");
-    private JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit Slip");
-    private JFXRadioButton mpesaRadioButton = new JFXRadioButton("MPESA");
-    private ToggleGroup payOptionGroup = new ToggleGroup();
+    public JFXTextField tdName = new JFXTextField();
+    public JFXTextField tdPhone = new JFXTextField();
+    public JFXTextField tdAmount = new JFXTextField();
+    public JFXTextField tdDeposit = new JFXTextField();
+    public JFXTextField tdDueDate = new JFXTextField();
+    public JFXDatePicker tdMoveInDate = new JFXDatePicker();
+    public JFXDatePicker tdMoveOutDate = new JFXDatePicker();
+    public JFXDatePicker tdLeaseStartDate = new JFXDatePicker();
+    public JFXDatePicker tdLeaseEndDate = new JFXDatePicker();
+    
+    public JFXTextField pdName = new JFXTextField();
+    public JFXComboBox<PDModel.Strings> pdMonthCombo = new JFXComboBox<>();
+    public JFXTextField pdAmount = new JFXTextField();
+    public JFXDatePicker pdPaymentDate = new JFXDatePicker();
+    public TitledPane pdPaymentOption = new TitledPane("Choose Option", pdTitledPaneVbox);
+    public JFXButton pdTableViewButton = new JFXButton("Show Table");
+    public JFXRadioButton cashRadioButton = new JFXRadioButton("Cash");
+    public JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit Slip");
+    public JFXRadioButton mpesaRadioButton = new JFXRadioButton("MPESA");
+    public ToggleGroup payOptionGroup = new ToggleGroup();
+    
+    public String payOptionString;
+    public JFXTextField pdCashTextfield  = new JFXTextField();
+    public JFXTextField pdbankTextfield  = new JFXTextField();
+    public JFXTextField pdMpesaTextfield  = new JFXTextField();
+    public JFXButton pdCashButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
+    public JFXButton pdBankButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
+    public JFXButton pdMpesaButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
+    
+    public JFXTextField rdName = new JFXTextField();
+    public JFXTextArea rdRepairsDone = new JFXTextArea();
+    public JFXTextField rdRepairCost = new JFXTextField();
+    public  JFXDatePicker rdRepairDate = new JFXDatePicker();
+    public JFXTextField rdMiscCost = new JFXTextField();
     
     HBox tdHbox1 = new HBox(10, l1, tdName);
     HBox tdHbox2 = new HBox(10, l2, tdPhone);
@@ -306,7 +329,20 @@ public class PDController implements Initializable {
     HBox pdHbox3 = new HBox(10, l12, pdAmount);
     HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
     HBox pdHbox5 = new HBox(10, l14, placingVbox);
-    HBox pdHbox6 = new HBox(10, pdTableViewButton, pdTableViewHide);
+    HBox pdHbox6 = new HBox(pdTableViewButton);
+    
+    HBox rdHbox1 = new HBox(10, l15, rdName);
+    HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);
+    HBox rdHbox3 = new HBox(10, l17, rdRepairCost);
+    HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
+    HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
+    
+    HBox pdPayOptionHbox = new HBox(10);
+    HBox pdBankHbox = new HBox(10);
+    HBox pdMpesaHbox = new HBox(10);
+    
+    SimpleIntegerProperty count = new SimpleIntegerProperty(30);
+    int rowHeight = 10;
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
@@ -433,18 +469,9 @@ public class PDController implements Initializable {
     TreeItem<String> root2 = new TreeItem<>("Banker's Cheque");
     TreeItem<String> bank = new TreeItem<>("Enter cheque no:");
     
-    private void setEmpty(){
-        tenantNamePD.setText("");
-        amountPD.setText("");
-        monthComboPD.setValue(PDModel.Strings.NONE);
-        rentPaymentDatePD.setValue(null);
-        cash.setValue("Cash recieved by:");
-        root3.setExpanded(false);
-        mpesa.setValue("Enter mpesa transaction code");
-        root1.setExpanded(false);
-        bank.setValue("Enter cheque no.");
-        root2.setExpanded(false);
-        rentArrears.setVisible(false);
+    public void setEmpty(){
+        pdAmount.setText("");
+        pdPaymentDate.setValue(null);
     }
     
     private void setEmpty1() {
@@ -1019,20 +1046,25 @@ public class PDController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
-        l1.setPrefSize(120, 20);
-        l2.setPrefSize(120, 20);
-        l3.setPrefSize(120, 20);
-        l4.setPrefSize(120, 20);
-        l5.setPrefSize(120, 20);
-        l6.setPrefSize(120, 20);
-        l7.setPrefSize(120, 20);
-        l8.setPrefSize(120, 20);
-        l9.setPrefSize(120, 20);
-        l10.setPrefSize(120, 20);
-        l11.setPrefSize(120, 20);
-        l12.setPrefSize(120, 20);
-        l13.setPrefSize(120, 20);
-        l14.setPrefSize(120, 20);
+        l1.setMinSize(120, 20);
+        l2.setMinSize(120, 20);
+        l3.setMinSize(120, 20);
+        l4.setMinSize(120, 20);
+        l5.setMinSize(120, 20);
+        l6.setMinSize(120, 20);
+        l7.setMinSize(120, 20);
+        l8.setMinSize(120, 20);
+        l9.setMinSize(120, 20);
+        l10.setMinSize(120, 20);
+        l11.setMinSize(120, 20);
+        l12.setMinSize(120, 20);
+        l13.setMinSize(120, 20);
+        l14.setMinSize(120, 20);
+        l15.setMinSize(120, 20);
+        l16.setMinSize(120, 20);
+        l17.setMinSize(120, 20);
+        l18.setMinSize(120, 20);
+        l19.setMinSize(120, 20);
         
         setupHouseNumberColumn();
         setupTenantNameColumn();
@@ -1045,7 +1077,7 @@ public class PDController implements Initializable {
         bankRadioButton.setToggleGroup(payOptionGroup);
         mpesaRadioButton.setToggleGroup(payOptionGroup);
         
-        monthComboPD.getItems().addAll(PDModel.Strings.values());
+        pdMonthCombo.getItems().addAll(PDModel.Strings.values());
         
         blockA.getChildren().addAll(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
         blockB.getChildren().addAll(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12);
@@ -1058,6 +1090,49 @@ public class PDController implements Initializable {
         blockTreeView.setRoot(rootBlock);
         blockTreeView.setShowRoot(false);
         
+        payOptionGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (payOptionGroup.getSelectedToggle().equals(cashRadioButton)) {
+                radioVbox.getChildren().clear();
+                pdCashTextfield.setPromptText("Name of receiver");
+                pdPayOptionHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
+                radioVbox.getChildren().add(pdPayOptionHbox);
+            } else if (payOptionGroup.getSelectedToggle().equals(bankRadioButton)) {
+                radioVbox.getChildren().clear();
+                pdbankTextfield.setPromptText("Bank Deposit Slip");
+                pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
+                radioVbox.getChildren().add(pdPayOptionHbox);
+            } else if (payOptionGroup.getSelectedToggle().equals(mpesaRadioButton)) {
+                radioVbox.getChildren().clear();
+                pdMpesaTextfield.setPromptText("Mpesa Transaction Code");
+                pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
+                radioVbox.getChildren().add(pdPayOptionHbox);
+            }
+        });
+        
+        pdCashButton.setOnAction((event) -> {
+            payOptionString = pdCashTextfield.getText();
+            radioVbox.getChildren().clear();
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
+            pdPaymentOption.setText("Cash received by: "+payOptionString);
+            pdPaymentOption.setExpanded(false);
+        });
+        
+        pdBankButton.setOnAction((event) -> {
+            payOptionString = pdbankTextfield.getText();
+            radioVbox.getChildren().clear();
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
+            pdPaymentOption.setText("Deposit slip: "+payOptionString);
+            pdPaymentOption.setExpanded(false);
+        });
+        
+        pdMpesaButton.setOnAction((event) -> {
+            payOptionString = pdMpesaButton.getText();
+            radioVbox.getChildren().clear();
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
+            pdPaymentOption.setText("Mpesa code: "+payOptionString);
+            pdPaymentOption.setExpanded(false);
+        });
+        
         blockTreeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 String searchTenantDetails = "SELECT * FROM TenantDetails WHERE HouseNumber = ?";
@@ -1068,6 +1143,8 @@ public class PDController implements Initializable {
 
                 if (!rs.next()) {
                     setEmpty1();
+                    pdTableViewButton.setVisible(false);
+                    pdMonthCombo.setValue(PDModel.Strings.NONE);
                 } else {
                     do {
                         tdName.setText(rs.getString("TenantName"));
@@ -1096,13 +1173,47 @@ public class PDController implements Initializable {
                             tdLeaseEndDate.setValue(null);
                         }
                     } while (rs.next());
+                    System.out.println("in database");
+                    pdTableViewButton.setVisible(true);
                 }
                 pstmt.close();
                 conn.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            
+            try {
+                    String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
+                    Class.forName("org.sqlite.JDBC");
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchPDSql);
+                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    ResultSet rs = pstmt.executeQuery();
+                    String searchTDSql = "SELECT RentAmount FROM TenantDetails WHERE HouseNumber = ?";
+                    PreparedStatement pstmt1 = conn.prepareStatement(searchTDSql);
+                    pstmt1.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    ResultSet rs1 = pstmt1.executeQuery();
+                    if(!rs.next()){
+                        pdName.setText("");
+                        setEmpty();
+                    }else
+                        do {                            
+                            pdName.setText(rs.getString("TenantName"));
+                            pdAmount.setText(rs.getString("Amount"));
+                            pdMonthCombo.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
+                            if (rs.getString("PaymentDate") != null){
+                                pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
+                            }else
+                                pdPaymentDate.setValue(null);
+                        } while (rs.next());
+                    
+                    pstmt.close();
+                    pstmt1.close();
+                    conn.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
@@ -1249,6 +1360,43 @@ public class PDController implements Initializable {
             paymentsTable.setItems(sortedData);
         });
         
+        pdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                try {
+                    String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchPDTable);
+                    String searchTDTable = "SELECT RentAmount FROM TenantDetails WHERE HouseNumber = ?";
+                    PreparedStatement pstmt1 = conn.prepareStatement(searchTDTable);
+                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    pstmt1.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+
+                    pstmt.setString(2, pdMonthCombo.getSelectionModel().getSelectedItem().name());
+                    ResultSet rs = pstmt.executeQuery();
+                    ResultSet rs1 = pstmt1.executeQuery();
+                    if (!rs.next()) {
+                        setEmpty();
+                    } else {
+                        do {
+                            pdAmount.setText(rs.getString("Amount"));
+
+                            Object paymentDate = rs.getObject("PaymentDate");
+                            if (paymentDate == null) {
+                                pdPaymentDate.setValue(null);
+                            } else {
+                                pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
+                            }
+                            
+                        } while (rs.next());
+                    }
+                    pstmt.close();
+                    pstmt1.close();
+                    conn.close();
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        
         monthComboPD.valueProperty().addListener((observable, oldValue, newValue) -> {
             FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
             filteredList.setPredicate((t) -> {
@@ -1285,32 +1433,67 @@ public class PDController implements Initializable {
             }
         });
         
-        tdName.textProperty().addListener((observable, oldValue, newValue) -> {
+        pdName.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
-            tdName.setPrefWidth(length*10);
-            if (newValue.isEmpty() || oldValue.isEmpty()) {
-                tdName.setPrefWidth(180);
+            if (length > 21) {
+                pdName.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdName.setPrefWidth(170);
             }
         });
         
-        pdTableViewButton.setOnAction((event) -> {
-            paymentsTable.prefHeightProperty().bind(tableViewPane.heightProperty());
-            
-            paymentsTable.setMinHeight(100);
-            tableViewPane.setCenter(paymentsTable);
-            sp1.getItems().add(tableViewPane);
-            Node source = (Node) event.getSource();
-            Stage stage = (Stage) source.getScene().getWindow();
-            System.out.println(stage.getHeight());
-            double newHeight = stage.getHeight()+tableViewPane.getHeight();
-            MainApp.changeWindowSize(stage, 600);
+        tdName.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 21) {
+                tdName.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                tdName.setPrefWidth(170);
+            }
         });
         
-        pdTableViewHide.setOnAction((event) -> {
-            sp1.getItems().remove(tableViewPane);
-            Node source = (Node) event.getSource();
-            Stage stage = (Stage) source.getScene().getWindow();
-            MainApp.changeWindowSize(stage, 500);
+        rdName.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 21) {
+                rdName.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                rdName.setPrefWidth(170);
+            }
+        });
+        
+        rdRepairsDone.setPrefWidth(160);
+        
+        rdRepairsDone.prefHeightProperty().bindBidirectional(count);
+        rdRepairsDone.minHeightProperty().bindBidirectional(count);
+        rdRepairsDone.scrollTopProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.intValue() > rowHeight) {
+                count.setValue(count.get() + newValue.intValue());
+                System.out.println(newValue);
+                System.out.println(observable.getValue());
+                System.out.println(oldValue);
+                System.out.println(count.get());
+            } else if (newValue.intValue() < oldValue.intValue()) {
+                count.setValue(count.get() - newValue.intValue());
+            }
+        });
+        
+        pdTableViewButton.setVisible(false);
+        pdTableViewButton.setOnAction((event) -> {
+            if (sp1.getItems().size() == 1) {
+                paymentsTable.prefHeightProperty().bind(tableViewPane.heightProperty());
+                paymentsTable.setMinHeight(100);
+                tableViewPane.setCenter(paymentsTable);
+                sp1.getItems().add(tableViewPane);
+                pdTableViewButton.setText("Hide Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 600);
+            } else if (sp1.getItems().size() == 2) {
+                sp1.getItems().remove(tableViewPane);
+                pdTableViewButton.setText("Show table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
         });
         
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
@@ -1331,6 +1514,8 @@ public class PDController implements Initializable {
         pdVbox.getChildren().addAll(pdHbox1, pdHbox2, pdHbox3, pdHbox4, pdHbox5, pdHbox6);
         tdVbox.setPadding(new Insets(10, 10, 10, 10));
         tdVbox.getChildren().addAll(tdHbox1, tdHbox2, tdHbox3, tdHbox4, tdHbox5, tdHbox6, tdHbox7, tdHbox8, tdHbox9);
+        rdVbox.setPadding(new Insets(10, 10, 10, 10));
+        rdVbox.getChildren().addAll(rdHbox1, rdHbox2, rdHbox3, rdHbox4, rdHbox5);
         
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);
