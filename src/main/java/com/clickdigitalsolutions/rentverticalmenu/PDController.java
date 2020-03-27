@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -46,10 +47,12 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -57,11 +60,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -95,6 +100,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -176,8 +182,15 @@ public class PDController implements Initializable {
     private TableColumn<PDModel, PDModel.Strings> monthCol = new TableColumn<>("Month");
     private TableColumn dateCol = new TableColumn<>("Payment Date");
     private TableColumn<PDModel, String> methodCol = new TableColumn<>("Payment Method");
-    
     public TableView<PDModel> paymentsTable = new TableView<>();
+    
+    public TableColumn houseNo = new TableColumn("House Number");
+    public TableColumn tenantName = new TableColumn("Tenant Name");
+    public TableColumn<RModel, String> repairDone = new TableColumn("Repairs");
+    public TableColumn<RModel, String> costOfRepair = new TableColumn<>("Repair Cost");
+    public TableColumn dateOfRepair = new TableColumn("Repair Date");
+    public TableColumn<RModel, String> miscExpenses = new TableColumn<>("Miscellaneous Expenses");
+    public TableView<RModel> repairsTable = new TableView<>();
     
     String paymentMode;
 
@@ -189,12 +202,15 @@ public class PDController implements Initializable {
     
     String payMethodCheck;
     
+    String tdTableConstraint = "Empty";
+    
     SimpleStringProperty addCheck = new SimpleStringProperty("null");
     
     boolean arrearsCheck = false;
     
     int rentAmountPDPaid = 0;
     
+    ObservableList<PDModel> rentPaymentList1 = FXCollections.observableArrayList();
     
     private TextField payRecordsFilter = new TextField();
     
@@ -313,6 +329,7 @@ public class PDController implements Initializable {
     public JFXTextField rdRepairCost = new JFXTextField();
     public  JFXDatePicker rdRepairDate = new JFXDatePicker();
     public JFXTextField rdMiscCost = new JFXTextField();
+    public JFXButton rdTableViewButton = new JFXButton("Show Table");
     
     HBox tdHbox1 = new HBox(10, l1, tdName);
     HBox tdHbox2 = new HBox(10, l2, tdPhone);
@@ -336,6 +353,7 @@ public class PDController implements Initializable {
     HBox rdHbox3 = new HBox(10, l17, rdRepairCost);
     HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
     HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
+    HBox rdHbox6 = new HBox(rdTableViewButton);
     
     HBox pdPayOptionHbox = new HBox(10);
     HBox pdBankHbox = new HBox(10);
@@ -354,6 +372,46 @@ public class PDController implements Initializable {
     }
     public String getMonthComboSelect(){
         return monthComboSelect;
+    }
+    
+    public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate){
+        String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(HouseNumber text PRIMARY KEY, TenantName text, TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text)";
+        try {
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt =  conn.prepareStatement(createTDSql);
+            pstmt.execute();
+            pstmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        String insertTDSql = "INSERT INTO TenantDetails(HouseNumber, TenantName, TenantPhoneNumber, RentAmount, Deposit, DueDate, MoveInDate, MoveOutDate, LeaseStartDate, LeaseEndDate) VALUES(?,?,?,?,?,?,?,?,?,?)";
+        try {
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement(insertTDSql);
+            pstmt.setString(1, houseNumber);
+            pstmt.setString(2, tenantName);
+            pstmt.setString(3, tenantPhoneNumber);
+            pstmt.setString(4, monthlyRent);
+            pstmt.setString(5, deposit);
+            pstmt.setString(6, dueDate);
+            pstmt.setString(7, moveInDate);
+            pstmt.setString(8, moveOutDate);
+            pstmt.setString(9, leaseStartDate);
+            pstmt.setString(10, leaseEndDate);
+            pstmt.execute();
+            conn.close();
+            pstmt.close();
+        } catch (SQLException e) {
+            if (e.getMessage().startsWith("[SQLITE_CONSTRAINT]  Abort due to constraint violation")) {
+                System.out.println("Unique Constraint Violation Caught");
+                tdTableConstraint = "UNIQUE constraint failed: TenantDetails.HouseNumber";
+            } else {
+                e.printStackTrace();
+                tdTableConstraint = "Record inserted to TenantDetails table";
+            }
+        }
     }
     
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod){
@@ -383,6 +441,35 @@ public class PDController implements Initializable {
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    
+    public void createRepairsTable(String HouseNumber, String TenantName, String Repairs, String CostOfRepairs, String DateOfRepairs, String Miscellaneous){
+        try {
+            String createRepairsTableSql = "CREATE TABLE IF NOT EXISTS RepairsTable(HouseNumber text, TenantName text, Repairs text, CostOfRepairs text, DateOfRepairs text, MiscellaneousExpenses text, PRIMARY KEY(HouseNumber, DateOfRepairs), FOREIGN KEY(HouseNumber) REFERENCES TenantDetails(HouseNumber) ON DELETE CASCADE)";
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement(createRepairsTableSql);
+            pstmt.execute();
+            pstmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            String insertRepairsTableSql = "INSERT INTO RepairsTable(HouseNumber, TenantName, Repairs, CostOfRepairs, DateOfRepairs, MiscellaneousExpenses) VALUES(?,?,?,?,?,?)";
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement(insertRepairsTableSql);
+            pstmt.setString(1, HouseNumber);
+            pstmt.setString(2, TenantName);
+            pstmt.setString(3, Repairs);
+            pstmt.setString(4, CostOfRepairs);
+            pstmt.setString(5, DateOfRepairs);
+            pstmt.setString(6, Miscellaneous);
+            pstmt.execute();
+            pstmt.close();
+            conn.close();
+        } catch (Exception e) {
         }
     }
     
@@ -486,10 +573,17 @@ public class PDController implements Initializable {
         tdLeaseEndDate.setValue(null);
     }
     
+    private void setEmpty2(){
+        rdName.setText("");
+        rdRepairsDone.setText("");
+        rdRepairCost.setText("");
+        rdRepairDate.setValue(null);
+        rdMiscCost.setText("");
+    }
     
     public ObservableList<PDModel> getPaymentDetails(){
         ObservableList<PDModel> rentPaymentList = FXCollections.observableArrayList();
-        if (comboboxPDCheck.equals("Block A")){
+
             try {
                 String tableDataQuery = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -513,9 +607,37 @@ public class PDController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
         return rentPaymentList;
     }
+    
+    public  ObservableList<RModel> getRepairsDetails(){
+        ObservableList<RModel> repairsData = FXCollections.observableArrayList();
+       
+            try {
+                String repairsTableQuery = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                Connection conn = DriverManager.getConnection(databaseURL);
+                PreparedStatement pstmt = conn.prepareStatement(repairsTableQuery);
+                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {                    
+                    String houseNo1 = rs.getString("HouseNumber");
+                    String tenantName1 = rs.getString("Tenantname");
+                    String repairsDone1 = rs.getString("Repairs");
+                    String costOfRepair1 = rs.getString("CostOfRepairs");
+                    String dateOfRepair1 = rs.getString("DateOfRepairs");
+                    String miscellaneous = rs.getString("MiscellaneousExpenses");
+                    
+                    RModel repairsInfo = new RModel(houseNo1, tenantName1, repairsDone1, costOfRepair1, dateOfRepair1, miscellaneous);
+                    repairsData.add(repairsInfo);
+                }
+                pstmt.close();
+                conn.close();
+            } catch (Exception e) {
+            }
+        
+        return repairsData;
+    }
+    
     
     class MyStringTableCell extends TableCell<PDModel, String> {
         
@@ -898,7 +1020,222 @@ public class PDController implements Initializable {
     }
     
     
+    class MyRepairStringTableCell extends TableCell<RModel, String> {
+
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(empty ? null : getString());
+        }
+
+        private String getString() {
+            return getItem() == null ? "" : getItem().toString();
+        }
+    }
     
+    Callback<TableColumn, TableCell> repairStringCellFactory
+                = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn param) {
+                MyRepairStringTableCell cell = new MyRepairStringTableCell();
+                cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
+                return cell;
+            }
+        };
+    
+    class MyRepairEventHandler implements EventHandler<MouseEvent> {
+
+        @Override
+        public void handle(MouseEvent t) {
+            ContextMenu editTable = new ContextMenu();
+            MenuItem edit = new MenuItem("Edit Record");
+            MenuItem delete = new MenuItem("Delete Record");
+            delete.setOnAction((event) -> {
+                try {
+                    String deleteRecord = "DELETE FROM RepairsTable WHERE HouseNumber = ? AND DateOfRepairs = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(deleteRecord);
+                    TablePosition cellPos = repairsTable.getSelectionModel().getSelectedCells().get(0);
+                    int row = cellPos.getRow();
+                    pstmt.setString(1, repairsTable.getItems().get(row).gethouseNumberTableR());
+                    pstmt.setString(2, repairsTable.getItems().get(row).getdateofRepairsTableR());
+                    pstmt.executeUpdate();
+                    RModel selectedItem = repairsTable.getSelectionModel().getSelectedItem();
+                    repairsTable.getItems().remove(selectedItem);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                setEmpty();
+            });
+            
+            repairsTable.setOnContextMenuRequested((event) -> {
+                editTable.getItems().addAll(edit, delete);
+                editTable.show(repairsTable, event.getScreenX(), event.getScreenY());
+            });
+            repairsTable.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+                editTable.hide();
+            });
+            
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+                TableCell cell = (TableCell) t.getSource();
+                int index = cell.getIndex();
+                try {
+                    RModel item = getRepairsDetails().get(index);
+                    rdName.setText(item.gettenantNameTableR());
+                    rdRepairsDone.setText(item.getrepairsDoneTableR());
+                    rdRepairCost.setText(item.getcostofRepairsTableR());
+                    rdRepairDate.setValue(LocalDate.parse(item.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+                    rdMiscCost.setText(item.getmiscellaneousTableR());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void editRepairFocusedCell(){
+        final TablePosition<RModel, String> focusedCell = repairsTable
+                .focusModelProperty().get().focusedCellProperty().get();
+        repairsTable.edit(focusedCell.getRow(), focusedCell.getTableColumn());
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void selectPrevious() {
+        if (repairsTable.getSelectionModel().isCellSelectionEnabled()) {
+            TablePosition<RModel, ?> pos = repairsTable.getFocusModel().getFocusedCell();
+            if (pos.getColumn() - 1 >= 0) {
+                repairsTable.getSelectionModel().select(pos.getRow(), getRepairTableColumn(pos.getTableColumn(), -1));
+            } else if (pos.getRow() < repairsTable.getItems().size()) {
+                repairsTable.getSelectionModel().select(pos.getRow() - 1, 
+                        repairsTable.getVisibleLeafColumn(
+                                repairsTable.getVisibleLeafColumns().size() - 1));
+            }       
+        } else {
+            int focusindex = repairsTable.getFocusModel().getFocusedIndex();
+            if (focusindex == -1) {
+                repairsTable.getSelectionModel().select(repairsTable.getItems().size() - 1);
+            } else if (focusindex > 0) {
+                repairsTable.getSelectionModel().select(focusindex - 1);
+            }
+        }
+    }
+    
+    private TableColumn<RModel, ?> getRepairTableColumn (final TableColumn<RModel, ?> column, int offset) {
+        int columnIndex = repairsTable.getVisibleLeafIndex(column);
+        int newColumnIndex = columnIndex + offset;
+        return repairsTable.getVisibleLeafColumn(newColumnIndex);
+    }
+    
+    
+    private void setupHouseNoColumn() {
+        houseNo.setCellValueFactory(new PropertyValueFactory<RModel, String>("houseNumberTableR"));
+        houseNo.setCellFactory(repairStringCellFactory);
+    }
+    
+    private void setupRepairTenantNameColumn() {
+        tenantName.setCellValueFactory(new PropertyValueFactory<RModel, String>("tenantNameTableR"));
+        tenantName.setCellFactory(repairStringCellFactory);
+    }
+    
+    private void setupRepairsDoneColumn() {
+        repairDone.setCellValueFactory(new PropertyValueFactory<RModel, String>("repairsDoneTableR"));
+        repairDone.setCellFactory(column -> EditCell.createStringEditCell());
+        repairDone.setOnEditStart((event) -> {
+            RModel repDone = event.getRowValue();
+            rdRepairsDone.setText(repDone.getrepairsDoneTableR());
+            rdRepairCost.setText(repDone.getcostofRepairsTableR());
+            rdRepairDate.setValue(LocalDate.parse(repDone.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            rdMiscCost.setText(repDone.getmiscellaneousTableR());
+        });
+        repairDone.setOnEditCommit((event) -> {
+            RModel repDone = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit RepairsDone column for "+repDone.gethouseNumberTableR()+" on "+repDone.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Repairs Done field for " + repDone.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    repDone.setrepairsDoneTableR(event.getNewValue());
+                    updateRepairsTableData("Repairs", event.getNewValue(), repDone.gethouseNumberTableR(), repDone.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                   int index = repairsTable.getSelectionModel().getSelectedIndex();
+                   repairsTable.getItems().set(index, repDone);
+                }
+            });
+        });
+    }
+    
+    private void updateRepairsTableData(String column, String newValue, String houseNumber, String repairsDate) {
+        try {
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement("UPDATE RepairsTable SET " + column + " = ? WHERE HouseNumber = ? AND DateOfRepairs = ?");
+            pstmt.setString(1, newValue);
+            pstmt.setString(2, houseNumber);
+            pstmt.setString(3, repairsDate);
+            pstmt.execute();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void setupRepairCostColumn() {
+        costOfRepair.setCellValueFactory(new PropertyValueFactory<RModel, String>("costofRepairsTableR"));
+        costOfRepair.setCellFactory(column -> EditCell.createStringEditCell());
+        costOfRepair.setOnEditStart((event) -> {
+            RModel repairCost = event.getRowValue();
+            rdRepairsDone.setText(repairCost.getrepairsDoneTableR());
+            rdRepairCost.setText(repairCost.getcostofRepairsTableR());
+            rdRepairDate.setValue(LocalDate.parse(repairCost.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            rdMiscCost.setText(repairCost.getmiscellaneousTableR());
+        });
+        costOfRepair.setOnEditCommit((event) -> {
+            RModel repairCost = event.getRowValue();
+            RModel repDone = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit CostOfRepairs column for "+repDone.gethouseNumberTableR()+" on "+repDone.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Cost Of Repairs field for " + repDone.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    repairCost.setcostofRepairsTableR(event.getNewValue());
+                    updateRepairsTableData("CostOfRepairs", event.getNewValue(), repairCost.gethouseNumberTableR(), repairCost.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                    int index = repairsTable.getSelectionModel().getSelectedIndex();
+                    repairsTable.getItems().set(index, repDone);
+                }
+            });
+        });
+    }
+    
+    private void setupRepairsDateColumn() {
+        dateOfRepair.setCellValueFactory(new PropertyValueFactory<RModel, String>("dateofRepairsTableR"));
+        dateOfRepair.setCellFactory(repairStringCellFactory);
+    }
+    
+    private void setupMiscellaneousColumn() {
+        DoubleBinding usedWidth = houseNo.widthProperty().add(tenantName.widthProperty()).add(repairDone.widthProperty()).add(costOfRepair.widthProperty()).add(dateOfRepair.widthProperty());
+        miscExpenses.prefWidthProperty().bind(repairsTable.widthProperty().subtract(usedWidth));
+        miscExpenses.setCellValueFactory(new PropertyValueFactory<RModel, String>("miscellaneousTableR"));
+        miscExpenses.setCellFactory(column -> EditCell.createStringEditCell());
+        miscExpenses.setOnEditStart((event) -> {
+            RModel miscellaneous = event.getRowValue();
+            rdRepairsDone.setText(miscellaneous.getrepairsDoneTableR());
+            rdRepairCost.setText(miscellaneous.getcostofRepairsTableR());
+            rdRepairDate.setValue(LocalDate.parse(miscellaneous.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+            rdMiscCost.setText(miscellaneous.getmiscellaneousTableR());
+        });
+        miscExpenses.setOnEditCommit((event) -> {
+            RModel misc = event.getRowValue();
+            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit Miscellaneous Expenses column for "+misc.gethouseNumberTableR()+" on "+misc.getdateofRepairsTableR()+" in Repairs Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
+            commitWarning.setTitle("Edit Cost Of Repairs field for " + misc.gethouseNumberTableR());
+            commitWarning.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    misc.setmiscellaneousTableR(event.getNewValue());
+                    updateRepairsTableData("MiscellaneousExpenses", event.getNewValue(), misc.gethouseNumberTableR(), misc.getdateofRepairsTableR());
+                } else if (response == ButtonType.NO) {
+                    int index = repairsTable.getSelectionModel().getSelectedIndex();
+                    repairsTable.getItems().set(index, misc);
+                }
+            });
+        });
+    }
     
     public void createAndWriteExcelSheet(String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
         File tenantDataExists = new File("jatom tenants.xls");
@@ -1144,6 +1481,7 @@ public class PDController implements Initializable {
                 if (!rs.next()) {
                     setEmpty1();
                     pdTableViewButton.setVisible(false);
+                    rdTableViewButton.setVisible(false);
                     pdMonthCombo.setValue(PDModel.Strings.NONE);
                 } else {
                     do {
@@ -1175,6 +1513,7 @@ public class PDController implements Initializable {
                     } while (rs.next());
                     System.out.println("in database");
                     pdTableViewButton.setVisible(true);
+                    rdTableViewButton.setVisible(true);
                 }
                 pstmt.close();
                 conn.close();
@@ -1214,6 +1553,31 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             
+            try {
+                    String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(searchRepairsSql);
+                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    ResultSet rs = pstmt.executeQuery();
+                    if (!rs.next()){
+                        setEmpty();
+                    }else 
+                        do {
+                            rdName.setText(rs.getString("TenantName"));
+                            rdRepairsDone.setText(rs.getString("Repairs"));
+                            rdRepairCost.setText(rs.getString("CostOfRepairs"));
+                            if (rs.getString("DateOfRepairs") != null){
+                                rdRepairDate.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
+                            }else
+                                rdRepairDate.setValue(null);
+                            rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
+                        } while (rs.next());
+                    pstmt.close();
+                    conn.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
@@ -1433,6 +1797,22 @@ public class PDController implements Initializable {
             }
         });
         
+        repairsTable.setEditable(true);
+        repairsTable.getSelectionModel().setCellSelectionEnabled(true);
+        repairsTable.setOnKeyPressed((event) -> {
+            TablePosition<RModel, ?> pos = repairsTable.getFocusModel().getFocusedCell();
+            if (pos != null && event.getCode().isLetterKey()){
+                repairsTable.edit(pos.getRow(), pos.getTableColumn());
+            } else if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.TAB) {
+                repairsTable.getSelectionModel().selectNext();
+                event.consume();
+            } else if (event.getCode() == KeyCode.LEFT){
+                selectPrevious();
+                event.consume();
+            } 
+        });
+        repairsTable.getColumns().addAll(houseNo, tenantName, repairDone, costOfRepair, dateOfRepair, miscExpenses);
+        
         pdName.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
             if (length > 21) {
@@ -1441,6 +1821,7 @@ public class PDController implements Initializable {
                 pdName.setPrefWidth(170);
             }
         });
+        pdName.setDisable(true);
         
         tdName.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
@@ -1459,20 +1840,21 @@ public class PDController implements Initializable {
                 rdName.setPrefWidth(170);
             }
         });
+        rdName.setDisable(true);
         
-        rdRepairsDone.setPrefWidth(160);
-        
-        rdRepairsDone.prefHeightProperty().bindBidirectional(count);
-        rdRepairsDone.minHeightProperty().bindBidirectional(count);
-        rdRepairsDone.scrollTopProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.intValue() > rowHeight) {
-                count.setValue(count.get() + newValue.intValue());
-                System.out.println(newValue);
-                System.out.println(observable.getValue());
-                System.out.println(oldValue);
-                System.out.println(count.get());
-            } else if (newValue.intValue() < oldValue.intValue()) {
-                count.setValue(count.get() - newValue.intValue());
+        rdRepairsDone.setWrapText(true);
+        rdRepairsDone.setPrefWidth(170);
+        rdRepairsDone.sceneProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue  != null) {
+                rdRepairsDone.applyCss();
+                Node text = rdRepairsDone.lookup(".text");
+                rdRepairsDone.prefHeightProperty().bind(Bindings.createDoubleBinding(() -> {
+                    return rdRepairsDone.getFont().getSize() + text.getBoundsInLocal().getHeight();
+                }, text.boundsInLocalProperty()));
+                
+                text.boundsInLocalProperty().addListener((observableBoundsAfter, boundsBefore, boundsAfter) -> {
+                    Platform.runLater(() -> rdRepairsDone.requestLayout());
+                });
             }
         });
         
@@ -1480,7 +1862,8 @@ public class PDController implements Initializable {
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
                 paymentsTable.prefHeightProperty().bind(tableViewPane.heightProperty());
-                paymentsTable.setMinHeight(100);
+                paymentsTable.setMinHeight(200);
+                paymentsTable.setItems(getPaymentDetails());
                 tableViewPane.setCenter(paymentsTable);
                 sp1.getItems().add(tableViewPane);
                 pdTableViewButton.setText("Hide Table");
@@ -1490,6 +1873,26 @@ public class PDController implements Initializable {
             } else if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
                 pdTableViewButton.setText("Show table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        
+        rdTableViewButton.setVisible(false);
+        rdTableViewButton.setOnAction((event) -> {
+            if (sp1.getItems().size() == 1) {
+                repairsTable.setMinHeight(200);
+                repairsTable.setItems(getRepairsDetails());
+                tableViewPane.setCenter(repairsTable);
+                sp1.getItems().add(tableViewPane);
+                rdTableViewButton.setText("Hide Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 600);
+            } else if (sp1.getItems().size() == 2) {
+                sp1.getItems().remove(tableViewPane);
+                rdTableViewButton.setText("Show Table");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 500);
@@ -1515,7 +1918,7 @@ public class PDController implements Initializable {
         tdVbox.setPadding(new Insets(10, 10, 10, 10));
         tdVbox.getChildren().addAll(tdHbox1, tdHbox2, tdHbox3, tdHbox4, tdHbox5, tdHbox6, tdHbox7, tdHbox8, tdHbox9);
         rdVbox.setPadding(new Insets(10, 10, 10, 10));
-        rdVbox.getChildren().addAll(rdHbox1, rdHbox2, rdHbox3, rdHbox4, rdHbox5);
+        rdVbox.getChildren().addAll(rdHbox1, rdHbox2, rdHbox3, rdHbox4, rdHbox5, rdHbox6);
         
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);

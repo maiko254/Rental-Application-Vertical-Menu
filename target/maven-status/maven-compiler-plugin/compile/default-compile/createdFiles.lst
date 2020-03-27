@@ -9,6 +9,7 @@ com\clickdigitalsolutions\rentverticalmenu\PDModel.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$otherStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$5.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$1.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$5.class
 com\clickdigitalsolutions\rentverticalmenu\TDModel.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$8.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$otherMonthlyModel.class
@@ -23,7 +24,10 @@ com\clickdigitalsolutions\rentverticalmenu\TDController.class
 com\clickdigitalsolutions\rentverticalmenu\PDModel$Strings.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$4.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$MyRepairStringTableCell.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$MyRepairEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$3.class
+com\clickdigitalsolutions\rentverticalmenu\RModel.class
 com\clickdigitalsolutions\rentverticalmenu\EditCell.class
 com\clickdigitalsolutions\rentverticalmenu\PDController.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller.class
