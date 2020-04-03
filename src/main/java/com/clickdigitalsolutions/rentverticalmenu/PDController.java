@@ -110,9 +110,12 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -499,12 +502,7 @@ public class PDController implements Initializable {
             amountEmptyAlert.setHeaderText("Empty Field");
             amountEmptyAlert.setContentText("Amount field cannot be empty. Please input the rent amount");
             amountEmptyAlert.showAndWait();
-        } else if (comboboxPDCheck.equals("Block A")){
-            createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tenantNamePD.getText(), amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
-            createAndWriteExcelSheet(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tenantNamePD.getText() , amountPD.getText(), monthComboPD.getSelectionModel().getSelectedItem().name(), getDateValueAsString(rentPaymentDatePD.getValue()) , paymentMode);
-            setEmpty();
-        
-        }else if(comboboxPDCheck.equals("Empty")){
+        } else if(comboboxPDCheck.equals("Empty")){
             Alert emptyAlert = new Alert(Alert.AlertType.INFORMATION);
             emptyAlert.setTitle("Information Dialog");
             emptyAlert.setHeaderText("Empty Field");
@@ -1237,8 +1235,103 @@ public class PDController implements Initializable {
         });
     }
     
-    public void createAndWriteExcelSheet(String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
-        File tenantDataExists = new File("jatom tenants.xls");
+    public void createExcelSheet(File fileLocation ,String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+        File tenantDataExists = fileLocation;
+        if (tenantDataExists.exists()) {
+            try {
+                FileInputStream inputStream = new FileInputStream(tenantDataExists);
+                Workbook workbookExists = WorkbookFactory.create(inputStream);
+
+                Sheet sheet = workbookExists.getSheetAt(0);
+                
+                Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
+
+                int rowCount = sheet.getPhysicalNumberOfRows();
+
+                for (Object[] tBook : tData) {
+                    Row row = sheet.createRow(rowCount++);
+
+                    int columnCount = 0;
+
+                    for (Object obj : tBook) {
+                        Cell cell = row.createCell(columnCount++);
+                        if (obj instanceof String) {
+                            cell.setCellValue((String) obj);
+                        } else if (obj instanceof Integer) {
+                            cell.setCellValue((Integer) obj);
+                        }
+                    }
+                }
+                inputStream.close();
+
+                FileOutputStream outputStream = new FileOutputStream(tenantDataExists);
+                workbookExists.write(outputStream);
+                workbookExists.close();
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet sheet = workbook.createSheet("Tenant Data");
+
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            CellStyle headerRowStyle = workbook.createCellStyle();
+            headerRowStyle.setFont(boldFont);
+
+            CellStyle style = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setFontHeightInPoints((short) 11);
+            font.setFontName(HSSFFont.FONT_ARIAL);
+            font.setBold(true);
+            style.setFont(font);
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
+            tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Phone Number", "MonthlyRent", "House Deposit", "Rent Due Date", "Move-In Date", "Move-Out Date", "Lease-Start Date", "Lease-End Date"});
+            tenantData.put("2", new Object[]{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate});
+
+            Set<String> keyset = tenantData.keySet();
+            int rownum = 0;
+            for (String key : keyset) {
+                Row row = sheet.createRow(rownum++);
+                if (rownum == 1) {
+                    row.setRowStyle(headerRowStyle);
+                }
+                Object[] objArr = tenantData.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr) {
+                    Cell cell = row.createCell(cellnum++);
+                    cell.setCellStyle(getPrefferedCellStyle(cell));
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    }
+                }
+            }
+
+            for (int c = 0; c < tenantData.get("1").length; c++) {
+                sheet.autoSizeColumn(c); //autosize, merged cells should be ignored
+                //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
+            }
+
+            try {
+                FileOutputStream out = new FileOutputStream(fileLocation);
+                workbook.write(out);
+                out.close();
+                workbook.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+    
+    public void createAndWriteExcelSheet(File fileLocation, String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
+        File tenantDataExists = fileLocation;
         HSSFWorkbook workbook;
         
         if (tenantDataExists.exists() == false) {
@@ -1415,6 +1508,7 @@ public class PDController implements Initializable {
         mpesaRadioButton.setToggleGroup(payOptionGroup);
         
         pdMonthCombo.getItems().addAll(PDModel.Strings.values());
+        pdMonthCombo.setValue(PDModel.Strings.CHOOSE);
         
         blockA.getChildren().addAll(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
         blockB.getChildren().addAll(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12);
@@ -1482,7 +1576,7 @@ public class PDController implements Initializable {
                     setEmpty1();
                     pdTableViewButton.setVisible(false);
                     rdTableViewButton.setVisible(false);
-                    pdMonthCombo.setValue(PDModel.Strings.NONE);
+                    pdMonthCombo.setValue(PDModel.Strings.CHOOSE);
                 } else {
                     do {
                         tdName.setText(rs.getString("TenantName"));
@@ -1780,7 +1874,7 @@ public class PDController implements Initializable {
         
         clearButton.setOnAction((event) -> {
             payRecordsFilter.clear();
-            monthComboPD.setValue(PDModel.Strings.NONE);
+            monthComboPD.setValue(PDModel.Strings.CHOOSE);
         });
         
         paymentsTable.setEditable(true);

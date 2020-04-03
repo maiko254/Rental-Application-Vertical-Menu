@@ -6,6 +6,8 @@
 package com.clickdigitalsolutions.rentverticalmenu;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -15,8 +17,9 @@ import javafx.stage.Window;
  * @author bonyo
  */
 public class FileChooserClass {
-    private static FileChooser newInstance = null;
+    public static FileChooser newInstance = null;
     public static SimpleObjectProperty<File> lastSelectedDirectoryProperty = new SimpleObjectProperty<>();
+    public  static Path file = null;
     
     private FileChooserClass() {}
     
@@ -47,6 +50,7 @@ public class FileChooserClass {
     
     public static File showSaveDialog(Window ownerWindow) {
         File selectedFile = getInstance().showSaveDialog(ownerWindow);
+        file = Paths.get(selectedFile.toURI());
         if (selectedFile != null) {
             lastSelectedDirectoryProperty.setValue(selectedFile.getParentFile());
         }
