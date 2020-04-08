@@ -136,7 +136,7 @@ public class FXMLController implements Initializable {
     
     private BorderPane rd;
     
-    private BorderPane me;
+    private SplitPane me;
     
     private TDController tdController;
     
@@ -145,6 +145,8 @@ public class FXMLController implements Initializable {
     private ME2Controller expensesController;
     
     private Preferences prefs;
+    
+    private String loc = "Test1";
     
     private void configureView() {
         tabContainer.setTabMinWidth(tabWidth);
@@ -409,27 +411,40 @@ public class FXMLController implements Initializable {
         });
         
         SaveAs.setOnAction((event) -> {
-            File payFile = FileChooserClass.showSaveDialog(motherAnchor.getScene().getWindow());
-            if (payFile != null) {
-                try {
-                    System.out.println(payFile);
+            prefs = Preferences.userRoot().node(this.getClass().getName());
+            try {
+                if (prefs.get(loc, "Hello World").equals("Hello World")) {
+                    FileChooser first = new FileChooser();
+                    File initFile = first.showSaveDialog(motherAnchor.getScene().getWindow());
+                    prefs.put(loc, initFile.getPath());
                     subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
-                    subcontroller.createExcelSheet(payFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
+                    subcontroller.createExcelSheet(initFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                     subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
                     subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
-                    subcontroller.createAndWriteExcelSheet(payFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                    subcontroller.createAndWriteExcelSheet(initFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
+                } else if (!prefs.get(loc, "Hello World").equals("Hello World")) {
+                    FileChooser secondChooser = new FileChooser();
+                    File file = new File(prefs.get(loc, "Hello World"));
+                    secondChooser.setInitialDirectory(file.getParentFile());
+                    secondChooser.showSaveDialog(motherAnchor.getScene().getWindow());
+                    subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
+                    subcontroller.createExcelSheet(file, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
+                    subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
+                    subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
+                    subcontroller.createAndWriteExcelSheet(file, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payOptionString);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
         
+        
         Save.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            String loc = "Test1";
             try {
-                if (FileChooserClass.file == null && prefs.get(loc, "Hello World").equals("Hello World")) {
-                    File fileLocation = FileChooserClass.showSaveDialog(motherAnchor.getScene().getWindow());
+                if (prefs.get(loc, "Hello World").equals("Hello World")) {
+                    FileChooser firtChooser = new FileChooser();
+                    File fileLocation = firtChooser.showSaveDialog(motherAnchor.getScene().getWindow());
                     prefs.put(loc, fileLocation.getPath());
                     if (fileLocation != null ) {
                         if (subcontroller.tenantDetails.isSelected()) {
@@ -444,7 +459,7 @@ public class FXMLController implements Initializable {
                             subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.rdName.getText(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
                         }
                     }
-                } else {
+                } else if (!prefs.get(loc, "Hello World").equals("Hello World")){
                     File lastLoc = new File(prefs.get(loc, "Hello World"));
                     if (subcontroller.tenantDetails.isSelected()) {
                         subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));

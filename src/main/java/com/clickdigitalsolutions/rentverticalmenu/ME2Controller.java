@@ -5,8 +5,10 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +20,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -29,6 +33,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -36,6 +41,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
@@ -50,7 +56,10 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -60,23 +69,82 @@ import javafx.util.StringConverter;
  * @author bonyo
  */
 public class ME2Controller implements Initializable {
-
+    
+    @FXML
+    public SplitPane sp3;
+    
+    @FXML
+    public BorderPane monthlyExpensePane;
+    
+    public BorderPane tableViewPane = new BorderPane();
+    
+    public VBox elecVbox = new VBox(10);
+    public VBox waterVbox = new VBox(10);
+    public VBox otherVbox = new VBox(10);
+    
+    private TabPane monthlyExpensesTabPane = new TabPane();
+    public Tab elecExpenseTab = new Tab("Electricity Expense", elecVbox);
+    public Tab waterExpenseTab = new Tab("Water Expense", waterVbox);
+    public Tab otherExpenseTab = new Tab("Other Expenses", otherVbox);
+    
+    Label l1 = new Label("Month");
+    Label l2 = new Label("Amount");
+    Label l3 = new Label("Date Paid");
+    Label l4 = new Label("Units\nConsumed (KWh)");
+    
+    Label l5 = new Label("Month");
+    Label l6 = new Label("Amount");
+    Label l7 = new Label("Date Paid");
+    Label l8 = new Label("Unit\nConsumed (m3)");
+    
+    Label l9 = new Label("Month");
+    Label l10 = new Label("Amount");
+    Label l11 = new Label("Date Paid");
+    Label l12 = new Label("Reason For\nExpense");
+    
+    public JFXComboBox<PDModel.Strings> elecCombo = new JFXComboBox<>();
+    public JFXTextField elecAmount = new JFXTextField();
+    public JFXDatePicker elecDate = new JFXDatePicker();
+    public JFXTextField elecUnits = new JFXTextField();
+    public JFXButton elecButton = new JFXButton("Show Table");
+    
+    public JFXComboBox<PDModel.Strings> waterCombo = new JFXComboBox<>();
+    public JFXTextField waterAmount = new JFXTextField();
+    public JFXDatePicker waterDate = new JFXDatePicker();
+    public JFXTextField waterUnits = new JFXTextField();
+    public JFXButton waterButton = new JFXButton("Show Table");
+    
+    public JFXComboBox<PDModel.Strings> otherCombo = new JFXComboBox<>();
+    public JFXTextField otherAmount = new JFXTextField();
+    public JFXDatePicker otherDate = new JFXDatePicker();
+    public JFXTextArea otherReason = new JFXTextArea();
+    public JFXButton otherButton = new JFXButton("Show Table");
+    
+    public HBox hbox1 = new HBox(10, l1, elecCombo);
+    public HBox hbox2 = new HBox(10, l2, elecAmount);
+    public HBox hbox3 = new HBox(10, l3, elecDate);
+    public HBox hbox4 = new HBox(10, l4, elecUnits);
+    public HBox hbox13 = new HBox(elecButton);
+    
+    public HBox hbox5 = new HBox(10, l5, waterCombo);
+    public HBox hbox6 = new HBox(10, l6, waterAmount);
+    public HBox hbox7 = new HBox(10, l7, waterDate);
+    public HBox hbox8 = new HBox(10, l8, waterUnits);
+    public HBox hbox14 = new HBox(waterButton);
+    
+    public HBox hbox9 = new HBox(10, l9, otherCombo);
+    public HBox hbox10 = new HBox(10, l10, otherAmount);
+    public HBox hbox11 = new HBox(10, l11, otherDate);
+    public HBox hbox12 = new HBox(10, l12, otherReason);
+    public HBox hbox15 = new HBox(otherButton);
+    
     public TabPane tabContainer1;
     public BorderPane monthGridPane;
     public Tab electricityExpense;
     public Tab waterExpense;
     public Tab otherExpenses;
-    public JFXComboBox<String> elecCombo;
-    public JFXComboBox<String> waterCombo;
-    public JFXComboBox<String> otherCombo;
-    public JFXTextField elecAmount;
-    public JFXTextField waterAmount;
-    public JFXTextField otherAmount;
-    public JFXDatePicker elecDate;
-    public JFXDatePicker waterDate;
-    public JFXDatePicker otherDate;
-    public JFXTextField elecUnits;
-    public JFXTextField waterUnits;
+    
+    
     public JFXTextField expenseReason;
     public Button saveMonthlyExpense;
     private TableColumn monthCol = new TableColumn("Month");
@@ -98,6 +166,8 @@ public class ME2Controller implements Initializable {
     public BorderPane waterAnchor;
     public BorderPane otherAnchor;
     public AnchorPane savePane;
+    
+    
     
     private double tabWidth = 90.0;
     String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
@@ -326,13 +396,13 @@ public class ME2Controller implements Initializable {
     @FXML
     private void saveMonthlyExpense() {
         if (electricityExpense.isSelected()) {
-            createElecMonthlyExpensesTable(elecCombo.getSelectionModel().getSelectedItem(), elecAmount.getText(), getDateValueAsString(elecDate.getValue()), elecUnits.getText());
+            createElecMonthlyExpensesTable(elecCombo.getSelectionModel().getSelectedItem().name(), elecAmount.getText(), getDateValueAsString(elecDate.getValue()), elecUnits.getText());
             setElecEmpty();
         } else if (waterExpense.isSelected()) {
-            createWaterMonthlyExpensesTable(waterCombo.getSelectionModel().getSelectedItem(), waterAmount.getText(), getDateValueAsString(waterDate.getValue()), waterUnits.getText());
+            createWaterMonthlyExpensesTable(waterCombo.getSelectionModel().getSelectedItem().name(), waterAmount.getText(), getDateValueAsString(waterDate.getValue()), waterUnits.getText());
             setWaterEmpty();
         } else if (otherExpenses.isSelected()) {
-            createOtherMonthlyExpensesTable(otherCombo.getSelectionModel().getSelectedItem(), otherAmount.getText(), getDateValueAsString(otherDate.getValue()), expenseReason.getText());
+            createOtherMonthlyExpensesTable(otherCombo.getSelectionModel().getSelectedItem().name(), otherAmount.getText(), getDateValueAsString(otherDate.getValue()), expenseReason.getText());
             setOtherEmpty();
         }
     }
@@ -408,24 +478,7 @@ public class ME2Controller implements Initializable {
     }
     
     
-    private void configureView(){
-        EventHandler<Event> replaceBackgroundColorHandler = (event) -> {
-            Tab currentTab =  (Tab)event.getTarget();
-            if (currentTab.isSelected()){
-                currentTab.setStyle("-fx-background-color: #ababab;");
-            } else {
-                currentTab.setStyle("-fx-background-color: #ababab;");
-            }
-        };
-        
-        configureTab(electricityExpense, replaceBackgroundColorHandler);
-        configureTab(waterExpense, replaceBackgroundColorHandler);
-        configureTab(otherExpenses, replaceBackgroundColorHandler);
-    }
     
-    private void configureTab(Tab tab, EventHandler<Event> onSelectionChangedEvent){
-        tab.setOnSelectionChanged(onSelectionChangedEvent);
-    }
     
     private void configureViewTab(Tab tab, String title, String iconPath, URL resourceURL, EventHandler<Event> onSelectionChangedEvent){
         double imageWidth = 40.0;
@@ -475,12 +528,12 @@ public class ME2Controller implements Initializable {
     
     public ObservableList<MonthlyModel> getElectricityMonthlyDetails() {
         ObservableList<MonthlyModel> monthlyData = FXCollections.observableArrayList();
-        if (tabCheck.equals("Electricity")) {
+  
             try {
                 String searchElecTable = "SELECT * FROM ElectricityMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(searchElecTable);
-                pstmt.setString(1, elecCombo.getSelectionModel().getSelectedItem());
+                pstmt.setString(1, elecCombo.getSelectionModel().getSelectedItem().name());
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {                    
                     String month = rs.getString("Month");
@@ -495,19 +548,16 @@ public class ME2Controller implements Initializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            System.out.println("Electricity");
-        }  
         return monthlyData;
     }
     
     public ObservableList<waterMonthlyModel> getWaterMonthlyDetails() {
         ObservableList<waterMonthlyModel> monthlyData = FXCollections.observableArrayList();
-        if (tabCheck.equals("Water")){
             try {
                 String searchWaterTable = "SELECT * FROM WaterMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(searchWaterTable);
-                pstmt.setString(1, waterCombo.getSelectionModel().getSelectedItem());
+                pstmt.setString(1, waterCombo.getSelectionModel().getSelectedItem().name());
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {                    
                     String month = rs.getString("Month");
@@ -521,20 +571,17 @@ public class ME2Controller implements Initializable {
                 conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
-            }
-            System.out.println("Water");
-        } 
+            }    
         return monthlyData;
     }
     
     public ObservableList<otherMonthlyModel> getOtherMonthlyDetails() {
         ObservableList<otherMonthlyModel> monthlyData = FXCollections.observableArrayList();
-        if (tabCheck.equals("Other")){
             try {
                 String searchOtherTable = "SELECT * FROM OtherMonthlyExpenses WHERE Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(searchOtherTable);
-                pstmt.setString(1, otherCombo.getSelectionModel().getSelectedItem());
+                pstmt.setString(1, otherCombo.getSelectionModel().getSelectedItem().name());
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {                    
                    String month = rs.getString("Month");
@@ -547,8 +594,6 @@ public class ME2Controller implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("Other");
-        }
         return monthlyData;
     }
     
@@ -991,8 +1036,21 @@ public class ME2Controller implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-      
-        configureView();
+        
+        l1.setMinSize(120, 20);
+        l2.setMinSize(120, 20);
+        l3.setMinSize(120, 20);
+        l4.setMinSize(120, 20);
+        
+        l5.setMinSize(120, 20);
+        l6.setMinSize(120, 20);
+        l7.setMinSize(120, 20);
+        l8.setMinSize(120, 20);
+        
+        l9.setMinSize(120, 20);
+        l10.setMinSize(120, 20);
+        l11.setMinSize(120, 20);
+        l12.setMinSize(120, 20);
         
         setupMonthColumn();
         setupAmountColumn();
@@ -1009,9 +1067,35 @@ public class ME2Controller implements Initializable {
         setupOtherDateColumn();
         setupOtherExpenseReasonColumn();
         
-        elecCombo.setItems(months);
-        waterCombo.setItems(months);
-        otherCombo.setItems(months);
+        elecCombo.setPrefWidth(170);
+        elecCombo.getItems().addAll(PDModel.Strings.values());
+        elecCombo.setValue(PDModel.Strings.CHOOSE);
+        
+        waterCombo.setPrefWidth(170);
+        waterCombo.getItems().addAll(PDModel.Strings.values());
+        waterCombo.setValue(PDModel.Strings.CHOOSE);
+        
+        otherCombo.setPrefWidth(170);
+        otherCombo.getItems().addAll(PDModel.Strings.values());
+        otherCombo.setValue(PDModel.Strings.CHOOSE);
+        
+        otherReason.setWrapText(true);
+        otherReason.setPrefWidth(170);
+        otherReason.sceneProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                otherReason.applyCss();
+                Node text = otherReason.lookup(".text");
+                otherReason.prefHeightProperty().bind(Bindings.createDoubleBinding(() -> {
+                    return otherReason.getFont().getSize() + text.getBoundsInLocal().getHeight();
+                }, text.boundsInLocalProperty()));
+                
+                text.boundsInLocalProperty().addListener((observableBoundsAfter, boundsBefore, boundsAfter) -> {
+                    Platform.runLater(() -> otherReason.requestLayout());
+                });
+            }
+        });
+        
+        
         
         elecCombo.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             elecCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1019,7 +1103,7 @@ public class ME2Controller implements Initializable {
                     String searchElecTable = "SELECT * FROM ElectricityMonthlyExpenses WHERE MONTH = ?";
                     Connection conn = DriverManager.getConnection(databaseURL);
                     PreparedStatement pstmt = conn.prepareStatement(searchElecTable);
-                    pstmt.setString(1, elecCombo.getSelectionModel().getSelectedItem());
+                    pstmt.setString(1, elecCombo.getSelectionModel().getSelectedItem().name());
                     ResultSet rs = pstmt.executeQuery();
                     if (!rs.next()) {
                         elecAmount.setText("");
@@ -1042,6 +1126,63 @@ public class ME2Controller implements Initializable {
             });
         });
         
+        elecButton.setOnAction((event) -> {
+            if (sp3.getItems().size() == 1) {
+                monthlyElectricExpenseTable.setMinHeight(200);
+                monthlyElectricExpenseTable.setItems(getElectricityMonthlyDetails());
+                tableViewPane.setCenter(monthlyElectricExpenseTable);
+                sp3.getItems().add(tableViewPane);
+                elecButton.setText("Hide Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 600);
+            } else if (sp3.getItems().size() == 2) {
+                sp3.getItems().remove(tableViewPane);
+                elecButton.setText("Show Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        
+        waterButton.setOnAction((event) -> {
+            if (sp3.getItems().size() == 1) {
+               waterExpenseTable.setMinHeight(200);
+               waterExpenseTable.setItems(getWaterMonthlyDetails());
+               tableViewPane.setCenter(waterExpenseTable);
+               sp3.getItems().add(tableViewPane);
+               waterButton.setText("Hide Table");
+               Node source = (Node) event.getSource();
+               Stage stage = (Stage) source.getScene().getWindow();
+               MainApp.changeWindowSize(stage, 600);
+            } else if (sp3.getItems().size() == 2) {
+                sp3.getItems().remove(tableViewPane);
+                waterButton.setText("Show Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        
+        otherButton.setOnAction((event) -> {
+            if (sp3.getItems().size() == 1) {
+               otherExpenseTable.setMinHeight(200);
+               otherExpenseTable.setItems(getOtherMonthlyDetails());
+               tableViewPane.setCenter(otherExpenseTable);
+               sp3.getItems().add(tableViewPane);
+               waterButton.setText("Hide Table");
+               Node source = (Node) event.getSource();
+               Stage stage = (Stage) source.getScene().getWindow();
+               MainApp.changeWindowSize(stage, 600);
+            } else if (sp3.getItems().size() == 2) {
+                sp3.getItems().remove(tableViewPane);
+                otherButton.setText("Show Table");
+                Node source = (Node) event.getSource();
+                Stage stage = (Stage) source.getScene().getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        /**
         waterCombo.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             waterCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
@@ -1097,7 +1238,7 @@ public class ME2Controller implements Initializable {
                 otherExpenseTable.setItems(getOtherMonthlyDetails());
             });
         });
-        
+        **/
         Callback<TableColumn, TableCell> stringCellFactory
                 = new Callback<TableColumn, TableCell>() {
             @Override
@@ -1123,8 +1264,6 @@ public class ME2Controller implements Initializable {
             } 
         });
         monthlyElectricExpenseTable.getColumns().addAll(monthCol, amountCol, dateCol, unitsCol);
-        
-        
         
         
         waterExpenseTable.setEditable(true);
@@ -1158,13 +1297,22 @@ public class ME2Controller implements Initializable {
             } 
         });
         otherExpenseTable.getColumns().addAll(monthOtherCol, amountOtherCol, dateOtherCol, reasonOtherCol);
-
-        savePane.prefHeightProperty().bind(monthGridPane.heightProperty());
         
+        elecVbox.setPadding(new Insets(10, 10, 10, 10));
+        elecVbox.getChildren().addAll(hbox1, hbox2, hbox3, hbox4, hbox13);
         
-        electricityAnchor.setBottom(monthlyElectricExpenseTable);
-        waterAnchor.setBottom(waterExpenseTable);
-        otherAnchor.setBottom(otherExpenseTable);
+        waterVbox.setPadding(new Insets(10, 10, 10, 10));
+        waterVbox.getChildren().addAll(hbox5, hbox6, hbox7, hbox8, hbox14);
+        
+        otherVbox.setPadding(new Insets(10, 10, 10, 10));
+        otherVbox.getChildren().addAll(hbox9, hbox10, hbox11, hbox12, hbox15);
+        
+        monthlyExpensesTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        monthlyExpensesTabPane.getTabs().addAll(elecExpenseTab, waterExpenseTab, otherExpenseTab);
+        
+        monthlyExpensePane.setMinHeight(300);
+        monthlyExpensePane.setCenter(monthlyExpensesTabPane);
+       
     }
 
 }
