@@ -65,6 +65,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -139,10 +140,10 @@ public class PDController implements Initializable {
     private BorderPane tableViewPane = new BorderPane();
     
     @FXML
-    private BorderPane selectionPane;
+    public BorderPane selectionPane;
     
     @FXML
-    private BorderPane detailsPane;;
+    public BorderPane detailsPane;;
     
     private VBox tdVbox = new VBox(10);
     
@@ -255,7 +256,7 @@ public class PDController implements Initializable {
     TreeItem<String> d1 = new TreeItem<>("D1");
     TreeItem<String> d2 = new TreeItem<>("D2");
     
-    private TabPane tenantDataPane = new TabPane();
+    public TabPane tenantDataPane = new TabPane();
     public Tab tenantDetails = new Tab("Tenant Details", tdVbox);
     public Tab paymentDetails = new Tab("Payment Details", pdVbox);
     public Tab repairDetails = new Tab("Repairs Details", rdVbox);
@@ -297,9 +298,9 @@ public class PDController implements Initializable {
     public JFXTextField pdAmount = new JFXTextField();
     public JFXDatePicker pdPaymentDate = new JFXDatePicker();
     public TitledPane pdPaymentOption = new TitledPane("Choose Option", pdTitledPaneVbox);
-    public JFXButton pdTableViewButton = new JFXButton("Show Table");
+    public JFXButton pdTableViewButton = new JFXButton("Show details >>");
     public JFXRadioButton cashRadioButton = new JFXRadioButton("Cash");
-    public JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit Slip");
+    public JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit");
     public JFXRadioButton mpesaRadioButton = new JFXRadioButton("MPESA");
     public ToggleGroup payOptionGroup = new ToggleGroup();
     
@@ -316,7 +317,7 @@ public class PDController implements Initializable {
     public JFXTextField rdRepairCost = new JFXTextField();
     public  JFXDatePicker rdRepairDate = new JFXDatePicker();
     public JFXTextField rdMiscCost = new JFXTextField();
-    public JFXButton rdTableViewButton = new JFXButton("Show Table");
+    public JFXButton rdTableViewButton = new JFXButton("Show details >>");
     
     HBox tdHbox1 = new HBox(10, l1, tdName);
     HBox tdHbox2 = new HBox(10, l2, tdPhone);
@@ -1456,7 +1457,6 @@ public class PDController implements Initializable {
         }
     }
     
-    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
@@ -1507,20 +1507,35 @@ public class PDController implements Initializable {
         
         payOptionGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (payOptionGroup.getSelectedToggle().equals(cashRadioButton)) {
+                System.out.println("Cash button selected");
                 radioVbox.getChildren().clear();
-                pdCashTextfield.setPromptText("Name of receiver");
+                pdPayOptionHbox.getChildren().clear();
+                pdCashTextfield.setPromptText("Name");
                 pdPayOptionHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
                 radioVbox.getChildren().add(pdPayOptionHbox);
             } else if (payOptionGroup.getSelectedToggle().equals(bankRadioButton)) {
+                System.out.println("Bank button selected");
                 radioVbox.getChildren().clear();
-                pdbankTextfield.setPromptText("Bank Deposit Slip");
+                pdPayOptionHbox.getChildren().clear();
+                pdbankTextfield.setPromptText("Deposit Slip");
                 pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
                 radioVbox.getChildren().add(pdPayOptionHbox);
             } else if (payOptionGroup.getSelectedToggle().equals(mpesaRadioButton)) {
+                System.out.println("Mpesa button selected");
                 radioVbox.getChildren().clear();
-                pdMpesaTextfield.setPromptText("Mpesa Transaction Code");
-                pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
+                pdPayOptionHbox.getChildren().clear();
+                pdMpesaTextfield.setPromptText("Transaction Code");
+                pdPayOptionHbox.getChildren().addAll(pdMpesaTextfield, pdMpesaButton);
                 radioVbox.getChildren().add(pdPayOptionHbox);
+            }
+        });
+        
+        
+        
+        pdPaymentOption.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
+            if (wasExpanded) {
+                System.out.println("Titled Pane is collapsed");
+                payOptionGroup.getToggles().clear();
             }
         });
         
@@ -1558,9 +1573,6 @@ public class PDController implements Initializable {
 
                 if (!rs.next()) {
                     setEmpty1();
-                    pdTableViewButton.setVisible(false);
-                    rdTableViewButton.setVisible(false);
-                    pdMonthCombo.setValue(PDModel.Strings.CHOOSE);
                 } else {
                     do {
                         tdName.setText(rs.getString("TenantName"));
@@ -1589,9 +1601,6 @@ public class PDController implements Initializable {
                             tdLeaseEndDate.setValue(null);
                         }
                     } while (rs.next());
-                    System.out.println("in database");
-                    pdTableViewButton.setVisible(true);
-                    rdTableViewButton.setVisible(true);
                 }
                 pstmt.close();
                 conn.close();
@@ -1612,8 +1621,10 @@ public class PDController implements Initializable {
                     ResultSet rs1 = pstmt1.executeQuery();
                     if(!rs.next()){
                         pdName.setText("");
+                        pdMonthCombo.setValue(PDModel.Strings.CHOOSE);
+                        pdTableViewButton.setVisible(false);
                         setEmpty();
-                    }else
+                    }else {
                         do {                            
                             pdName.setText(rs.getString("TenantName"));
                             pdAmount.setText(rs.getString("Amount"));
@@ -1623,7 +1634,8 @@ public class PDController implements Initializable {
                             }else
                                 pdPaymentDate.setValue(null);
                         } while (rs.next());
-                    
+                        pdTableViewButton.setVisible(true);
+                    }
                     pstmt.close();
                     pstmt1.close();
                     conn.close();
@@ -1639,7 +1651,8 @@ public class PDController implements Initializable {
                     ResultSet rs = pstmt.executeQuery();
                     if (!rs.next()){
                         setEmpty();
-                    }else 
+                        rdTableViewButton.setVisible(false);
+                    }else {
                         do {
                             rdName.setText(rs.getString("TenantName"));
                             rdRepairsDone.setText(rs.getString("Repairs"));
@@ -1650,6 +1663,8 @@ public class PDController implements Initializable {
                                 rdRepairDate.setValue(null);
                             rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
                         } while (rs.next());
+                        rdTableViewButton.setVisible(true);
+                    }
                     pstmt.close();
                     conn.close();
                 } catch (Exception e) {
@@ -1910,6 +1925,7 @@ public class PDController implements Initializable {
             }
         });
         
+        
         rdName.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
             if (length > 21) {
@@ -1919,6 +1935,36 @@ public class PDController implements Initializable {
             }
         });
         rdName.setDisable(true);
+        
+        pdCashTextfield.setPrefWidth(50);
+        pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdCashTextfield.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdCashTextfield.setPrefWidth(50);
+            }
+        });
+        
+        pdbankTextfield.setPrefWidth(50);
+        pdbankTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdbankTextfield.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdbankTextfield.setPrefWidth(50);
+            } 
+        });
+        
+        pdMpesaTextfield.setPrefWidth(50);
+        pdMpesaTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdMpesaTextfield.setPrefWidth(length*8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdMpesaTextfield.setPrefWidth(50);
+            }
+        });
         
         rdRepairsDone.setWrapText(true);
         rdRepairsDone.setPrefWidth(170);
@@ -1943,13 +1989,13 @@ public class PDController implements Initializable {
                 paymentsTable.setItems(getPaymentDetails());
                 tableViewPane.setCenter(paymentsTable);
                 sp1.getItems().add(tableViewPane);
-                pdTableViewButton.setText("Hide Table");
+                pdTableViewButton.setText("Hide details >>");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 600);
             } else if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                pdTableViewButton.setText("Show table");
+                pdTableViewButton.setText("Show details >>");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 500);
@@ -1963,13 +2009,13 @@ public class PDController implements Initializable {
                 repairsTable.setItems(getRepairsDetails());
                 tableViewPane.setCenter(repairsTable);
                 sp1.getItems().add(tableViewPane);
-                rdTableViewButton.setText("Hide Table");
+                rdTableViewButton.setText("Hide details >>");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 600);
             } else if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                rdTableViewButton.setText("Show Table");
+                rdTableViewButton.setText("Show details >>");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 500);
@@ -1978,6 +2024,7 @@ public class PDController implements Initializable {
         
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
         
+        radioVbox.setMinWidth(170);
         radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
         
         pdPaymentOption.setContent(radioVbox);
@@ -2004,6 +2051,7 @@ public class PDController implements Initializable {
         detailsPane.setCenter(tenantDataPane);
         blockTreeView.setMinWidth(120);
         selectionPane.setCenter(blockTreeView);
-          
+        
+        
     }   
 }

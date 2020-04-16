@@ -3,9 +3,13 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-
 <SplitPane fx:id="sp3" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="215.0" prefWidth="412.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.clickdigitalsolutions.rentverticalmenu.ME2Controller">
    <items>
-      <BorderPane fx:id="monthlyExpensePane" prefHeight="200.0" prefWidth="200.0" />
+      <SplitPane dividerPositions="0.25097465886939574" prefHeight="160.0" prefWidth="200.0">
+        <items>
+            <BorderPane fx:id="monthlyDetailsPane" prefHeight="214.0" prefWidth="46.0" />
+            <BorderPane fx:id="monthlyExpensePane" prefHeight="200.0" prefWidth="200.0" />
+        </items>
+      </SplitPane>
    </items>
 </SplitPane>
