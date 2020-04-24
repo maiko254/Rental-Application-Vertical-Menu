@@ -49,6 +49,7 @@ public class PDModel {
     public ObjectProperty<Strings> monthTablePD;
     public StringProperty paymentDateTablePD;
     public StringProperty paymentMethodPD;
+    private static StringProperty titledPaneText = new SimpleStringProperty();
     
     public PDModel(String houseNumber, String tenantName, String rentAmount, Strings monthPaid, String paymentDate, String paymentMethod){
         houseNumberTablePD = new SimpleStringProperty(houseNumber);
@@ -62,16 +63,28 @@ public class PDModel {
     @Override
     public String toString(){
         return houseNumberTablePD.get() +","+ tenantNameTablePD.get() +","+ amountTablePD.get() +","+ monthTablePD.get() +","+ paymentDateTablePD.get() +","+ paymentMethodPD.get();
-        
-        
     }
     
     public PDModel(){
         
     }
+    
+    public static StringProperty titledPaneTextProperty() {
+        return titledPaneText;
+    }
+    
+    public static void setTitledPaneText(String data) {
+        titledPaneText.set(data + getTitledPaneText());
+    }
+
+    public static String getTitledPaneText() {
+        return titledPaneText.get();
+    }
+    
     public String gethouseNumberTablePD(){
         return houseNumberTablePD.get();
     }
+    
     public void sethouseNumberTablePD(String value){
         houseNumberTablePD.set(value);
     }

@@ -65,6 +65,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
@@ -87,6 +88,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -151,11 +153,9 @@ public class PDController implements Initializable {
     
     private VBox rdVbox = new VBox(10);
     
-    private VBox pdTitledPaneVbox = new VBox();
-    
     private VBox placingVbox = new VBox();
     
-    private VBox radioVbox = new VBox(5);
+    private VBox radioVbox = new VBox(10);
     
     public JFXButton updatePDAmount;
     
@@ -297,20 +297,23 @@ public class PDController implements Initializable {
     public JFXComboBox<PDModel.Strings> pdMonthCombo = new JFXComboBox<>();
     public JFXTextField pdAmount = new JFXTextField();
     public JFXDatePicker pdPaymentDate = new JFXDatePicker();
-    public TitledPane pdPaymentOption = new TitledPane("Choose Option", pdTitledPaneVbox);
+    public TitledPane pdPaymentOption = new TitledPane();
     public JFXButton pdTableViewButton = new JFXButton("Show details >>");
     public JFXRadioButton cashRadioButton = new JFXRadioButton("Cash");
     public JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit");
     public JFXRadioButton mpesaRadioButton = new JFXRadioButton("MPESA");
+    public JFXRadioButton otherRadioButton = new JFXRadioButton("Alternative");
     public ToggleGroup payOptionGroup = new ToggleGroup();
+    public Label payLabel = new Label();
     
-    public String payOptionString;
     public JFXTextField pdCashTextfield  = new JFXTextField();
     public JFXTextField pdbankTextfield  = new JFXTextField();
     public JFXTextField pdMpesaTextfield  = new JFXTextField();
-    public JFXButton pdCashButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
-    public JFXButton pdBankButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
-    public JFXButton pdMpesaButton = new JFXButton("Done", new ImageView(new Image("/images/checkmark_16px.png")));
+    public JFXTextArea pdOtherExpenseField = new JFXTextArea();
+    public JFXButton pdCashButton = new JFXButton("Done");
+    public JFXButton pdBankButton = new JFXButton("Done");
+    public JFXButton pdMpesaButton = new JFXButton("Done");
+    public JFXButton pdOtherButton = new JFXButton("Done");
     
     public JFXTextField rdName = new JFXTextField();
     public JFXTextArea rdRepairsDone = new JFXTextArea();
@@ -1487,10 +1490,6 @@ public class PDController implements Initializable {
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
         
-        cashRadioButton.setToggleGroup(payOptionGroup);
-        bankRadioButton.setToggleGroup(payOptionGroup);
-        mpesaRadioButton.setToggleGroup(payOptionGroup);
-        
         pdMonthCombo.getItems().addAll(PDModel.Strings.values());
         pdMonthCombo.setValue(PDModel.Strings.CHOOSE);
         
@@ -1505,22 +1504,31 @@ public class PDController implements Initializable {
         blockTreeView.setRoot(rootBlock);
         blockTreeView.setShowRoot(false);
         
+        cashRadioButton.setUserData("Cash");
+        bankRadioButton.setUserData("Bank");
+        mpesaRadioButton.setUserData("Mpesa");
+        
+        cashRadioButton.setToggleGroup(payOptionGroup);
+        bankRadioButton.setToggleGroup(payOptionGroup);
+        mpesaRadioButton.setToggleGroup(payOptionGroup);
+        
+        /**
         payOptionGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (payOptionGroup.getSelectedToggle().equals(cashRadioButton)) {
+            if (payOptionGroup.getSelectedToggle().getUserData().equals("Cash")) {
                 System.out.println("Cash button selected");
                 radioVbox.getChildren().clear();
                 pdPayOptionHbox.getChildren().clear();
                 pdCashTextfield.setPromptText("Name");
                 pdPayOptionHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
                 radioVbox.getChildren().add(pdPayOptionHbox);
-            } else if (payOptionGroup.getSelectedToggle().equals(bankRadioButton)) {
+            } else if (payOptionGroup.getSelectedToggle().getUserData().equals("Bank")) {
                 System.out.println("Bank button selected");
                 radioVbox.getChildren().clear();
                 pdPayOptionHbox.getChildren().clear();
                 pdbankTextfield.setPromptText("Deposit Slip");
                 pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
                 radioVbox.getChildren().add(pdPayOptionHbox);
-            } else if (payOptionGroup.getSelectedToggle().equals(mpesaRadioButton)) {
+            } else if (payOptionGroup.getSelectedToggle().getUserData().equals("Mpesa")) {
                 System.out.println("Mpesa button selected");
                 radioVbox.getChildren().clear();
                 pdPayOptionHbox.getChildren().clear();
@@ -1529,37 +1537,82 @@ public class PDController implements Initializable {
                 radioVbox.getChildren().add(pdPayOptionHbox);
             }
         });
+        **/
+        cashRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            radioVbox.getChildren().clear();
+            pdPayOptionHbox.getChildren().clear();
+            pdCashTextfield.setPromptText("Name");
+            pdPayOptionHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
+            radioVbox.getChildren().add(pdPayOptionHbox);
+            payLabel.textProperty().bind(Bindings.concat("Received by: ").concat(pdCashTextfield.textProperty()));
+        });
         
+        bankRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            System.out.println("Bank button selected");
+            radioVbox.getChildren().clear();
+            pdPayOptionHbox.getChildren().clear();
+            pdbankTextfield.setPromptText("Deposit Slip");
+            pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
+            radioVbox.getChildren().add(pdPayOptionHbox);
+            payLabel.textProperty().bind(Bindings.concat("Deposit slip: ").concat(pdbankTextfield.textProperty()));
+        });
         
+        mpesaRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            System.out.println("Mpesa button selected");
+            radioVbox.getChildren().clear();
+            pdPayOptionHbox.getChildren().clear();
+            pdMpesaTextfield.setPromptText("Transaction Code");
+            pdPayOptionHbox.getChildren().addAll(pdMpesaTextfield, pdMpesaButton);
+            radioVbox.getChildren().add(pdPayOptionHbox);
+            payLabel.textProperty().bind(Bindings.concat("Transaction code: ").concat(pdMpesaTextfield.textProperty()));
+        });
+        
+        otherRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+            radioVbox.getChildren().clear();
+            pdPayOptionHbox.getChildren().clear();
+            pdOtherExpenseField.setPromptText("Alternative Payment");
+            pdPayOptionHbox.getChildren().addAll(pdOtherExpenseField, pdOtherButton);
+            radioVbox.getChildren().add(pdPayOptionHbox);
+            payLabel.textProperty().bind(Bindings.concat("Alternative: ").concat(pdOtherExpenseField.textProperty()));
+        });
+        
+        pdPaymentOption.setMinWidth(5);
         
         pdPaymentOption.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
             if (wasExpanded) {
-                System.out.println("Titled Pane is collapsed");
-                payOptionGroup.getToggles().clear();
+                System.out.println(pdPaymentOption.getText());
+                cashRadioButton.setSelected(false);
+                bankRadioButton.setSelected(false);
+                mpesaRadioButton.setSelected(false);
+                otherRadioButton.setSelected(false);
+            } else if (isNowExpanded) {
+                
             }
+
         });
         
         pdCashButton.setOnAction((event) -> {
-            payOptionString = pdCashTextfield.getText();
             radioVbox.getChildren().clear();
-            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
-            pdPaymentOption.setText("Cash received by: "+payOptionString);
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
             pdPaymentOption.setExpanded(false);
+            System.out.println(payLabel.getText());
         });
         
         pdBankButton.setOnAction((event) -> {
-            payOptionString = pdbankTextfield.getText();
             radioVbox.getChildren().clear();
-            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
-            pdPaymentOption.setText("Deposit slip: "+payOptionString);
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
             pdPaymentOption.setExpanded(false);
         });
         
         pdMpesaButton.setOnAction((event) -> {
-            payOptionString = pdMpesaButton.getText();
             radioVbox.getChildren().clear();
-            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
-            pdPaymentOption.setText("Mpesa code: "+payOptionString);
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
+            pdPaymentOption.setExpanded(false);
+        });
+        
+        pdOtherButton.setOnAction((event) -> {
+            radioVbox.getChildren().clear();
+            radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
             pdPaymentOption.setExpanded(false);
         });
         
@@ -1631,9 +1684,13 @@ public class PDController implements Initializable {
                             pdMonthCombo.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
                             if (rs.getString("PaymentDate") != null){
                                 pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
-                            }else
+                            }else {
                                 pdPaymentDate.setValue(null);
+                            }
+                            payLabel.setText(rs.getString("PaymentMethod"));
+                           
                         } while (rs.next());
+                        
                         pdTableViewButton.setVisible(true);
                     }
                     pstmt.close();
@@ -1642,7 +1699,7 @@ public class PDController implements Initializable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            
+                
             try {
                     String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
                     Connection conn = DriverManager.getConnection(databaseURL);
@@ -1842,7 +1899,7 @@ public class PDController implements Initializable {
                             } else {
                                 pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
                             }
-                            
+                            payLabel.setText(rs.getString("PaymentMethod"));
                         } while (rs.next());
                     }
                     pstmt.close();
@@ -1855,6 +1912,7 @@ public class PDController implements Initializable {
             });
         
         pdMonthCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
+            payTenantDetails = getPaymentDetails();
             FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
             filteredList.setPredicate((t) -> {
                 if (pdMonthCombo.getValue() == null || pdMonthCombo.getSelectionModel().isEmpty()) {
@@ -1982,6 +2040,22 @@ public class PDController implements Initializable {
             }
         });
         
+        pdOtherExpenseField.setWrapText(true);
+        pdOtherExpenseField.setPrefSize(100, 10);
+        pdOtherExpenseField.sceneProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                pdOtherExpenseField.applyCss();
+                Node text = pdOtherExpenseField.lookup(".text");
+                pdOtherExpenseField.prefHeightProperty().bind(Bindings.createDoubleBinding(() -> {
+                    return pdOtherExpenseField.getFont().getSize() + text.getBoundsInLocal().getHeight();
+                }, text.boundsInLocalProperty()));
+                
+                text.boundsInLocalProperty().addListener((observableBoundsAfter, boundsBefore, boundsAfter) -> {
+                    Platform.runLater(() -> pdOtherExpenseField.requestLayout());
+                });
+            }
+        });
+        
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -2025,10 +2099,13 @@ public class PDController implements Initializable {
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
         
         radioVbox.setMinWidth(170);
-        radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton);
+        radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
         
+        pdPaymentOption.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        pdPaymentOption.setGraphic(payLabel);
         pdPaymentOption.setContent(radioVbox);
         pdPaymentOption.setExpanded(false);
+        pdPaymentOption.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
         
         pdHbox5.setPadding(new Insets(10, 0, 0, 0));
         
