@@ -17,7 +17,8 @@ import javafx.beans.property.StringProperty;
 public class PDModel {
     
     public enum Strings{
-        CHOOSE("Choose Month"),
+        ALL("All"),
+        NONE(""),
         JANUARY("January"),
         FEBRUARY("February"),
         MARCH("March"),
