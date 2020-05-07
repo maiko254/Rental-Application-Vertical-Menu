@@ -204,7 +204,11 @@ public class PDController implements Initializable {
     MenuItem edit = new MenuItem("Edit");
     MenuItem printReceipt = new MenuItem("Print Receipt");
     MenuItem stickyNote = new MenuItem("Add Sticky Note");
-
+    
+    Button updateButton = new Button("Update");
+    Button deleteButton = new Button("Delete");
+    Button cancelButton = new Button("Cancel");
+    
     Label houseSnLabel = new Label("A1");
     JFXButton closeButton = new JFXButton();
     HBox hboxTop = new HBox(50, houseSnLabel, closeButton);
@@ -1744,15 +1748,36 @@ public class PDController implements Initializable {
                 event.consume();
             }
         });
-
+        
+        updateButton.setOnAction((event) -> {
+            try {
+                System.out.println(pdPaymentDate.getValue());
+                if (!("".equals(pdAmount.getText()))) {
+                    String updateAmountSql = "UPDATE PaymentDetails SET Amount = ? WHERE Amount <> ? AND HouseNumber = ? AND PaymentDate = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(updateAmountSql);
+                    pstmt.setString(1, pdAmount.getText());
+                    pstmt.setString(2, pdAmount.getText());
+                    pstmt.setString(3, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    pstmt.setString(4, getDateValueAsString(pdPaymentDate.getValue()));
+                    pstmt.executeUpdate();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            try {
+                
+            } catch (Exception e) {
+            }
+        });
+        
         edit.setOnAction((event) -> {
-            JFXButton updateButton = new JFXButton("Update");
-            updateButton.getStylesheets().add("/styles/updateButtonCss.css");
-            JFXButton deleteButton = new JFXButton("Delete");
-            deleteButton.getStylesheets().add("/styles/deleteButtonCss.css");
-            HBox updateHbox = new HBox(70, updateButton, deleteButton);
+            HBox updateHbox = new HBox(70, updateButton, deleteButton, cancelButton);
             updateHbox.prefWidthProperty().bind(detailsPane.widthProperty());
-            updateHbox.setPadding(new Insets(20, 0, 0, 100));
+            updateHbox.setPadding(new Insets(20, 0, 0, 20));
+            pdAmount.setStyle("-fx-background-color: white;");
+            pdPaymentDate.setStyle("-fx-background-color: white;");
             pdVboxEdit.setStyle("-fx-border-style: none none solid none;");
             pdVbox.getChildren().add(1, updateHbox);
         });
@@ -1827,14 +1852,14 @@ public class PDController implements Initializable {
         });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
 
-        detailsPane.setOnContextMenuRequested((event) -> {
+        pdScrollPane.setOnContextMenuRequested((event) -> {
             editMenu.getItems().clear();
             editMenu.getItems().addAll(edit, printReceipt, stickyNote);
             xCursorPos = event.getScreenX();
             yCursorPos = event.getScreenY();
             editMenu.show(sp1, event.getScreenX(), event.getScreenY());
         });
-        detailsPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+        pdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             editMenu.hide();
         });
 
