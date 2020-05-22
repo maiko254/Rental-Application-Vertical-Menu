@@ -58,6 +58,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -1482,6 +1483,12 @@ public class PDController implements Initializable {
                     pdName.setText("");
                     pdMonthCombo.setValue(PDModel.Strings.NONE);
                     pdTableViewButton.setVisible(false);
+                    payLabel.textProperty().unbind();
+                    payLabel.setText("");
+                    payRowId = 0;
+                    if (pdVbox.getChildren().contains(updateHbox)) {
+                        pdVbox.getChildren().remove(updateHbox);
+                    }
                     setEmpty();
                 } else {
                     do {
@@ -1538,12 +1545,24 @@ public class PDController implements Initializable {
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
                     blockA.setExpanded(false);
+                    blockB.setValue("Block B");
+                    blockC.setValue("Block C");
+                    nasraBlock.setValue("Nasra Block");
                 } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockB)) {
                     blockB.setExpanded(false);
+                    blockA.setValue("Block A");
+                    blockC.setValue("Block C");
+                    nasraBlock.setValue("Nasra Block");
                 } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockC)) {
                     blockC.setExpanded(false);
+                    blockA.setValue("Block A");
+                    blockB.setValue("Block B");
+                    nasraBlock.setValue("Nasra Block");
                 } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(nasraBlock)) {
                     nasraBlock.setExpanded(false);
+                    blockA.setValue("Block A");
+                    blockB.setValue("Block B");
+                    blockC.setValue("Block C");
                 }
             });
         }
@@ -1753,16 +1772,6 @@ public class PDController implements Initializable {
             blockC.setExpanded(false);
             nasraBlock.setExpanded(false);
         });
-        sp1.setOnKeyPressed((event) -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-                blockA.setValue("Block A");
-                blockB.setValue("Block B");
-                blockC.setValue("Block C");
-                nasraBlock.setValue("Nasra Block");
-                setEmpty();
-                event.consume();
-            }
-        });
         
         updateButton.setOnAction((event) -> {
 
@@ -1783,6 +1792,9 @@ public class PDController implements Initializable {
                     pstmt.setInt(4, payRowId);
                     pstmt.executeUpdate();
                     if (pstmt.executeUpdate() == 1) {
+                        setEmpty();
+                        payLabel.textProperty().unbind();
+                        payLabel.setText("");
                         Alert confirmPDUpdate = new Alert(AlertType.INFORMATION);
                         confirmPDUpdate.setTitle("Update Confirmation");
                         confirmPDUpdate.setHeaderText(null);
@@ -1801,6 +1813,8 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
+            pdVbox.getChildren().remove(updateHbox);
+            pdTableViewButton.setDisable(false);
         });
         
         deleteButton.setOnAction((event) -> {
@@ -1809,7 +1823,15 @@ public class PDController implements Initializable {
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(deletePaySql);
                 pstmt.setInt(1, payRowId);
-                pstmt.executeUpdate();
+                System.out.println(payRowId);
+                int one = pstmt.executeUpdate();
+                if (one == 0) {
+                    Alert noRecordAlert = new Alert(AlertType.ERROR);
+                    noRecordAlert.setTitle("Missing Record");
+                    noRecordAlert.setHeaderText(null);
+                    noRecordAlert.setContentText("No reocrd found for "+blockTreeView.getSelectionModel().getSelectedItem().getValue()+" for "+pdMonthCombo.getValue().name());
+                    noRecordAlert.showAndWait();
+                }
                 pstmt.close();
                 conn.close();
                 setEmpty();
@@ -1819,10 +1841,12 @@ public class PDController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            pdTableViewButton.setDisable(false);
         });
         
         cancelButton.setOnAction((event) -> {
             pdVbox.getChildren().remove(updateHbox);
+            pdTableViewButton.setDisable(false);
         });
         
         clear.setOnAction((event) -> {
@@ -1835,10 +1859,12 @@ public class PDController implements Initializable {
             } else if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("D")) {
                 blockTreeView.getSelectionModel().getSelectedItem().setValue("Nasra Block");
             }
+            payRowId = 0;
             setAllEmpty();
         });
         
         edit.setOnAction((event) -> {
+            System.out.println(payRowId);
             if (payRowId == 0) {
                 Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
                 emptyHouseAlert.setTitle("No house selected");
@@ -1846,13 +1872,19 @@ public class PDController implements Initializable {
                 emptyHouseAlert.setContentText("Please select a house");
                 emptyHouseAlert.showAndWait();
             } else {
+                if (sp1.getItems().size() == 2) {
+                    sp1.getItems().remove(tableViewPane);
+                    pdTableViewButton.setText("Show details >>");
+                }
                 updateHbox.prefWidthProperty().bind(detailsPane.widthProperty());
                 updateHbox.setPadding(new Insets(20, 0, 0, 20));
-                pdAmount.setStyle("-fx-background-color: white;");
-                pdPaymentDate.setStyle("-fx-background-color: white;");
-                pdVboxEdit.setStyle("-fx-border-style: none none solid none;");
-                pdVbox.getChildren().add(1, updateHbox);
+                pdVbox.getChildren().add(1, updateHbox); 
             }
+            
+            if (pdVbox.getChildren().contains(updateHbox)) {
+                pdTableViewButton.setDisable(true);
+            }
+            
         });
 
         stickyNote.setOnAction((event) -> {
@@ -1924,7 +1956,7 @@ public class PDController implements Initializable {
             jasperViewer.setVisible(true);
         });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
-
+        
         pdScrollPane.setOnContextMenuRequested((event) -> {
             editMenu.getItems().clear();
             editMenu.getItems().addAll(edit, printReceipt, stickyNote, clear);
@@ -2000,6 +2032,7 @@ public class PDController implements Initializable {
                         payLabel.textProperty().unbind();
                         payLabel.setText("");
                         rentArrearslabel.setVisible(false);
+                        payRowId = 0;
                     } else {
                         do {
                             if (rs2.next()) {
@@ -2203,7 +2236,8 @@ public class PDController implements Initializable {
                 });
             }
         });
-
+        
+        
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -2223,7 +2257,7 @@ public class PDController implements Initializable {
                 MainApp.changeWindowSize(stage, 500);
             }
         });
-
+        
         rdTableViewButton.setVisible(false);
         rdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
