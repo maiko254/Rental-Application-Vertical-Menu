@@ -608,120 +608,6 @@ public class ME2Controller implements Initializable {
         return monthlyData;
     }
     
-    class MyStringTableCell extends TableCell<MonthlyModel, String> {
-
-        @Override
-        public void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            setText(empty ? null : getString());
-        }
-
-        private String getString() {
-            return getItem() == null ? "" : getItem().toString();
-        }
-    }
-    
-    class waterStringTableCell extends TableCell<waterMonthlyModel, String> {
-
-        @Override
-        public void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            setText(empty ? null : getString());
-        }
-
-        private String getString() {
-            return getItem() == null ? "" : getItem().toString();
-        }
-    }
-    
-    class otherStringTableCell extends TableCell<otherMonthlyModel, String> {
-
-        @Override
-        public void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-            setText(empty ? null : getString());
-        }
-
-        private String getString() {
-            return getItem() == null ? "" : getItem().toString();
-        }
-    }
-    
-    Callback<TableColumn, TableCell> stringCellFactory
-            = new Callback<TableColumn, TableCell>() {
-        @Override
-        public TableCell call(TableColumn param) {
-            MyStringTableCell cell = new MyStringTableCell();
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-    
-    public static final StringConverter<String> IDENTITY_CONVERTER = new StringConverter<String>() {
-
-        @Override
-        public String toString(String object) {
-            return object;
-        }
-
-        @Override
-        public String fromString(String string) {
-            return string;
-        }
-        
-    };
-
-    
-    Callback<TableColumn<MonthlyModel, String>, TableCell<MonthlyModel, String>> customStringCellFactory
-            = new Callback<TableColumn<MonthlyModel, String>, TableCell<MonthlyModel, String>>() {
-        @Override
-        public TableCell<MonthlyModel, String> call(TableColumn<MonthlyModel, String> param) {
-            EditCell cell = new EditCell(IDENTITY_CONVERTER);
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-    
-    Callback<TableColumn, TableCell> waterStringCellFactory
-            = new Callback<TableColumn, TableCell>() {
-        @Override
-        public TableCell call(TableColumn param) {
-            waterStringTableCell cell = new waterStringTableCell();
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-    
-    Callback<TableColumn<waterMonthlyModel, String>, TableCell<waterMonthlyModel, String>> customWaterColCellFactory
-            = new Callback<TableColumn<waterMonthlyModel, String>, TableCell<waterMonthlyModel, String>>() {
-        @Override
-        public TableCell<waterMonthlyModel, String> call(TableColumn<waterMonthlyModel, String> param) {
-            EditCell cell = new EditCell(IDENTITY_CONVERTER);
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-    
-    Callback<TableColumn, TableCell> otherStringCellFactory
-            = new Callback<TableColumn, TableCell>() {
-        @Override
-        public TableCell call(TableColumn param) {
-            otherStringTableCell cell = new otherStringTableCell();
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-    
-    Callback<TableColumn<otherMonthlyModel, String>, TableCell<otherMonthlyModel, String>> customOtherColCellFactory
-            = new Callback<TableColumn<otherMonthlyModel, String>, TableCell<otherMonthlyModel, String>>() {
-        @Override
-        public TableCell<otherMonthlyModel, String> call(TableColumn<otherMonthlyModel, String> param) {
-            EditCell cell = new EditCell(IDENTITY_CONVERTER);
-            cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-            return cell;
-        }
-    };
-
     class MyEventHandler implements EventHandler<MouseEvent> {
 
         @Override
@@ -848,41 +734,18 @@ public class ME2Controller implements Initializable {
         monthCol.setPrefWidth(130.0);
         monthCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("monthME"));
-        monthCol.setCellFactory(stringCellFactory);
     }
     
     private void setupAmountColumn() {
         amountCol.setPrefWidth(150.0);
         amountCol.setCellValueFactory(
-                new PropertyValueFactory<MonthlyModel, String>("amountPaidME"));
-        amountCol.setCellFactory(customStringCellFactory);
-        amountCol.setOnEditStart((event) -> {
-            MonthlyModel amount = event.getRowValue();
-            elecAmount.setText(amount.getAmountPaidME());
-            elecDate.setValue(LocalDate.parse(amount.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            elecUnits.setText(amount.getUnitsConsumedME());
-        });
-        amountCol.setOnEditCommit((event) -> {
-            MonthlyModel amount = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Amount column for "+amount.getMonthME()+" on "+amount.getDatePaidME()+" in ElectricityMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Electricity Monthly Expenses Table for "+amount.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    amount.setAmountPaidME(event.getNewValue());
-                    updateMonthlyExpenseTable("ElectricityMonthlyExpenses", "Amount", event.getNewValue(), amount.getMonthME(), amount.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = monthlyElectricExpenseTable.getSelectionModel().getSelectedIndex();
-                    monthlyElectricExpenseTable.getItems().set(index, amount);
-                }
-            });
-        });
+                new PropertyValueFactory<MonthlyModel, String>("amountPaidME")); 
     }
     
     private void setupDateColumn() {
         dateCol.setPrefWidth(110.0);
         dateCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("datePaidME"));
-        dateCol.setCellFactory(stringCellFactory);
     }
     
     private void setupUnitsConsumedCol() {
@@ -890,159 +753,50 @@ public class ME2Controller implements Initializable {
         unitsCol.prefWidthProperty().bind(monthlyElectricExpenseTable.widthProperty().subtract(usedWidth));
         unitsCol.setCellValueFactory(
                 new PropertyValueFactory<MonthlyModel, String>("unitsConsumedME"));
-        unitsCol.setCellFactory(customStringCellFactory);
-        unitsCol.setOnEditStart((event) -> {
-            MonthlyModel units = event.getRowValue();
-            elecAmount.setText(units.getAmountPaidME());
-            elecDate.setValue(LocalDate.parse(units.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            elecUnits.setText(units.getUnitsConsumedME());
-        });
-        unitsCol.setOnEditCommit((event) -> {
-            MonthlyModel units = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Units Consumed column for "+units.getMonthME()+" on "+units.getDatePaidME()+" in ElectricityMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Electricity Monthly Expenses Table for "+units.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    units.setUnitsConsumedME(event.getNewValue());
-                    updateMonthlyExpenseTable("ElectricityMonthlyExpenses", "UnitsConsumed", event.getNewValue(), units.getMonthME(), units.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = monthlyElectricExpenseTable.getSelectionModel().getSelectedIndex();
-                    monthlyElectricExpenseTable.getItems().set(index, units);
-                }
-            });
-        });
     }
     
     private void setupMonthWaterCol() {
         monthWaterCol.setPrefWidth(130.0);
         monthWaterCol.setCellValueFactory(
                 new PropertyValueFactory<waterMonthlyModel, String>("monthME"));
-        monthWaterCol.setCellFactory(waterStringCellFactory);
     }
     
     private void setupAmountWaterColumn() {
         amountWaterCol.setPrefWidth(150.0);
         amountWaterCol.setCellValueFactory(
                 new PropertyValueFactory<waterMonthlyModel, String>("amountPaidME"));
-        amountWaterCol.setCellFactory(customWaterColCellFactory);
-        amountWaterCol.setOnEditStart((event) -> {
-            waterMonthlyModel amount = event.getRowValue();
-            waterAmount.setText(amount.getAmountPaidME());
-            waterDate.setValue(LocalDate.parse(amount.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            waterUnits.setText(amount.getUnitsConsumedME());
-        });
-        amountWaterCol.setOnEditCommit((event) -> {
-            waterMonthlyModel amount = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Amount column for "+amount.getMonthME()+" on "+amount.getDatePaidME()+" in WaterMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Water Monthly Expenses Table for "+amount.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    amount.setAmountPaidME(event.getNewValue());
-                    updateMonthlyExpenseTable("WaterMonthlyExpenses", "Amount", event.getNewValue(), amount.getMonthME(), amount.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = waterExpenseTable.getSelectionModel().getSelectedIndex();
-                    waterExpenseTable.getItems().set(index, amount);
-                }
-            });
-        });
     }
     
     private void setupWaterDateColumn() {
         dateWaterCol.setPrefWidth(110.0);
         dateWaterCol.setCellValueFactory(new PropertyValueFactory<waterMonthlyModel, String>("datePaidME"));
-        dateWaterCol.setCellFactory(stringCellFactory);
     }
     
     private void setupWaterUnitColumn() {
         DoubleBinding usedWidth = monthWaterCol.widthProperty().add(amountWaterCol.widthProperty()).add(dateWaterCol.widthProperty());
         unitsWaterCol.prefWidthProperty().bind(waterExpenseTable.widthProperty().subtract(usedWidth));
         unitsWaterCol.setCellValueFactory(new PropertyValueFactory<waterMonthlyModel, String>("unitsConsumedME"));
-        unitsWaterCol.setCellFactory(customWaterColCellFactory);
-        unitsWaterCol.setOnEditStart((event) -> {
-            waterMonthlyModel units  = event.getRowValue();
-            waterAmount.setText(units.getAmountPaidME());
-            waterDate.setValue(LocalDate.parse(units.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            waterUnits.setText(units.getUnitsConsumedME());
-        });
-        unitsWaterCol.setOnEditCommit((event) -> {
-            waterMonthlyModel units = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Units Consumed column for " + units.getMonthME() + " on " + units.getDatePaidME() + " in WaterMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Water Monthly Expenses Table for " + units.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    units.setUnitsConsumedME(event.getNewValue());
-                    updateMonthlyExpenseTable("WaterMonthlyExpenses", "UnitsConsumed", event.getNewValue(), units.getMonthME(), units.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = waterExpenseTable.getSelectionModel().getSelectedIndex();
-                    waterExpenseTable.getItems().set(index, units);
-                }
-            });
-        });
     }
     
     private void setupOtherMonthColumn() {
         monthOtherCol.setPrefWidth(130.0);
         monthOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("monthME"));
-        monthOtherCol.setCellFactory(otherStringCellFactory);
     }
     
     private void setupOtherAmountCol() {
         amountOtherCol.setPrefWidth(150.0);
         amountOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("amountPaidME"));
-        amountOtherCol.setCellFactory(customOtherColCellFactory);
-        amountOtherCol.setOnEditStart((event) -> {
-            otherMonthlyModel amount = event.getRowValue();
-            otherAmount.setText(amount.getAmountPaidME());
-            otherDate.setValue(LocalDate.parse(amount.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            expenseReason.setText(amount.getExpenseReasonME());
-        });
-        amountOtherCol.setOnEditCommit((event) -> {
-            otherMonthlyModel amount = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Amount column for "+amount.getMonthME()+" on "+amount.getDatePaidME()+" in OtherMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Other Monthly Expenses Table for "+amount.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    amount.setAmountPaidME(event.getNewValue());
-                    updateMonthlyExpenseTable("OtherMonthlyExpenses", "Amount", event.getNewValue(), amount.getMonthME(), amount.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = otherExpenseTable.getSelectionModel().getSelectedIndex();
-                    otherExpenseTable.getItems().set(index, amount);
-                }
-            });
-        });
     }
     
     private void setupOtherDateColumn() {
         dateOtherCol.setPrefWidth(90.0);
         dateOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("datePaidME"));
-        dateOtherCol.setCellFactory(otherStringCellFactory);
     }
     
     private void setupOtherExpenseReasonColumn() {
         DoubleBinding usedWidth = monthOtherCol.widthProperty().add(amountOtherCol.widthProperty()).add(dateOtherCol.widthProperty());
         reasonOtherCol.prefWidthProperty().bind(otherExpenseTable.widthProperty().subtract(usedWidth));
-        reasonOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("expenseReasonME"));
-        reasonOtherCol.setCellFactory(customOtherColCellFactory);
-        reasonOtherCol.setOnEditStart((event) -> {
-            otherMonthlyModel reason = event.getRowValue();
-            otherAmount.setText(reason.getAmountPaidME());
-            otherDate.setValue(LocalDate.parse(reason.getDatePaidME(), DateTimeFormatter.ISO_DATE));
-            otherReason.setText(reason.getExpenseReasonME());
-        });
-        reasonOtherCol.setOnEditCommit((event) -> {
-            otherMonthlyModel reason = event.getRowValue();
-            Alert commitWarning = new Alert(Alert.AlertType.WARNING, "This will edit the Reason For Expense column for " + reason.getMonthME() + " on " + reason.getDatePaidME() + " in OtherMonthlyExpenses Table. Do you want to proceed?", ButtonType.YES, ButtonType.NO);
-            commitWarning.setTitle("Edit Other Monthly Expenses Table for " + reason.getMonthME());
-            commitWarning.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    reason.setExpenseReasonME(event.getNewValue());
-                    updateMonthlyExpenseTable("OtherMonthlyExpenses", "ReasonForExpense", event.getNewValue(), reason.getMonthME(), reason.getDatePaidME());
-                } else if (response == ButtonType.NO) {
-                    int index = otherExpenseTable.getSelectionModel().getSelectedIndex();
-                    otherExpenseTable.getItems().set(index, reason);
-                }
-            });
-        });
+        reasonOtherCol.setCellValueFactory(new PropertyValueFactory<otherMonthlyModel, String>("expenseReasonME")); 
     }
     
     @Override
@@ -1236,15 +990,7 @@ public class ME2Controller implements Initializable {
             }
         });
         
-        Callback<TableColumn, TableCell> stringCellFactory
-                = new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn param) {
-                MyStringTableCell cell = new MyStringTableCell();
-                cell.addEventFilter(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-                return cell;
-            }
-        };
+        
        
         monthlyElectricExpenseTable.setEditable(true);
         monthlyElectricExpenseTable.getSelectionModel().cellSelectionEnabledProperty().set(true);
