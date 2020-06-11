@@ -15,10 +15,14 @@ import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -53,12 +57,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -79,6 +84,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
@@ -92,14 +98,18 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -151,13 +161,13 @@ public class PDController implements Initializable {
 
     @FXML
     public BorderPane detailsPane;
-    
+
     private VBox tdVbox = new VBox(10);
 
     private VBox pdVbox = new VBox(10);
-    
+
     public BorderPane pdDetailsPane = new BorderPane(pdVbox);
-    
+
     private VBox pdVboxEdit = new VBox(10);
 
     private VBox rdVbox = new VBox(10);
@@ -172,7 +182,7 @@ public class PDController implements Initializable {
 
     private VBox paymentVbox;
 
-    private TableColumn<PDModel, String>houseNoCol = new TableColumn("House Number");
+    private TableColumn<PDModel, String> houseNoCol = new TableColumn("House Number");
     private TableColumn<PDModel, String> tenantNameCol = new TableColumn("Tenant Name");
     private TableColumn<PDModel, String> amountCol = new TableColumn<>("Amount");
     private TableColumn<PDModel, PDModel.Strings> monthCol = new TableColumn<>("Month");
@@ -218,16 +228,16 @@ public class PDController implements Initializable {
     MenuItem edit = new MenuItem("Edit");
     MenuItem printReceipt = new MenuItem("Print Receipt");
     MenuItem stickyNote = new MenuItem("Add Sticky Note");
-    
+
     Button updateButton = new Button("Update");
     Button deleteButton = new Button("Delete");
     Button cancelButton = new Button("Cancel");
-    
+
     Label houseSnLabel = new Label("A1");
     JFXButton closeButton = new JFXButton();
-    
+
     int payRowId = 0;
-    
+
     public JFXTreeView<String> blockTreeView = new JFXTreeView<>();
 
     private TreeItem<String> rootBlock = new TreeItem<>();
@@ -372,20 +382,19 @@ public class PDController implements Initializable {
     HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
     HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
     HBox rdHbox6 = new HBox(rdTableViewButton);
-    
+
     HBox updateHbox = new HBox(70, updateButton, deleteButton, cancelButton);
-    
+
     HBox pdPayOptionHbox = new HBox(10);
     HBox pdBankHbox = new HBox(10);
     HBox pdMpesaHbox = new HBox(10);
-
+   
     double xCursorPos = 0;
     double yCursorPos = 0;
     
-    double mainSceneX, mainSceneY;
-    double offsetX, offsetY;
+    TextArea stickyTextArea = new TextArea();
     
-    Rectangle stickyRec = new Rectangle(290.0d, 160.0d);
+    ImageView stickyImageView = new ImageView(new Image("/images/icons8_note_24px.png"));
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
@@ -451,7 +460,6 @@ public class PDController implements Initializable {
         } catch (SQLException ex) {
             ex.getErrorCode();
         }
-
 
         try {
             String insertPDSql = "INSERT INTO PaymentDetails(HouseNumber, TenantName, Amount, Month, PaymentDate, PaymentMethod) VALUES(?,?,?,?,?,?)";
@@ -576,7 +584,7 @@ public class PDController implements Initializable {
     TreeItem<String> mpesa = new TreeItem<>("Enter mpesa transaction code:");
     TreeItem<String> root2 = new TreeItem<>("Banker's Cheque");
     TreeItem<String> bank = new TreeItem<>("Enter cheque no:");
-    
+
     public void setAllEmpty() {
         tdName.setText("");
         tdPhone.setText("");
@@ -599,7 +607,7 @@ public class PDController implements Initializable {
         rdRepairDate.setValue(null);
         rdMiscCost.setText("");
     }
-    
+
     public void setEmpty() {
         pdAmount.setText("");
         pdPaymentDate.setValue(null);
@@ -625,7 +633,6 @@ public class PDController implements Initializable {
         rdMiscCost.setText("");
     }
 
-
     public ObservableList<PDModel> getPaymentDetails() {
         ObservableList<PDModel> rentPaymentList = FXCollections.observableArrayList();
         if (pdMonthCombo.getSelectionModel().getSelectedItem().getMonth().equals("All")) {
@@ -650,11 +657,10 @@ public class PDController implements Initializable {
                 conn.close();
             } catch (Exception e) {
             }
-        }else if(pdMonthCombo.getSelectionModel().getSelectedItem().getMonth().equals("")) {
+        } else if (pdMonthCombo.getSelectionModel().getSelectedItem().getMonth().equals("")) {
             System.out.println("");
             pdMonthCombo.getSelectionModel().getSelectedItem().getMonth();
-        }
-            else {
+        } else {
             try {
                 String tableDataQuery = "SELECT * FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -859,7 +865,7 @@ public class PDController implements Initializable {
         DoubleBinding usedWidth = amountCol.widthProperty().add(monthCol.widthProperty()).add(dateCol.widthProperty());
         methodCol.prefWidthProperty().bind(paymentsTable.widthProperty().subtract(usedWidth));
         methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-        methodCol.setCellValueFactory(cellData -> cellData.getValue().paymentMethodPDProperty()); 
+        methodCol.setCellValueFactory(cellData -> cellData.getValue().paymentMethodPDProperty());
     }
 
     class MyRepairStringTableCell extends TableCell<RModel, String> {
@@ -889,7 +895,7 @@ public class PDController implements Initializable {
 
         @Override
         public void handle(MouseEvent t) {
-            
+
             if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
                 TableCell cell = (TableCell) t.getSource();
                 int index = cell.getIndex();
@@ -1226,7 +1232,7 @@ public class PDController implements Initializable {
             rentArrearslabel.setVisible(false);
         }
     }
-    
+
     ChangeListener houseListener = new ChangeListener() {
         @Override
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
@@ -1371,13 +1377,12 @@ public class PDController implements Initializable {
             });
         }
     };
+
+    
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
-        Image closeImage = new Image("/images/icons8_close_16px.png");
-        closeButton.setGraphic(new ImageView(closeImage));
-
+        
         l1.setMinSize(120, 20);
         l2.setMinSize(120, 20);
         l3.setMinSize(120, 20);
@@ -1459,7 +1464,7 @@ public class PDController implements Initializable {
          * pdMpesaTextfield.setPromptText("Transaction Code");
          * pdPayOptionHbox.getChildren().addAll(pdMpesaTextfield,
          * pdMpesaButton); radioVbox.getChildren().add(pdPayOptionHbox); } });
-        *
+         *
          */
         cashRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             radioVbox.getChildren().clear();
@@ -1540,7 +1545,7 @@ public class PDController implements Initializable {
         });
 
         blockTreeView.getSelectionModel().selectedItemProperty().addListener(houseListener);
-        
+
         blockA.expandedProperty().addListener((observable, oldValue, newValue) -> {
             if (blockA.isExpanded()) {
                 blockB.setExpanded(false);
@@ -1576,7 +1581,7 @@ public class PDController implements Initializable {
             blockC.setExpanded(false);
             nasraBlock.setExpanded(false);
         });
-        
+
         updateButton.setOnAction((event) -> {
 
             if ("".equals(pdAmount.getText()) || "".equals(getDateValueAsString(pdPaymentDate.getValue())) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
@@ -1602,13 +1607,13 @@ public class PDController implements Initializable {
                         Alert confirmPDUpdate = new Alert(AlertType.INFORMATION);
                         confirmPDUpdate.setTitle("Update Confirmation");
                         confirmPDUpdate.setHeaderText(null);
-                        confirmPDUpdate.setContentText("Record "+blockTreeView.getSelectionModel().getSelectedItem().getValue()+" for "+pdMonthCombo.getValue().name()+" successfully updated");
+                        confirmPDUpdate.setContentText("Record " + blockTreeView.getSelectionModel().getSelectedItem().getValue() + " for " + pdMonthCombo.getValue().name() + " successfully updated");
                         confirmPDUpdate.showAndWait();
                     } else if (pstmt.executeUpdate() == 0) {
                         Alert noUpdate = new Alert(AlertType.ERROR);
                         noUpdate.setTitle("Update Error");
                         noUpdate.setHeaderText(null);
-                        noUpdate.setContentText("Record "+blockTreeView.getSelectionModel().getSelectedItem().getValue()+" for "+pdMonthCombo.getValue().name()+" not updated");
+                        noUpdate.setContentText("Record " + blockTreeView.getSelectionModel().getSelectedItem().getValue() + " for " + pdMonthCombo.getValue().name() + " not updated");
                         noUpdate.showAndWait();
                     }
                     pstmt.close();
@@ -1620,7 +1625,7 @@ public class PDController implements Initializable {
             pdVbox.getChildren().remove(updateHbox);
             pdTableViewButton.setDisable(false);
         });
-        
+
         deleteButton.setOnAction((event) -> {
             try {
                 String deletePaySql = "DELETE FROM PaymentDetails WHERE ROWID = ?";
@@ -1633,7 +1638,7 @@ public class PDController implements Initializable {
                     Alert noRecordAlert = new Alert(AlertType.ERROR);
                     noRecordAlert.setTitle("Missing Record");
                     noRecordAlert.setHeaderText(null);
-                    noRecordAlert.setContentText("No reocrd found for "+blockTreeView.getSelectionModel().getSelectedItem().getValue()+" for "+pdMonthCombo.getValue().name());
+                    noRecordAlert.setContentText("No reocrd found for " + blockTreeView.getSelectionModel().getSelectedItem().getValue() + " for " + pdMonthCombo.getValue().name());
                     noRecordAlert.showAndWait();
                 }
                 pstmt.close();
@@ -1647,12 +1652,12 @@ public class PDController implements Initializable {
             }
             pdTableViewButton.setDisable(false);
         });
-        
+
         cancelButton.setOnAction((event) -> {
             pdVbox.getChildren().remove(updateHbox);
             pdTableViewButton.setDisable(false);
         });
-        
+
         clear.setOnAction((event) -> {
             if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("A")) {
                 blockTreeView.getSelectionModel().getSelectedItem().setValue("Block A");
@@ -1666,7 +1671,7 @@ public class PDController implements Initializable {
             payRowId = 0;
             setAllEmpty();
         });
-        
+
         edit.setOnAction((event) -> {
             System.out.println(payRowId);
             if (payRowId == 0) {
@@ -1682,79 +1687,30 @@ public class PDController implements Initializable {
                 }
                 updateHbox.prefWidthProperty().bind(detailsPane.widthProperty());
                 updateHbox.setPadding(new Insets(20, 0, 0, 20));
-                pdVbox.getChildren().add(1, updateHbox); 
+                pdVbox.getChildren().add(1, updateHbox);
             }
-            
+
             if (pdVbox.getChildren().contains(updateHbox)) {
                 pdTableViewButton.setDisable(true);
             }
-            
-        });
 
-        stickyNote.setOnAction((event) -> {
-            if (payRowId == 0) {
-                Alert stickyEmptyAlert = new Alert(AlertType.ERROR);
-                stickyEmptyAlert.setTitle("No house selected");
-                stickyEmptyAlert.setHeaderText(null);
-                stickyEmptyAlert.setContentText("You can't add a sticky without a selection. Please select a house.");
-                stickyEmptyAlert.showAndWait();
-            } else {
-                stickyRec.setFill(Color.WHITE);
-                stickyRec.setArcHeight(10.0d);
-                stickyRec.setArcWidth(10.0d);
-                stickyRec.setStrokeType(StrokeType.INSIDE);
-                stickyRec.setStroke(Color.BLACK);
-                stickyRec.setStrokeWidth(1);
-
-                StackPane stickyPane = new StackPane();
-                BorderPane stickyBorderPane = new BorderPane();
-
-                JFXTextArea sn = new JFXTextArea();
-                sn.setPrefSize(180, 40);
-                sn.setPromptText("Add a comment...");
-                sn.setStyle("-fx-focus-color: transparent; -fx-text-box-border: transparent;");
-
-                HBox stickyHbox = new HBox(250);
-                Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                Label label2 = new Label("X");
-                label2.setAlignment(Pos.CENTER);
-                label2.setPrefWidth(20);
-                label2.setOnMouseClicked((evt) -> {
-                    (label1.getScene()).getWindow().hide();
-                });
-                label1.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
-                label2.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
-                stickyHbox.getChildren().addAll(label1, label2);
-
-                stickyBorderPane.setCenter(sn);
-                stickyBorderPane.setBottom(new JFXButton("Save"));
-                stickyBorderPane.setTop(stickyHbox);
-                stickyBorderPane.setPadding(new Insets(3, 0, 0, 3));
-                stickyPane.getChildren().addAll(stickyRec);
-
-                Popup snPopup = new Popup();
-                snPopup.setAutoHide(true);
-                snPopup.setX(xCursorPos);
-                snPopup.setY(yCursorPos);
-                snPopup.getContent().add(stickyPane);
-                snPopup.show(detailsPane.getScene().getWindow());
-            }
         });
         
-        stickyRec.setOnMousePressed((t) -> {
-            System.out.println("PRESSED_" + Double.toString(stickyRec.getX()));
+        stickyNote.setOnAction((event) -> {
+            MyPopUp popUp = new MyPopUp();
+            popUp.show();
+            
         });
-
-        stickyRec.setOnMouseReleased((t) -> {
-            System.out.println("RELEASE_" + Double.toString(stickyRec.getX()));
-        });
-
-        stickyRec.setOnMouseDragged((t) -> {
-            double offsetX = t.getX() - mainSceneX;
-            double offsetY = t.getY() - mainSceneY;
-            System.out.println("SET_" + Double.toString(stickyRec.getX()));
-            stickyRec.setX(offsetX);
-            stickyRec.setY(offsetY);
+        
+        stickyImageView.setOnMouseClicked((event) -> {
+            HashMap<String, String> stickyHMap = null;
+            try {
+                FileInputStream fis = new FileInputStream("stickysave.ser");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                stickyHMap = (HashMap) ois.readObject();
+                System.out.println(stickyHMap.keySet());
+            } catch (Exception e) {
+            }
         });
         
         printReceipt.setOnAction((event) -> {
@@ -1800,6 +1756,8 @@ public class PDController implements Initializable {
         });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         
+        pdScrollPane.setFitToHeight(true);
+        pdScrollPane.setFitToWidth(true);
         pdScrollPane.setOnContextMenuRequested((event) -> {
             editMenu.getItems().clear();
             editMenu.getItems().addAll(edit, printReceipt, stickyNote, clear);
@@ -1932,7 +1890,7 @@ public class PDController implements Initializable {
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
-            
+
             contextMenu.getItems().addAll(editPay, deletePay);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
@@ -1948,7 +1906,7 @@ public class PDController implements Initializable {
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
-            
+
             contextMenu.getItems().addAll(editPay, deletePay);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
@@ -1958,7 +1916,7 @@ public class PDController implements Initializable {
             );
             return row;
         });
-        
+
         repairsTable.setEditable(true);
         repairsTable.getSelectionModel().setCellSelectionEnabled(true);
         repairsTable.setOnKeyPressed((event) -> {
@@ -2065,8 +2023,7 @@ public class PDController implements Initializable {
                 });
             }
         });
-        
-        
+
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -2086,7 +2043,7 @@ public class PDController implements Initializable {
                 MainApp.changeWindowSize(stage, 500);
             }
         });
-        
+
         rdTableViewButton.setVisible(false);
         rdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -2123,7 +2080,7 @@ public class PDController implements Initializable {
         pdMonthCombo.setPrefWidth(160);
 
         placingVbox.setPadding(new Insets(22, 0, 0, 0));
-        placingVbox.getChildren().add(pdPaymentOption);
+        placingVbox.getChildren().addAll(pdPaymentOption);
 
         pdVbox.setPadding(new Insets(10, 10, 10, 10));
         pdVboxEdit.getChildren().addAll(pdHbox1, pdHbox2, pdHbox3, pdHbox4, pdHbox5);
@@ -2141,5 +2098,81 @@ public class PDController implements Initializable {
         blockTreeView.setMinWidth(120);
         selectionPane.setCenter(blockTreeView);
 
+    }
+    
+    public class MyPopUp extends Stage {
+
+        public MyPopUp() {
+            super();
+            this.setResizable(true);
+            
+            this.initStyle(StageStyle.UNDECORATED);
+            
+            BorderPane borderPaneOptionPane = new BorderPane();
+            
+            stickyTextArea.setPromptText("Add a comment...");
+            stickyTextArea.setPrefSize(200, 160);
+            
+            HBox stickyHbox = new HBox(230);
+            stickyHbox.prefWidthProperty().bind(borderPaneOptionPane.heightProperty());
+            Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+            Label label2 = new Label("X");
+            HBox.setHgrow(label2, Priority.ALWAYS);
+            label1.setAlignment(Pos.CENTER);
+            label2.setAlignment(Pos.CENTER);
+            
+            label2.setOnMouseClicked((evt) -> {
+                (label1.getScene()).getWindow().hide();
+            });
+            label1.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
+            label2.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
+            stickyHbox.getChildren().addAll(label1, label2);
+            
+            HBox stickyHboxBottom = new HBox(150);
+            Button save = new Button("Save");
+            Button delete = new Button("Delete");
+            stickyHboxBottom.setPadding(new Insets(3, 0, 0, 0));
+            stickyHboxBottom.getChildren().addAll(save, delete);
+            
+            HashMap<String, String> stickyHMap = new HashMap<>();
+            String key = blockTreeView.getSelectionModel().getSelectedItem().getValue();
+            String value = stickyTextArea.getText();
+            stickyHMap.put(key, value);
+            
+            save.setOnAction((event) -> {
+                try {
+                    FileOutputStream stickySave = new FileOutputStream("stickysave.ser");
+                    ObjectOutputStream oos = new ObjectOutputStream(stickySave);
+                    oos.writeObject(stickyHMap);
+                    oos.close();
+                    stickySave.close();
+                    pdHbox1.getChildren().add(stickyImageView);
+                    (label1.getScene()).getWindow().hide();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            
+            Rectangle stickyRec = new Rectangle(200, 150);
+            stickyRec.setArcWidth(10.0);
+            stickyRec.setArcHeight(10.0);
+            
+            borderPaneOptionPane.setShape(stickyRec);
+            borderPaneOptionPane.setCenter(stickyTextArea);
+            borderPaneOptionPane.setTop(stickyHbox);
+            borderPaneOptionPane.setBottom(stickyHboxBottom);
+            borderPaneOptionPane.setPadding(new Insets(5));
+            borderPaneOptionPane.setStyle("-fx-border-color: Black;");
+
+            Scene s = new Scene(borderPaneOptionPane);
+            this.setScene(s);
+            this.setX(xCursorPos);
+            this.setY(yCursorPos);
+            ResizeHelper.addResizeListener(this);
+        }
+        
+        public void setSticky(String string) {
+            stickyTextArea.setText(string);
+        }
     }
 }
