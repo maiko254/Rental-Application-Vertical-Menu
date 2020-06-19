@@ -392,15 +392,22 @@ public class PDController implements Initializable {
     double xCursorPos = 0;
     double yCursorPos = 0;
     
+    HashMap<Integer, String> stickyHMap = new HashMap<>();
+    
     TextArea stickyTextArea = new TextArea();
     
-    ImageView stickyImageView = new ImageView(new Image("/images/icons8_note_24px.png"));
+    Button save = new Button("Save");
+    Button delete = new Button("Delete");
+    
+    Label label2 = new Label("X");
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
     FilteredList<PDModel> filteredItems = new FilteredList<>(FXCollections.observableArrayList());
     String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
-
+    
+    Icons icon = new Icons("!");
+    
     public String getComboSelect() {
         return houseComboSelect;
     }
@@ -451,7 +458,7 @@ public class PDController implements Initializable {
 
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
         try {
-            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text)";
+            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text)";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createPDSql);
             pstmt.execute();
@@ -1312,12 +1319,23 @@ public class PDController implements Initializable {
                         }
                         payLabel.setText(rs.getString("PaymentMethod"));
 
+                        HashMap<Integer, String> sHMap = new HashMap<>();
+                        FileInputStream fis = new FileInputStream("stickysave.ser");
+                        ObjectInputStream ois = new ObjectInputStream(fis);
+                        sHMap = (HashMap) ois.readObject();
+                        
+                        if (sHMap.containsKey(payRowId)) {
+                           System.out.println("Yes key "+payRowId+" holds value "+sHMap.get(payRowId));
+                           System.out.println(sHMap.keySet());
+                           pdHbox1.getChildren().add(icon);
+                        }
                     } while (rs.next());
-
+                    
                     pdTableViewButton.setVisible(true);
                 }
                 pstmt.close();
                 conn.close();
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1378,7 +1396,20 @@ public class PDController implements Initializable {
         }
     };
 
-    
+    private Node createNotification(String number) {
+        StackPane p = new StackPane();
+        Label lab = new Label(number);
+        lab.setStyle("-fx-text-fill:white");
+        Rectangle rect = new Rectangle(15, 15);
+        rect.setFill(Color.rgb(200, 0, 0, .8));
+        rect.setArcHeight(2);
+        rect.setArcHeight(2);
+        rect.setStrokeWidth(2.0);
+        rect.setStyle("-fx-background-insets: 0 0 -1 0, 0, 1, 2;");
+        rect.setSmooth(true);
+        p.getChildren().addAll(rect, lab);
+        return p;
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -1632,7 +1663,6 @@ public class PDController implements Initializable {
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(deletePaySql);
                 pstmt.setInt(1, payRowId);
-                System.out.println(payRowId);
                 int one = pstmt.executeUpdate();
                 if (one == 0) {
                     Alert noRecordAlert = new Alert(AlertType.ERROR);
@@ -1673,7 +1703,6 @@ public class PDController implements Initializable {
         });
 
         edit.setOnAction((event) -> {
-            System.out.println(payRowId);
             if (payRowId == 0) {
                 Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
                 emptyHouseAlert.setTitle("No house selected");
@@ -1699,17 +1728,39 @@ public class PDController implements Initializable {
         stickyNote.setOnAction((event) -> {
             MyPopUp popUp = new MyPopUp();
             popUp.show();
-            
         });
         
-        stickyImageView.setOnMouseClicked((event) -> {
-            HashMap<String, String> stickyHMap = null;
+        save.setOnAction((event) -> {
+            System.out.println(payRowId);
+            String value = stickyTextArea.getText();
+            stickyHMap.put(payRowId, value);
+            stickyHMap.put(payRowId, value);
+            try {
+                FileOutputStream stickySave = new FileOutputStream("stickysave.ser");
+                ObjectOutputStream oos = new ObjectOutputStream(stickySave);
+                oos.writeObject(stickyHMap);
+                oos.close();
+                stickySave.close();
+                pdHbox1.getChildren().add(icon);
+                (label2.getScene()).getWindow().hide();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        
+        icon.setOnMouseClicked((event) -> {
+            HashMap<Integer, String> stickyMap = new HashMap<>();
             try {
                 FileInputStream fis = new FileInputStream("stickysave.ser");
                 ObjectInputStream ois = new ObjectInputStream(fis);
-                stickyHMap = (HashMap) ois.readObject();
-                System.out.println(stickyHMap.keySet());
+                stickyMap = (HashMap) ois.readObject();
+                MyPopUp popUp = new MyPopUp();
+                System.out.println(stickyMap.keySet());
+                System.out.println(stickyMap.get(payRowId));
+                stickyTextArea.setText(stickyMap.get(payRowId));
+                popUp.show();
             } catch (Exception e) {
+                e.printStackTrace();
             }
         });
         
@@ -1821,11 +1872,6 @@ public class PDController implements Initializable {
                     pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                     pstmt1.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                     pstmt.setString(2, pdMonthCombo.getSelectionModel().getSelectedItem().name());
-                    String rowIdSql = "SELECT ROWID FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
-                    PreparedStatement pstmt2 = conn.prepareStatement(rowIdSql);
-                    pstmt2.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                    pstmt2.setString(2, pdMonthCombo.getSelectionModel().getSelectedItem().name());
-                    ResultSet rs2 = pstmt2.executeQuery();
                     ResultSet rs = pstmt.executeQuery();
                     ResultSet rs1 = pstmt1.executeQuery();
                     if (!rs.next()) {
@@ -1836,10 +1882,8 @@ public class PDController implements Initializable {
                         payRowId = 0;
                     } else {
                         do {
-                            if (rs2.next()) {
-                                payRowId = rs2.getInt("ROWID");
-                                System.out.println(payRowId);
-                            }
+                            payRowId = rs.getInt("RowID");
+                            System.out.println(payRowId);
                             pdAmount.setText(rs.getString("Amount"));
                             Object paymentDate = rs.getObject("PaymentDate");
                             if (paymentDate == null) {
@@ -2097,7 +2141,6 @@ public class PDController implements Initializable {
         detailsPane.setCenter(tenantDataPane);
         blockTreeView.setMinWidth(120);
         selectionPane.setCenter(blockTreeView);
-
     }
     
     public class MyPopUp extends Stage {
@@ -2116,7 +2159,7 @@ public class PDController implements Initializable {
             HBox stickyHbox = new HBox(230);
             stickyHbox.prefWidthProperty().bind(borderPaneOptionPane.heightProperty());
             Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue());
-            Label label2 = new Label("X");
+            
             HBox.setHgrow(label2, Priority.ALWAYS);
             label1.setAlignment(Pos.CENTER);
             label2.setAlignment(Pos.CENTER);
@@ -2129,28 +2172,12 @@ public class PDController implements Initializable {
             stickyHbox.getChildren().addAll(label1, label2);
             
             HBox stickyHboxBottom = new HBox(150);
-            Button save = new Button("Save");
-            Button delete = new Button("Delete");
+            
             stickyHboxBottom.setPadding(new Insets(3, 0, 0, 0));
             stickyHboxBottom.getChildren().addAll(save, delete);
             
-            HashMap<String, String> stickyHMap = new HashMap<>();
-            String key = blockTreeView.getSelectionModel().getSelectedItem().getValue();
-            String value = stickyTextArea.getText();
-            stickyHMap.put(key, value);
-            
-            save.setOnAction((event) -> {
-                try {
-                    FileOutputStream stickySave = new FileOutputStream("stickysave.ser");
-                    ObjectOutputStream oos = new ObjectOutputStream(stickySave);
-                    oos.writeObject(stickyHMap);
-                    oos.close();
-                    stickySave.close();
-                    pdHbox1.getChildren().add(stickyImageView);
-                    (label1.getScene()).getWindow().hide();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            delete.setOnAction((event) -> {
+                
             });
             
             Rectangle stickyRec = new Rectangle(200, 150);
