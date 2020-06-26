@@ -12,6 +12,7 @@ import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
@@ -24,9 +25,15 @@ public class Icons extends StackPane {
 
 
     private AnimationType type;
+    
+    public ContextMenu stickyMenu = new ContextMenu();
+    
+    public MenuItem stickyMenuItem = new MenuItem("Delete Sticky Note");
 
     public Icons(String number) {
         Label lab = new Label(number);
+        stickyMenu.getItems().add(stickyMenuItem);
+        lab.setContextMenu(stickyMenu);
         lab.setStyle("-fx-text-fill:white");
         Rectangle rect = new Rectangle(15, 15);
         rect.setFill(Color.rgb(200, 0, 0, .8));

@@ -17,13 +17,18 @@ import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
 import java.awt.MouseInfo;
 import java.awt.Point;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -92,6 +97,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
@@ -392,14 +398,12 @@ public class PDController implements Initializable {
     double xCursorPos = 0;
     double yCursorPos = 0;
     
-    HashMap<Integer, String> stickyHMap = new HashMap<>();
-    
     TextArea stickyTextArea = new TextArea();
     
     Button save = new Button("Save");
-    Button delete = new Button("Delete");
     
     Label label2 = new Label("X");
+    
     
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
@@ -458,7 +462,7 @@ public class PDController implements Initializable {
 
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
         try {
-            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text)";
+            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text, StickyNote text)";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createPDSql);
             pstmt.execute();
@@ -1307,6 +1311,9 @@ public class PDController implements Initializable {
                     payLabel.setText("");
                     payRowId = 0;
                     setEmpty();
+                    if (pdHbox1.getChildren().contains(icon)) {
+                        pdHbox1.getChildren().remove(icon);
+                    }
                 } else {
                     do {
                         pdName.setText(rs.getString("TenantName"));
@@ -1318,19 +1325,21 @@ public class PDController implements Initializable {
                             pdPaymentDate.setValue(null);
                         }
                         payLabel.setText(rs.getString("PaymentMethod"));
-
-                        HashMap<Integer, String> sHMap = new HashMap<>();
-                        FileInputStream fis = new FileInputStream("stickysave.ser");
-                        ObjectInputStream ois = new ObjectInputStream(fis);
-                        sHMap = (HashMap) ois.readObject();
-                        
-                        if (sHMap.containsKey(payRowId)) {
-                           System.out.println("Yes key "+payRowId+" holds value "+sHMap.get(payRowId));
-                           System.out.println(sHMap.keySet());
-                           pdHbox1.getChildren().add(icon);
+                        Object sticky = rs.getObject("StickyNote");
+                        if (sticky != null) {
+                            if (!pdHbox1.getChildren().contains(icon)) {
+                                stickyTextArea.setText(rs.getString("StickyNote"));
+                                pdHbox1.getChildren().add(icon);
+                            } else if (pdHbox1.getChildren().contains(icon)) {
+                                stickyTextArea.setText(rs.getString("StickyNote"));
+                            }
+                        } else {
+                            if (pdHbox1.getChildren().contains(icon)) {
+                                pdHbox1.getChildren().remove(icon);
+                            }
                         }
+                        
                     } while (rs.next());
-                    
                     pdTableViewButton.setVisible(true);
                 }
                 pstmt.close();
@@ -1396,20 +1405,15 @@ public class PDController implements Initializable {
         }
     };
 
-    private Node createNotification(String number) {
-        StackPane p = new StackPane();
-        Label lab = new Label(number);
-        lab.setStyle("-fx-text-fill:white");
-        Rectangle rect = new Rectangle(15, 15);
-        rect.setFill(Color.rgb(200, 0, 0, .8));
-        rect.setArcHeight(2);
-        rect.setArcHeight(2);
-        rect.setStrokeWidth(2.0);
-        rect.setStyle("-fx-background-insets: 0 0 -1 0, 0, 1, 2;");
-        rect.setSmooth(true);
-        p.getChildren().addAll(rect, lab);
-        return p;
-    }
+    /**public boolean checkIcon(Node node) {
+        while (node != null) {            
+            if (node.equals(icon)) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }*/
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -1731,38 +1735,48 @@ public class PDController implements Initializable {
         });
         
         save.setOnAction((event) -> {
-            System.out.println(payRowId);
-            String value = stickyTextArea.getText();
-            stickyHMap.put(payRowId, value);
-            stickyHMap.put(payRowId, value);
             try {
-                FileOutputStream stickySave = new FileOutputStream("stickysave.ser");
-                ObjectOutputStream oos = new ObjectOutputStream(stickySave);
-                oos.writeObject(stickyHMap);
-                oos.close();
-                stickySave.close();
-                pdHbox1.getChildren().add(icon);
-                (label2.getScene()).getWindow().hide();
+                Connection conn = DriverManager.getConnection(databaseURL);
+                String saveSticky = "UPDATE PaymentDetails SET StickyNote = ? WHERE RowID = ?";
+                PreparedStatement pstmt = conn.prepareStatement(saveSticky);
+                pstmt.setString(1, stickyTextArea.getText());
+                pstmt.setInt(2, payRowId);
+                pstmt.executeUpdate();
+                
+                if (pdHbox1.getChildren().contains(icon)) {
+                    (label2.getScene()).getWindow().hide();
+                } else if (!pdHbox1.getChildren().contains(icon)) {
+                    pdHbox1.getChildren().add(icon);
+                    (label2.getScene()).getWindow().hide();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+            
+            
+        });
+        
+        
+        icon.setOnMouseClicked((event) -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                try {
+                    MyPopUp popUp = new MyPopUp();
+                    popUp.setX(700);
+                    popUp.setY(250);
+                    popUp.show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
         
-        icon.setOnMouseClicked((event) -> {
-            HashMap<Integer, String> stickyMap = new HashMap<>();
-            try {
-                FileInputStream fis = new FileInputStream("stickysave.ser");
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                stickyMap = (HashMap) ois.readObject();
-                MyPopUp popUp = new MyPopUp();
-                System.out.println(stickyMap.keySet());
-                System.out.println(stickyMap.get(payRowId));
-                stickyTextArea.setText(stickyMap.get(payRowId));
-                popUp.show();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        /**icon.setOnContextMenuRequested((event) -> {
+            ContextMenu stickyContextMenu = new ContextMenu();
+            MenuItem deleteSticky = new MenuItem("Delete Sticky ljdljflafhljsdhfljfldsfsdfsdfsfdsf");
+            stickyContextMenu.getItems().add(deleteSticky);
+            Node node = (Node)event.getSource();
+            stickyContextMenu.show(node.getScene().getWindow(), event.getScreenX(), event.getScreenY());
+        });*/
         
         printReceipt.setOnAction((event) -> {
             Map map = null;
@@ -1809,6 +1823,13 @@ public class PDController implements Initializable {
         
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
+        
+        /**pdScrollPane.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, (evt) -> {
+            if (checkIcon((Node) evt.getTarget())) {
+                evt.consume();
+            }
+        });*/
+        
         pdScrollPane.setOnContextMenuRequested((event) -> {
             editMenu.getItems().clear();
             editMenu.getItems().addAll(edit, printReceipt, stickyNote, clear);
@@ -1880,10 +1901,12 @@ public class PDController implements Initializable {
                         payLabel.setText("");
                         rentArrearslabel.setVisible(false);
                         payRowId = 0;
+                        if (pdHbox1.getChildren().contains(icon)) {
+                            pdHbox1.getChildren().remove(icon);
+                        }
                     } else {
                         do {
                             payRowId = rs.getInt("RowID");
-                            System.out.println(payRowId);
                             pdAmount.setText(rs.getString("Amount"));
                             Object paymentDate = rs.getObject("PaymentDate");
                             if (paymentDate == null) {
@@ -1893,13 +1916,30 @@ public class PDController implements Initializable {
                             }
                             payLabel.setText(rs.getString("PaymentMethod"));
                             showRentArrears(getStringNumber(rs1.getString("RentAmount")), getStringNumber(rs.getString("Amount")));
+                            Object sticky = rs.getObject("StickyNote");
+                            if (sticky == null) {
+                                if (pdHbox1.getChildren().contains(icon)) {
+                                    pdHbox1.getChildren().remove(icon);
+                                }
+                            } else {
+                                if (!pdHbox1.getChildren().contains(icon)) {
+                                    pdHbox1.getChildren().add(icon);
+                                }
+                            }
+
                         } while (rs.next());
+                        if (pdHbox1.getChildren().contains(icon)) {
+                            icon.stickyMenuItem.setOnAction((event) -> {
+                                pdHbox1.getChildren().remove(icon);
+                            });
+                        }
+                        
                     }
                     pstmt.close();
                     pstmt1.close();
                     conn.close();
 
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -2157,7 +2197,6 @@ public class PDController implements Initializable {
             stickyTextArea.setPrefSize(200, 160);
             
             HBox stickyHbox = new HBox(230);
-            stickyHbox.prefWidthProperty().bind(borderPaneOptionPane.heightProperty());
             Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             
             HBox.setHgrow(label2, Priority.ALWAYS);
@@ -2172,13 +2211,10 @@ public class PDController implements Initializable {
             stickyHbox.getChildren().addAll(label1, label2);
             
             HBox stickyHboxBottom = new HBox(150);
-            
+            HBox.setMargin(save, new Insets(0, 0, 0, 210));
+            stickyHboxBottom.setAlignment(Pos.CENTER_LEFT);
             stickyHboxBottom.setPadding(new Insets(3, 0, 0, 0));
-            stickyHboxBottom.getChildren().addAll(save, delete);
-            
-            delete.setOnAction((event) -> {
-                
-            });
+            stickyHboxBottom.getChildren().addAll(save);
             
             Rectangle stickyRec = new Rectangle(200, 150);
             stickyRec.setArcWidth(10.0);
