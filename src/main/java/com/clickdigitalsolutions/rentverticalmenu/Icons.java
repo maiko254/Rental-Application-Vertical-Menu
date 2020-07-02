@@ -10,11 +10,15 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -29,7 +33,14 @@ public class Icons extends StackPane {
     public ContextMenu stickyMenu = new ContextMenu();
     
     public MenuItem stickyMenuItem = new MenuItem("Delete Sticky Note");
-
+    
+    EventHandler<MouseEvent> keyEventHandler =
+        (MouseEvent keyEvent) -> {
+            addJumpAnimation();
+    };
+    
+    
+    
     public Icons(String number) {
         Label lab = new Label(number);
         stickyMenu.getItems().add(stickyMenuItem);
@@ -42,12 +53,6 @@ public class Icons extends StackPane {
         rect.setStrokeWidth(2.0);
         rect.setStyle("-fx-background-insets: 0 0 -1 0, 0, 1, 2;");
         getChildren().addAll(rect, lab);
-        this.addEventHandler(MouseEvent.MOUSE_ENTERED, (event) -> {
-            addJumpAnimation();
-        });
-        this.removeEventHandler(MouseEvent.MOUSE_EXITED, (event) -> {
-            addJumpAnimation();
-        });
     }
 
     private void addBlinkAnimation() {
