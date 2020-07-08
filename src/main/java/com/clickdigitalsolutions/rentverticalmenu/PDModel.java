@@ -16,7 +16,7 @@ import javafx.beans.property.StringProperty;
  */
 public class PDModel {
     
-    public enum Strings{
+    public enum Strings {
         ALL("All"),
         NONE(""),
         JANUARY("January"),
@@ -41,7 +41,6 @@ public class PDModel {
         public String getMonth() {
             return text;
         }
-        
     }
     
     public StringProperty houseNumberTablePD;

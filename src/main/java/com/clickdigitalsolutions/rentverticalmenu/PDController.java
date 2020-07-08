@@ -63,6 +63,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.Event;
+import javafx.event.EventDispatcher;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -229,10 +231,6 @@ public class PDController implements Initializable {
 
     ObservableList<PDModel> rentPaymentList1 = FXCollections.observableArrayList();
 
-    private TextField payRecordsFilter = new TextField();
-
-    private Button clearButton = new Button();
-
     ContextMenu editMenu = new ContextMenu();
     JFXButton OK = new JFXButton("OK");
     MenuItem clear = new MenuItem("Clear Selection");
@@ -248,7 +246,8 @@ public class PDController implements Initializable {
     JFXButton closeButton = new JFXButton();
 
     int payRowId = 0;
-
+    int repairRowId = 0;
+    
     public JFXTreeView<String> blockTreeView = new JFXTreeView<>();
 
     private TreeItem<String> rootBlock = new TreeItem<>();
@@ -325,6 +324,7 @@ public class PDController implements Initializable {
     Label l14 = new Label("Payment Option");
 
     Label l15 = new Label("Tenant Name");
+    Label l20 = new Label("Month");
     Label l16 = new Label("Repairs Done");
     Label l17 = new Label("Repairs Costs");
     Label l18 = new Label("Date of\nRepairs");
@@ -364,6 +364,7 @@ public class PDController implements Initializable {
     public JFXButton pdOtherButton = new JFXButton("Done");
 
     public JFXTextField rdName = new JFXTextField();
+    public JFXComboBox<RModel.Strings> rdMonthCombo = new JFXComboBox<>();
     public JFXTextArea rdRepairsDone = new JFXTextArea();
     public JFXTextField rdRepairCost = new JFXTextField();
     public JFXDatePicker rdRepairDate = new JFXDatePicker();
@@ -388,6 +389,7 @@ public class PDController implements Initializable {
     HBox pdHbox6 = new HBox(pdTableViewButton);
 
     HBox rdHbox1 = new HBox(10, l15, rdName);
+    HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
     HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);
     HBox rdHbox3 = new HBox(10, l17, rdRepairCost);
     HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
@@ -493,9 +495,9 @@ public class PDController implements Initializable {
 
     }
 
-    public void createRepairsTable(String HouseNumber, String TenantName, String Repairs, String CostOfRepairs, String DateOfRepairs, String Miscellaneous) {
+    public void createRepairsTable(String HouseNumber, String TenantName, RModel.Strings Month, String Repairs, String CostOfRepairs, String DateOfRepairs, String Miscellaneous) {
         try {
-            String createRepairsTableSql = "CREATE TABLE IF NOT EXISTS RepairsTable(HouseNumber text, TenantName text, Repairs text, CostOfRepairs text, DateOfRepairs text, MiscellaneousExpenses text, PRIMARY KEY(HouseNumber, DateOfRepairs), FOREIGN KEY(HouseNumber) REFERENCES TenantDetails(HouseNumber) ON DELETE CASCADE)";
+            String createRepairsTableSql = "CREATE TABLE IF NOT EXISTS RepairsTable(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, Month text, Repairs text, CostOfRepairs text, DateOfRepairs text, MiscellaneousExpenses text)";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createRepairsTableSql);
             pstmt.execute();
@@ -506,15 +508,16 @@ public class PDController implements Initializable {
         }
 
         try {
-            String insertRepairsTableSql = "INSERT INTO RepairsTable(HouseNumber, TenantName, Repairs, CostOfRepairs, DateOfRepairs, MiscellaneousExpenses) VALUES(?,?,?,?,?,?)";
+            String insertRepairsTableSql = "INSERT INTO RepairsTable(HouseNumber, TenantName, Month, Repairs, CostOfRepairs, DateOfRepairs, MiscellaneousExpenses) VALUES(?,?,?,?,?,?,?)";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(insertRepairsTableSql);
             pstmt.setString(1, HouseNumber);
             pstmt.setString(2, TenantName);
-            pstmt.setString(3, Repairs);
-            pstmt.setString(4, CostOfRepairs);
-            pstmt.setString(5, DateOfRepairs);
-            pstmt.setString(6, Miscellaneous);
+            pstmt.setString(3, Month.name());
+            pstmt.setString(4, Repairs);
+            pstmt.setString(5, CostOfRepairs);
+            pstmt.setString(6, DateOfRepairs);
+            pstmt.setString(7, Miscellaneous);
             pstmt.execute();
             pstmt.close();
             conn.close();
@@ -638,8 +641,8 @@ public class PDController implements Initializable {
         tdLeaseEndDate.setValue(null);
     }
 
-    public void setEmpty2() {
-        rdName.setText("");
+    public void setRepairsEmpty() {
+        rdMonthCombo.setValue(RModel.Strings.NONE);
         rdRepairsDone.setText("");
         rdRepairCost.setText("");
         rdRepairDate.setValue(null);
@@ -711,19 +714,21 @@ public class PDController implements Initializable {
             pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String houseNo1 = rs.getString("HouseNumber");
+                String houseNo = rs.getString("HouseNumber");
                 String tenantName1 = rs.getString("Tenantname");
-                String repairsDone1 = rs.getString("Repairs");
-                String costOfRepair1 = rs.getString("CostOfRepairs");
-                String dateOfRepair1 = rs.getString("DateOfRepairs");
+                RModel.Strings month = RModel.Strings.valueOf(rs.getString("Month"));
+                String repairsDone = rs.getString("Repairs");
+                String costOfRepair = rs.getString("CostOfRepairs");
+                String dateOfRepair = rs.getString("DateOfRepairs");
                 String miscellaneous = rs.getString("MiscellaneousExpenses");
 
-                RModel repairsInfo = new RModel(houseNo1, tenantName1, repairsDone1, costOfRepair1, dateOfRepair1, miscellaneous);
+                RModel repairsInfo = new RModel(houseNo, tenantName1, month, repairsDone, costOfRepair, dateOfRepair, miscellaneous);
                 repairsData.add(repairsInfo);
             }
             pstmt.close();
             conn.close();
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return repairsData;
@@ -742,7 +747,7 @@ public class PDController implements Initializable {
             String payData = (String) col.getCellObservableValue(payitem).getValue();
             System.out.println(payData);*/
             if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
-                TableCell c = (TableCell) t.getSource();
+                TableRow c = (TableRow) t.getSource();
                 int index = c.getIndex();
                 try {
                     PDModel item = getPaymentDetails().get(index);
@@ -1362,6 +1367,7 @@ public class PDController implements Initializable {
                     rdTableViewButton.setVisible(false);
                 } else {
                     do {
+                        rdMonthCombo.setValue(RModel.Strings.valueOf(rs.getString("Month")));
                         rdName.setText(rs.getString("TenantName"));
                         rdRepairsDone.setText(rs.getString("Repairs"));
                         rdRepairCost.setText(rs.getString("CostOfRepairs"));
@@ -1427,7 +1433,15 @@ public class PDController implements Initializable {
             addJumpAnimation(icon);
     };
    
-    
+    public boolean checkIfNode(Node node) {
+        while (node != null) {
+            if (node.equals(pdMonthCombo) || node.equals(pdPaymentOption)) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -1451,6 +1465,7 @@ public class PDController implements Initializable {
         l17.setMinSize(120, 20);
         l18.setMinSize(120, 20);
         l19.setMinSize(120, 20);
+        l20.setMinSize(120, 20);
 
         setupHouseNumberColumn();
         setupTenantNameColumn();
@@ -1469,6 +1484,7 @@ public class PDController implements Initializable {
         rentArrearslabel.setVisible(false);
 
         pdMonthCombo.getItems().addAll(PDModel.Strings.values());
+        rdMonthCombo.getItems().addAll(RModel.Strings.values());
 
         blockA.getChildren().addAll(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
         blockB.getChildren().addAll(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12);
@@ -1529,7 +1545,6 @@ public class PDController implements Initializable {
         });
 
         pdPaymentOption.setMinWidth(5);
-
         pdPaymentOption.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
             if (wasExpanded) {
                 System.out.println(pdPaymentOption.getText());
@@ -1607,7 +1622,6 @@ public class PDController implements Initializable {
         });
 
         updateButton.setOnAction((event) -> {
-
             if ("".equals(pdAmount.getText()) || "".equals(getDateValueAsString(pdPaymentDate.getValue())) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
                 Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
                 emptyFieldAlert.setTitle("Empty Field!");
@@ -1616,7 +1630,7 @@ public class PDController implements Initializable {
                 emptyFieldAlert.showAndWait();
             } else {
                 try {
-                    String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?  WHERE ROWID = ?";
+                    String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?  WHERE RowID = ?";
                     Connection conn = DriverManager.getConnection(databaseURL);
                     PreparedStatement pstmt = conn.prepareStatement(updateAmountSql);
                     pstmt.setString(1, pdAmount.getText());
@@ -1652,7 +1666,7 @@ public class PDController implements Initializable {
 
         deleteButton.setOnAction((event) -> {
             try {
-                String deletePaySql = "DELETE FROM PaymentDetails WHERE ROWID = ?";
+                String deletePaySql = "DELETE FROM PaymentDetails WHERE RowID = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(deletePaySql);
                 pstmt.setInt(1, payRowId);
@@ -1719,14 +1733,20 @@ public class PDController implements Initializable {
         });
         
         stickyNote.setOnAction((event) -> {
-            MyPopUp popUp = new MyPopUp();
-            stickyStage = (Stage) popUp.getScene().getWindow();
-            System.out.println("Popup height is "+popUp.getHeight());
-            System.out.println("Popup width is "+popUp.getWidth());
-            popUp.setOnShown((e) -> {
-                
-            });
-            popUp.show();
+            if (payRowId == 0) {
+                Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
+                emptyHouseAlert.setTitle("No house selected");
+                emptyHouseAlert.setHeaderText(null);
+                emptyHouseAlert.setContentText("Please select a house");
+                emptyHouseAlert.showAndWait();
+            } else {
+                MyPopUp popUp = new MyPopUp();
+                stickyStage = (Stage) popUp.getScene().getWindow();
+                popUp.setOnShown((e) -> {
+
+                });
+                popUp.show();
+            }
         });
         
         save.setOnAction((event) -> {
@@ -1753,7 +1773,6 @@ public class PDController implements Initializable {
         
         
         icon.setOnMouseClicked((event) -> {
-            
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 try {
                     parentStickyStage = (Stage) icon.getScene().getWindow();
@@ -1825,15 +1844,33 @@ public class PDController implements Initializable {
         });
         edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         
+        pdAmount.setOnContextMenuRequested((event) -> {
+            editMenu.hide();
+        });
+        
+        pdPaymentDate.getEditor().setOnMouseClicked((event) -> {
+            editMenu.hide();
+        });
+        
+        Platform.runLater(() -> {
+            pdScrollPane.getScene().addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, (event) -> {
+                if (checkIfNode((Node) event.getTarget())) {
+                    event.consume();
+                    editMenu.hide();
+                }
+            });
+        });
+        
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
         
         pdScrollPane.setOnContextMenuRequested((event) -> {
             editMenu.getItems().clear();
+            editMenu.setAutoHide(true);
             editMenu.getItems().addAll(edit, printReceipt, stickyNote, clear);
             xCursorPos = event.getScreenX();
             yCursorPos = event.getScreenY();
-            editMenu.show(sp1, event.getScreenX(), event.getScreenY());
+            editMenu.show(pdScrollPane, event.getScreenX(), event.getScreenY());
         });
         pdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             editMenu.hide();
@@ -1842,24 +1879,6 @@ public class PDController implements Initializable {
             } else if (stickyStage.isShowing()) {
                 stickyStage.close();
             }
-        });
-
-        payRecordsFilter.textProperty().addListener((observable, oldValue, newValue) -> {
-            FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
-            filteredList.setPredicate((t) -> {
-                if (payRecordsFilter.getText() == null || payRecordsFilter.getText().isEmpty()) {
-                    return true;
-                }
-
-                String lowerCaseFilter = newValue.toLowerCase();
-                if (t.gettenantNameTablePD().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                }
-                return false;
-            });
-            SortedList<PDModel> sortedData = new SortedList<>(filteredList);
-            sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
-            paymentsTable.setItems(sortedData);
         });
 
         pdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -1875,10 +1894,10 @@ public class PDController implements Initializable {
                         payLabel.setText("");
                     } else {
                         do {
-                            pdAmount.setDisable(true);
-                            pdAmount.setDisableAnimation(Boolean.TRUE);
-                            pdPaymentDate.setDisable(true);
-                            pdPaymentOption.setDisable(true);
+                            pdAmount.clear();
+                            pdPaymentDate.setValue(null);
+                            payLabel.textProperty().unbind();
+                            payLabel.setText("");
                         } while (rs.next());
                     }
                 } catch (SQLException ex) {
@@ -1936,6 +1955,14 @@ public class PDController implements Initializable {
                         } while (rs.next());
                         if (pdHbox1.getChildren().contains(icon)) {
                             icon.stickyMenuItem.setOnAction((event) -> {
+                                try {
+                                    String deleteSticky = "UPDATE PaymentDetails SET StickyNote = null WHERE RowID = ?";
+                                    Connection con = DriverManager.getConnection(databaseURL);
+                                    PreparedStatement stmt = con.prepareStatement(deleteSticky);
+                                    stmt.setInt(1, payRowId);
+                                    stmt.executeUpdate();
+                                } catch (Exception e) {
+                                }
                                 pdHbox1.getChildren().remove(icon);
                             });
                         }
@@ -1949,7 +1976,7 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
-
+            
         });
 
         pdMonthCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -1960,7 +1987,7 @@ public class PDController implements Initializable {
                     return true;
                 }
                 PDModel.Strings comboFilter = newValue;
-                if (t.getmonthTablePD().equals(newValue)) {
+                if (t.getmonthTablePD().equals(newValue) || newValue.getMonth().equals("All")) {
                     return true;
                 }
                 return false;
@@ -1969,18 +1996,80 @@ public class PDController implements Initializable {
             sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
             paymentsTable.setItems(sortedData);
         });
+        
+        rdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.getMonth().equals("All")) {
+                try {
+                    String selectRepairs = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
+                    Connection conn = DriverManager.getConnection(databaseURL);
+                    PreparedStatement pstmt = conn.prepareStatement(selectRepairs);
+                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    ResultSet rs = pstmt.executeQuery();
 
-        clearButton.setOnAction((event) -> {
-            payRecordsFilter.clear();
-            monthComboPD.setValue(PDModel.Strings.NONE);
+                    if (!rs.next()) {
+                        setRepairsEmpty();
+                    } else {
+                        do {
+                            setRepairsEmpty();
+                        } while (rs.next());
+                    }
+                } catch (Exception e) {
+                }
+            } else if (newValue.getMonth().equals("")) {
+
+            } else {
+                try {
+                    String selectRepairs = "SELECT * FROM RepairsTable WHERE HouseNumber = ? AND Month = ?";
+                    Connection conn = DriverManager.getConnection(selectRepairs);
+                    PreparedStatement pstmt = conn.prepareStatement(selectRepairs);
+                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    pstmt.setString(2, rdMonthCombo.getValue().name());
+                    ResultSet rs = pstmt.executeQuery();
+                    
+                    if (!rs.next()) {
+                        setRepairsEmpty();
+                    } else {
+                        do {                            
+                          repairRowId = rs.getInt("RowID");
+                          rdRepairsDone.setText(rs.getString("Repairs"));
+                          rdRepairCost.setText(rs.getString("CostOfRepairs"));
+                          Object repairsDate = rs.getObject("DateOfRepairs");
+                            if (repairsDate == null) {
+                                rdRepairDate.setValue(null);
+                            } else {
+                                rdRepairDate.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
+                            }
+                           rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
+                        } while (rs.next());
+                    }
+                } catch (Exception e) {
+                }
+            }
         });
-
+        
         paymentsTable.setRowFactory((TableView<PDModel> tableView) -> {
             final TableRow<PDModel> row = new TableRow<>();
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
-
+            
+            row.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+                    TableRow c = (TableRow) event.getSource();
+                    int index = c.getIndex();
+                    try {
+                        PDModel item = getPaymentDetails().get(index);
+                        pdName.setText(item.gettenantNameTablePD());
+                        pdAmount.setText(item.getamountTablePD());
+                        pdMonthCombo.setValue(item.getmonthTablePD());
+                        pdPaymentDate.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+                        payLabel.setText(item.getpaymentMethodPD());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            
             contextMenu.getItems().addAll(editPay, deletePay);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
@@ -2031,7 +2120,7 @@ public class PDController implements Initializable {
                 pdName.setPrefWidth(170);
             }
         });
-        pdName.setDisable(true);
+        pdName.setEditable(false);
 
         tdName.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
@@ -2050,8 +2139,28 @@ public class PDController implements Initializable {
                 rdName.setPrefWidth(170);
             }
         });
-        rdName.setDisable(true);
-
+        rdName.setEditable(false);
+        
+        paymentDetails.setOnSelectionChanged((event) -> {
+            if (sp1.getItems().size() == 2) {
+                sp1.getItems().remove(tableViewPane);
+                pdTableViewButton.setText("Show details >>");
+                Scene scene = paymentDetails.getTabPane().getScene();
+                Stage stage = (Stage) scene.getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        
+        repairDetails.setOnSelectionChanged((event) -> {
+            if (sp1.getItems().size() == 2) {
+                sp1.getItems().remove(tableViewPane);
+                rdTableViewButton.setText("Show details >>");
+                Scene scene = repairDetails.getTabPane().getScene();
+                Stage stage = (Stage) scene.getWindow();
+                MainApp.changeWindowSize(stage, 500);
+            }
+        });
+        
         pdCashTextfield.setPrefWidth(50);
         pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
@@ -2167,7 +2276,8 @@ public class PDController implements Initializable {
 
         pdHbox5.setPadding(new Insets(10, 0, 0, 0));
 
-        pdMonthCombo.setPrefWidth(160);
+        pdMonthCombo.setPrefWidth(170);
+        rdMonthCombo.setPrefWidth(170);
 
         placingVbox.setPadding(new Insets(22, 0, 0, 0));
         placingVbox.getChildren().addAll(pdPaymentOption);
@@ -2178,7 +2288,7 @@ public class PDController implements Initializable {
         tdVbox.setPadding(new Insets(10, 10, 10, 10));
         tdVbox.getChildren().addAll(tdHbox1, tdHbox2, tdHbox3, tdHbox4, tdHbox5, tdHbox6, tdHbox7, tdHbox8, tdHbox9);
         rdVbox.setPadding(new Insets(10, 10, 10, 10));
-        rdVbox.getChildren().addAll(rdHbox1, rdHbox2, rdHbox3, rdHbox4, rdHbox5, rdHbox6);
+        rdVbox.getChildren().addAll(rdHbox1, rdHbox7, rdHbox2, rdHbox3, rdHbox4, rdHbox5, rdHbox6);
 
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);
@@ -2199,8 +2309,8 @@ public class PDController implements Initializable {
             this.setMinWidth(270);
             this.setResizable(true);
             this.initStyle(StageStyle.UNDECORATED);
-            this.setAlwaysOnTop(true);
             this.initModality(Modality.APPLICATION_MODAL);
+            this.setOpacity(0.9);
             
             BorderPane borderPaneOptionPane = new BorderPane();
             
@@ -2212,7 +2322,7 @@ public class PDController implements Initializable {
             
             HBox stickyHbox = new HBox();
             HBox.setHgrow(filler, Priority.ALWAYS);
-            Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+            Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue()+" "+pdMonthCombo.getValue().name());
             label1.setAlignment(Pos.CENTER);
             label2.setAlignment(Pos.CENTER);
             
@@ -2242,6 +2352,7 @@ public class PDController implements Initializable {
             borderPaneOptionPane.setStyle("-fx-border-color: Black;");
 
             Scene s = new Scene(borderPaneOptionPane);
+            s.setFill(Color.TRANSPARENT);
             this.setScene(s);
             this.setX(xCursorPos);
             this.setY(yCursorPos);
