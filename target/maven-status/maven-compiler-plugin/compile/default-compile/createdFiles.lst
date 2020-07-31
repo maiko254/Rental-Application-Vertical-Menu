@@ -1,10 +1,11 @@
-com\clickdigitalsolutions\rentverticalmenu\PDController$2.class
 com\clickdigitalsolutions\rentverticalmenu\FileChooserClass.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\MainApp.class
 com\clickdigitalsolutions\rentverticalmenu\PDModel.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$1.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$DetailsIcon.class
 com\clickdigitalsolutions\rentverticalmenu\TDModel.class
+com\clickdigitalsolutions\rentverticalmenu\PDController$PayMenuIcon.class
 com\clickdigitalsolutions\rentverticalmenu\ME2Controller$otherMonthlyModel.class
 com\clickdigitalsolutions\rentverticalmenu\jatomRentPreloader.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyPopUp.class
@@ -13,7 +14,6 @@ com\clickdigitalsolutions\rentverticalmenu\RModel$Strings.class
 com\clickdigitalsolutions\rentverticalmenu\TDController.class
 com\clickdigitalsolutions\rentverticalmenu\PDModel$Strings.class
 com\clickdigitalsolutions\rentverticalmenu\Icons$1.class
-com\clickdigitalsolutions\rentverticalmenu\PDController$MyRepairStringTableCell.class
 com\clickdigitalsolutions\rentverticalmenu\PDController$MyRepairEventHandler.class
 com\clickdigitalsolutions\rentverticalmenu\RModel.class
 com\clickdigitalsolutions\rentverticalmenu\PDController.class

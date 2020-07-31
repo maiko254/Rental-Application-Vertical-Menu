@@ -44,17 +44,15 @@ public class RModel {
     }
     
     public StringProperty houseNumberTableR;
-    public StringProperty tenantNameTableR;
-    public ObjectProperty<Strings> monthTablePD;
+    public ObjectProperty<Strings> monthTableR;
     public StringProperty repairsDoneTableR;
     public StringProperty costofRepairsTableR;
     public StringProperty dateofRepairsTableR;
     public StringProperty miscellaneousTableR;
     
-    public RModel(String houseNumber, String tenantName, Strings month, String repairsDone, String costofRepair, String dateofRepairs, String miscellaneous){
+    public RModel(String houseNumber, Strings month, String repairsDone, String costofRepair, String dateofRepairs, String miscellaneous){
        houseNumberTableR = new SimpleStringProperty(houseNumber);
-       tenantNameTableR = new SimpleStringProperty(tenantName);
-       monthTablePD = new SimpleObjectProperty<>(month);
+       monthTableR = new SimpleObjectProperty<>(month);
        repairsDoneTableR = new SimpleStringProperty(repairsDone);
        costofRepairsTableR = new SimpleStringProperty(costofRepair);
        dateofRepairsTableR = new SimpleStringProperty(dateofRepairs);
@@ -71,24 +69,14 @@ public class RModel {
         return houseNumberTableR;
     }
     
-    public String gettenantNameTableR(){
-        return tenantNameTableR.get();
+    public Strings getMonthTableR() {
+        return this.monthTableR.get();
     }
-    public void settenantNameTableR(String value){
-        tenantNameTableR.set(value);
+    public void setMonthTableR(Strings value) {
+        monthTableR.set(value);
     }
-    public StringProperty tenantNameTableRProperty(){
-        return tenantNameTableR;
-    }
-    
-    public Strings getmonthTablePD(){
-        return this.monthTablePD.get();
-    }
-    public void setmonthTablePD(Strings value){
-        monthTablePD.set(value);
-    }
-    public ObjectProperty<Strings> monthTablePDProperty(){
-        return monthTablePD;
+    public ObjectProperty<Strings> monthTableRProperty() {
+        return monthTableR;
     }
     
     public String getrepairsDoneTableR(){

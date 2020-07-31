@@ -298,53 +298,7 @@ public class TDController implements Initializable {
 
     }
     
-    @FXML
-    private void saveButtonActionTD() throws FileNotFoundException{
-        if (comboboxTDCheck.equals("Block A")) {
-            createTenantDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            if (tdTableConstraint.equals("UNIQUE constraint failed: TenantDetails.HouseNumber")) {
-                System.out.println("Record is already in Payments Table");
-            } else {
-                subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-            }
-            createExcelSheet((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            setEmpty();
-            blockACombo.setValue(null);
-        }else if (comboboxTDCheck.equals("Block B")){
-            createTenantDetailsTable((String)blockBCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            if (tdTableConstraint.equals("UNIQUE constraint failed: TenantDetails.HouseNumber")) {
-                System.out.println("Record is already in Payments Table");
-            } else {
-                subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-            }
-            setEmpty();
-            blockBCombo.setValue(null);
-        }else if (comboboxTDCheck.equals("Block C")){
-            createTenantDetailsTable((String)blockCCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            if (tdTableConstraint.equals("UNIQUE constraint failed: TenantDetails.HouseNumber")) {
-                System.out.println("Record is already in Payments Table");
-            } else {
-                subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-            }
-            setEmpty();
-            blockCCombo.setValue(null);
-        }else if (comboboxTDCheck.equals("Nasra Block")){
-            createTenantDetailsTable((String)nasraBlockCombo.getSelectionModel().getSelectedItem(), tenantName.getText(), tenantPhoneNumber.getText(), monthlyRent.getText(), houseDeposit.getText(), dueDate.getText(), getDateValueAsString(moveInDate.getValue()), getDateValueAsString(moveOutDate.getValue()), getDateValueAsString(leaseStartDate.getValue()), getDateValueAsString(leaseEndDate.getValue()));
-            if (tdTableConstraint.equals("UNIQUE constraint failed: TenantDetails.HouseNumber")) {
-                System.out.println("Record is already in Payments Table");
-            } else {
-                subcontroller.createPaymentDetailsTable((String) blockACombo.getSelectionModel().getSelectedItem(), tenantName.getText(), null, PDModel.Strings.NONE, null, null);
-            }
-            setEmpty();
-            nasraBlockCombo.setValue(null);
-        }else if (comboboxTDCheck.equals("Empty")) {
-            Alert emptyAlert = new Alert(Alert.AlertType.ERROR);
-            emptyAlert.setTitle("Error Dialog");
-            emptyAlert.setHeaderText("Empty Field");
-            emptyAlert.setContentText("House Number selection cannot be empty. Please select a house");
-            emptyAlert.showAndWait();
-        }
-    }
+    
     
     PDController subcontroller = new PDController();
    

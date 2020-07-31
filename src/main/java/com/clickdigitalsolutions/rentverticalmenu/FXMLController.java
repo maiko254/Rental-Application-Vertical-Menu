@@ -420,7 +420,7 @@ public class FXMLController implements Initializable {
                     subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                     subcontroller.createExcelSheet(initFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                     subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.pdPaymentOption.getText());
-                    /*subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());*/
+                    /*subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(),subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());*/
                     subcontroller.createAndWriteExcelSheet(initFile, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.pdPaymentOption.getText());
                 } else if (!prefs.get(loc, "Hello World").equals("Hello World")) {
                     FileChooser secondChooser = new FileChooser();
@@ -439,6 +439,7 @@ public class FXMLController implements Initializable {
         });
         
         
+        
         Save.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
 
@@ -452,7 +453,7 @@ public class FXMLController implements Initializable {
                             if (subcontroller.tenantDetails.isSelected()) {
                                 subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                                 subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                                subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), RModel.Strings.NONE, null, null, null, null);
+                                subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
                                 subcontroller.createExcelSheet(fileLocation, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                             } else if (subcontroller.paymentDetails.isSelected()) {
                                 subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.pdPaymentOption.getText());
@@ -460,8 +461,10 @@ public class FXMLController implements Initializable {
                                 subcontroller.setEmpty();
                                 subcontroller.payLabel.textProperty().unbind();
                                 subcontroller.payLabel.setText("");
+                                subcontroller.newEntryCheck = "";
                             } else if (subcontroller.repairDetails.isSelected()) {
-                                subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.rdName.getText(), subcontroller.rdMonthCombo.getSelectionModel().getSelectedItem(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
+                                subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.rdMonthCombo.getSelectionModel().getSelectedItem(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
+                                subcontroller.newEntryCheck = "";
                             }
                         }
                     } else if (!prefs.get(loc, "Hello World").equals("Hello World")) {
@@ -469,16 +472,27 @@ public class FXMLController implements Initializable {
                         if (subcontroller.tenantDetails.isSelected()) {
                             subcontroller.createTenantDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
                             subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                            subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), RModel.Strings.NONE, null, null, null, null);
+                            subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
                             subcontroller.createExcelSheet(lastLoc, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.tdName.getText(), subcontroller.tdPhone.getText(), subcontroller.tdAmount.getText(), subcontroller.tdDeposit.getText(), subcontroller.tdDueDate.getText(), getDateValueAsString(subcontroller.tdMoveInDate.getValue()), getDateValueAsString(subcontroller.tdMoveOutDate.getValue()), getDateValueAsString(subcontroller.tdLeaseStartDate.getValue()), getDateValueAsString(subcontroller.tdLeaseEndDate.getValue()));
+                            subcontroller.setTDEmpty1();
                         } else if (subcontroller.paymentDetails.isSelected()) {
-                            subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payLabel.getText());
-                            subcontroller.createAndWriteExcelSheet(lastLoc, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.pdPaymentOption.getText());
-                            subcontroller.setEmpty();
-                            subcontroller.payLabel.textProperty().unbind();
-                            subcontroller.payLabel.setText("");
+                            if (subcontroller.pdMonthCombo.getValue().equals(PDModel.Strings.NONE)) {
+                                Alert emptyFieldAlert = new Alert(Alert.AlertType.INFORMATION);
+                                emptyFieldAlert.setTitle("No month selected");
+                                emptyFieldAlert.setHeaderText(null);
+                                emptyFieldAlert.setContentText("Select Month");
+                                emptyFieldAlert.showAndWait();
+                            } else {
+                                subcontroller.createPaymentDetailsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.payLabel.getText());
+                                subcontroller.createAndWriteExcelSheet(lastLoc, subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.pdName.getText(), subcontroller.pdAmount.getText(), subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(subcontroller.pdPaymentDate.getValue()), subcontroller.pdPaymentOption.getText());
+                                subcontroller.setEmpty();
+                                subcontroller.payLabel.textProperty().unbind();
+                                subcontroller.payLabel.setText("");
+                                subcontroller.newEntryCheck = "";
+                            }
                         } else if (subcontroller.repairDetails.isSelected()) {
-                            subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.rdName.getText(), subcontroller.rdMonthCombo.getSelectionModel().getSelectedItem(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
+                            subcontroller.createRepairsTable(subcontroller.blockTreeView.getSelectionModel().getSelectedItem().getValue(), subcontroller.rdMonthCombo.getSelectionModel().getSelectedItem(), subcontroller.rdRepairsDone.getText(), subcontroller.rdRepairCost.getText(), subcontroller.getDateValueAsString(subcontroller.rdRepairDate.getValue()), subcontroller.rdMiscCost.getText());
+                            subcontroller.newEntryCheck = "";
                         } 
                     }
                 } else if (monthlyExpensesTab.isSelected()) {
@@ -495,7 +509,6 @@ public class FXMLController implements Initializable {
                 e.printStackTrace();
             }
 
-        });
-        
+        }); 
     }
 }
