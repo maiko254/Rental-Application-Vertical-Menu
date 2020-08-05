@@ -14,28 +14,18 @@ import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeView;
-import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.materialicons.MaterialIcon;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,40 +47,27 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.event.Event;
-import javafx.event.EventDispatcher;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
-import javafx.geometry.Side;
-import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
@@ -104,16 +81,10 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -123,18 +94,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.StrokeType;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Callback;
 import javafx.util.Duration;
-import javafx.util.StringConverter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -239,21 +205,10 @@ public class PDController implements Initializable {
     MenuItem pdStickyNote = new MenuItem("Sticky Note");
     MenuItem pdPrintReceipt = new MenuItem("Print Receipt");
     
-    ContextMenu editMenu = new ContextMenu();
-    MenuItem clear = new MenuItem("Clear Selection");
-    MenuItem edit = new MenuItem("Edit");
-    MenuItem printReceipt = new MenuItem("Print Receipt");
-    MenuItem stickyNote = new MenuItem("Add Sticky Note");
-    MenuItem newEntry = new MenuItem("New Entry");
-    
     ContextMenu rdEditMenu = new ContextMenu();
     MenuItem rdEdit = new MenuItem("Edit");
     MenuItem rdNewEntry = new MenuItem("New Entry");
     MenuItem rdClear = new MenuItem("Clear Selection");
-    
-    Button updateButton = new Button("Update");
-    Button deleteButton = new Button("Delete");
-    Button cancelButton = new Button("Cancel");
     
     Button rdUpdateButton = new Button("Update");
     Button rdDeleteButton = new Button("Delete");
@@ -408,7 +363,6 @@ public class PDController implements Initializable {
     HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
     HBox rdHbox6 = new HBox(rdTableViewButton);
     
-    HBox updateHbox = new HBox(70, updateButton, deleteButton, cancelButton);
     HBox rdUpdateHbox = new HBox(70, rdUpdateButton, rdDeleteButton, rdCancelbutton);
    
     HBox pdPayOptionHbox = new HBox(10);
@@ -442,6 +396,7 @@ public class PDController implements Initializable {
     
     DetailsIcon detIcon = new DetailsIcon();
     PayMenuIcon payIcon = new PayMenuIcon();
+    repairsMenuIcon repairsIcon = new repairsMenuIcon();
     
     final TranslateTransition translateTransition = new TranslateTransition(Duration.millis(200), icon);
     
@@ -452,7 +407,7 @@ public class PDController implements Initializable {
     String loc = "location";
     
     public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
-        String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text, UNIQUE(TenantName, TenantPhoneNumber)) ";
+        String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
         try {
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createTDSql);
@@ -481,11 +436,17 @@ public class PDController implements Initializable {
             conn.close();
             pstmt.close();
         } catch (SQLException e) {
-            if (e.getMessage().startsWith("[SQLITE_CONSTRAINT]  Abort due to constraint violation")) {
+            if (e.getMessage().equals("[SQLITE_CONSTRAINT]  Abort due to constraint violation (UNIQUE constraint failed: TenantDetails.HouseNumber)")) {
                 Alert insertErrorAlert = new Alert(Alert.AlertType.ERROR);
                 insertErrorAlert.setTitle("Duplicate Record");
                 insertErrorAlert.setHeaderText(null);
                 insertErrorAlert.setContentText("This apartment is occupied. Please select a different apartment");
+                insertErrorAlert.showAndWait();
+            } else if (e.getMessage().equals("[SQLITE_CONSTRAINT]  Abort due to constraint violation (CHECK constraint failed: TenantDetails)")) {
+                Alert insertErrorAlert = new Alert(Alert.AlertType.ERROR);
+                insertErrorAlert.setTitle("Empty Field");
+                insertErrorAlert.setHeaderText(null);
+                insertErrorAlert.setContentText("House Number and Tenant Name cannot be empty");
                 insertErrorAlert.showAndWait();
             } else {
                 e.printStackTrace();
@@ -495,7 +456,7 @@ public class PDController implements Initializable {
 
     public void createPaymentDetailsTable(String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
         try {
-            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text, Amount text, Month text, PaymentDate text, PaymentMethod text, StickyNote text, UNIQUE(HouseNumber, Month, PaymentDate))";
+            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text CHECK(TenantName<>''), Amount text, Month text, PaymentDate text, PaymentMethod text, StickyNote text, UNIQUE(HouseNumber, Month, PaymentDate))";
             Connection conn = DriverManager.getConnection(databaseURL);
             PreparedStatement pstmt = conn.prepareStatement(createPDSql);
             pstmt.execute();
@@ -1027,7 +988,6 @@ public class PDController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         } else {
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet("Tenant Data");
@@ -1703,7 +1663,13 @@ public class PDController implements Initializable {
         });
         
         pdUpdate.setOnAction((event) -> {
-            if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE) || "".equals(pdAmount.getText()) || "".equals(pdPaymentDate.getEditor().getText()) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
+            if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
+                Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
+                emptyFieldAlert.setTitle("No month selected");
+                emptyFieldAlert.setHeaderText(null);
+                emptyFieldAlert.setContentText("Please select a month.");
+                emptyFieldAlert.showAndWait();
+            } else if ("".equals(pdAmount.getText()) || "".equals(pdPaymentDate.getEditor().getText()) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
                 Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
                 emptyFieldAlert.setTitle("Empty Field!");
                 emptyFieldAlert.setHeaderText(null);
@@ -1753,7 +1719,7 @@ public class PDController implements Initializable {
                     Alert emptyFieldAlert = new Alert(Alert.AlertType.ERROR);
                     emptyFieldAlert.setTitle("No month selected");
                     emptyFieldAlert.setHeaderText(null);
-                    emptyFieldAlert.setContentText("Select Month");
+                    emptyFieldAlert.setContentText("Please select a month");
                     emptyFieldAlert.showAndWait();
                 } else {
                     pstmt.setInt(1, payRowId);
@@ -1773,7 +1739,6 @@ public class PDController implements Initializable {
                 setEmpty();
                 payLabel.textProperty().unbind();
                 payLabel.setText("");
-                pdVbox.getChildren().remove(updateHbox);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1826,85 +1791,109 @@ public class PDController implements Initializable {
         
         tdSaveAs.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            try {
-                if (prefs.get(loc, "location").equals("location")) {
-                    FileChooser initialLoc = new FileChooser();
-                    File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                    prefs.put(loc, initFile.getPath());
-                    createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                    createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                    createExcelSheet(initFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    setTDEmpty1();
-                } else if (!prefs.get(loc, "location").equals("location")) {
-                    FileChooser savedLoc = new FileChooser();
-                    File savedFile = new File(prefs.get(loc, "location"));
-                    savedLoc.setInitialDirectory(savedFile.getParentFile());
-                    savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                    createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                    createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                    createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    setTDEmpty1();
+            if (blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block C") || blockTreeView.getSelectionModel().getSelectedItem().equals("Nasra Block")) {
+                Alert emptyFieldAlert = new Alert(Alert.AlertType.ERROR);
+                emptyFieldAlert.setTitle("No Apartment Selected");
+                emptyFieldAlert.setHeaderText(null);
+                emptyFieldAlert.setContentText("Please select a house.");
+                emptyFieldAlert.showAndWait();
+            } else {
+                try {
+                    if (prefs.get(loc, "location").equals("location")) {
+                        FileChooser initialLoc = new FileChooser();
+                        File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        prefs.put(loc, initFile.getPath());
+                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
+                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
+                        createExcelSheet(initFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        setTDEmpty1();
+                    } else if (!prefs.get(loc, "location").equals("location")) {
+                        FileChooser savedLoc = new FileChooser();
+                        File savedFile = new File(prefs.get(loc, "location"));
+                        savedLoc.setInitialDirectory(savedFile.getParentFile());
+                        savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
+                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
+                        createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        setTDEmpty1();
+                    }
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                 }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
             }
         });
         
         tdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            
-            try {
-                if (prefs.get(loc, "location").equals("location")) {
-                    FileChooser initialLoc = new FileChooser();
-                    File initialFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                    prefs.put(loc, initialFile.getPath());
-                    createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                    createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                    createExcelSheet(initialFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    setTDEmpty1();
-                } else if (!prefs.get(loc, "location").equals("location")) {
-                    File savedFile = new File(prefs.get(loc, "location"));
-                    createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                    createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                    createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    setTDEmpty1();
+            if (blockTreeView.getSelectionModel().getSelectedItem() == null || blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B")) {
+                Alert emptyFieldAlert = new Alert(Alert.AlertType.ERROR);
+                emptyFieldAlert.setTitle("No Apartment Selected");
+                emptyFieldAlert.setHeaderText(null);
+                emptyFieldAlert.setContentText("Please select a house.");
+                emptyFieldAlert.showAndWait();
+            } else {
+                try {
+                    if (prefs.get(loc, "location").equals("location")) {
+                        FileChooser initialLoc = new FileChooser();
+                        File initialFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        prefs.put(loc, initialFile.getPath());
+                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
+                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
+                        createExcelSheet(initialFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        setTDEmpty1();
+                    } else if (!prefs.get(loc, "location").equals("location")) {
+                        File savedFile = new File(prefs.get(loc, "location"));
+                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
+                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
+                        createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        setTDEmpty1();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         });
         
         pdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            try {
-                File savedFile = new File(prefs.get(loc, "location"));
-                if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE)) {
-                    Alert emptyFieldAlert = new Alert(Alert.AlertType.INFORMATION);
-                    emptyFieldAlert.setTitle("No month selected");
-                    emptyFieldAlert.setHeaderText(null);
-                    emptyFieldAlert.setContentText("Select Month");
-                    emptyFieldAlert.showAndWait();
-                } else {
-                    createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
-                    createAndWriteExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
-                    setEmpty();
-                    payLabel.textProperty().unbind();
-                    payLabel.setText("");
-                    newEntryCheck = "";
+            if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
+                Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
+                emptyFieldAlert.setTitle("No month selected");
+                emptyFieldAlert.setHeaderText(null);
+                emptyFieldAlert.setContentText("Please select a month");
+                emptyFieldAlert.showAndWait();
+            } else if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE) || "".equals(pdAmount.getText()) || "".equals(pdPaymentDate.getEditor().getText()) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
+                Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
+                emptyFieldAlert.setTitle("Empty Field!");
+                emptyFieldAlert.setHeaderText(null);
+                emptyFieldAlert.setContentText("Empty field is not allowed");
+                emptyFieldAlert.showAndWait();
+            } else {
+                try {
+                    File savedFile = new File(prefs.get(loc, "location"));
+                    if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE)) {
+                        Alert emptyFieldAlert = new Alert(Alert.AlertType.INFORMATION);
+                        emptyFieldAlert.setTitle("No month selected");
+                        emptyFieldAlert.setHeaderText(null);
+                        emptyFieldAlert.setContentText("Select Month");
+                        emptyFieldAlert.showAndWait();
+                    } else {
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+                        createAndWriteExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+                        setEmpty();
+                        payLabel.textProperty().unbind();
+                        payLabel.setText("");
+                        newEntryCheck = "";
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        });
-        
-        cancelButton.setOnAction((event) -> {
-            pdVbox.getChildren().remove(updateHbox);
-            pdTableViewButton.setDisable(false);
         });
         
         rdUpdateButton.setOnAction((event) -> {
@@ -1949,52 +1938,6 @@ public class PDController implements Initializable {
         rdCancelbutton.setOnAction((event) -> {
             rdVbox.getChildren().remove(rdUpdateHbox);
             rdVbox.setDisable(false);
-        });
-        
-        clear.setOnAction((event) -> {
-            if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("A")) {
-                blockTreeView.getSelectionModel().getSelectedItem().setValue("Block A");
-            } else if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("B")) {
-                blockTreeView.getSelectionModel().getSelectedItem().setValue("Block B");
-            } else if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("C")) {
-                blockTreeView.getSelectionModel().getSelectedItem().setValue("Block C");
-            } else if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("D")) {
-                blockTreeView.getSelectionModel().getSelectedItem().setValue("Nasra Block");
-            }
-            payRowId = 0;
-            rentArrearslabel.setVisible(false);
-            setAllEmpty();
-        });
-
-        edit.setOnAction((event) -> {
-            if (payRowId == 0) {
-                Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
-                emptyHouseAlert.setTitle("No house selected");
-                emptyHouseAlert.setHeaderText(null);
-                emptyHouseAlert.setContentText("Please select a house");
-                emptyHouseAlert.showAndWait();
-            } else {
-                if (sp1.getItems().size() == 2) {
-                    sp1.getItems().remove(tableViewPane);
-                    pdTableViewButton.setText("Show details >>");
-                    updateHbox.prefWidthProperty().bind(detailsPane.widthProperty());
-                    updateHbox.setPadding(new Insets(20, 0, 0, 20));
-                    pdVbox.getChildren().add(1, updateHbox);
-                } else {
-                    if (pdVbox.getChildren().contains(updateHbox)) {
-                        System.out.println("Update hbox visible. Do nothing.");
-                    } else {
-                        updateHbox.prefWidthProperty().bind(detailsPane.widthProperty());
-                        updateHbox.setPadding(new Insets(20, 0, 0, 20));
-                        pdVbox.getChildren().add(1, updateHbox);
-                    }
-                }
-            }
-
-            if (pdVbox.getChildren().contains(updateHbox)) {
-                pdTableViewButton.setDisable(true);
-            }
-
         });
         
         tdNewRecord.setOnAction((event) -> {
@@ -2062,14 +2005,19 @@ public class PDController implements Initializable {
         pdStickyNote.setOnAction((event) -> {
             if (payRowId == 0) {
                 Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
-                emptyHouseAlert.setTitle("No house selected");
+                emptyHouseAlert.setTitle("No Entry");
+                emptyHouseAlert.setHeaderText("Empty Record");
+                emptyHouseAlert.setContentText("First make an entry then try again");
+                emptyHouseAlert.showAndWait();
+            } else if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
+                Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
+                emptyHouseAlert.setTitle("No Month Selected");
                 emptyHouseAlert.setHeaderText(null);
-                emptyHouseAlert.setContentText("Please select a house");
+                emptyHouseAlert.setContentText("Please select a month.");
                 emptyHouseAlert.showAndWait();
             } else {
                 MyPopUp popUp = new MyPopUp();
-                
-                
+
                 stickyStage = (Stage) popUp.getScene().getWindow();
                 parentStickyStage = (Stage) detIcon.getScene().getWindow();
 
@@ -2083,7 +2031,7 @@ public class PDController implements Initializable {
                     stickyStage.setY(centerYPsition - stickyStage.getHeight() / 2);
                     stickyStage.show();
                 });
-                
+
                 stickyTextArea.clear();
                 popUp.showAndWait();
             }
@@ -2139,7 +2087,7 @@ public class PDController implements Initializable {
             stopJumpAnimation();
         });
         
-        printReceipt.setOnAction((event) -> {
+        /*printReceipt.setOnAction((event) -> {
             Map map = null;
             try {
                 map = getReceiptParameters();
@@ -2178,8 +2126,7 @@ public class PDController implements Initializable {
             JasperViewer jasperViewer = new JasperViewer(jasperPrint, false);
             jasperViewer.setTitle("Rent Receipt");
             jasperViewer.setVisible(true);
-        });
-        edit.setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
+        });*/
         
         tdName.setOnKeyPressed((event) -> {
             if (tdHbox1.getChildren().contains(detIcon)) {
@@ -2189,26 +2136,11 @@ public class PDController implements Initializable {
             }
         });
         
-        pdAmount.setOnContextMenuRequested((event) -> {
-            editMenu.hide();
-        });
-        
-        pdPaymentDate.getEditor().setOnMouseClicked((event) -> {
-            editMenu.hide();
-        });
-        
         rdRepairDate.getEditor().setOnMouseClicked((event) -> {
             rdEditMenu.hide();
         });
         
         Platform.runLater(() -> {
-            pdScrollPane.getScene().addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, (event) -> {
-                if (checkIfNode((Node) event.getTarget())) {
-                    event.consume();
-                    editMenu.hide();
-                }
-            });
-            
             rdScrollPane.getScene().addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, (event) -> {
                 if (checkIfNode((Node) event.getTarget())) {
                     event.consume();
@@ -2220,16 +2152,8 @@ public class PDController implements Initializable {
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
         
-        pdScrollPane.setOnContextMenuRequested((event) -> {
-            editMenu.getItems().clear();
-            editMenu.setAutoHide(true);
-            editMenu.getItems().addAll(edit, newEntry, printReceipt, stickyNote, clear);
-            xCursorPos = event.getScreenX();
-            yCursorPos = event.getScreenY();
-            editMenu.show(pdScrollPane, event.getScreenX(), event.getScreenY());
-        });
+        
         pdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
-            editMenu.hide();
             if (stickyStage == null || !stickyStage.isShowing()) {
                 System.out.println("Not showing");
             } else if (stickyStage.isShowing()) {
@@ -2759,9 +2683,16 @@ public class PDController implements Initializable {
             
             HBox stickyHbox = new HBox();
             HBox.setHgrow(filler, Priority.ALWAYS);
-            Label label1 = new Label(blockTreeView.getSelectionModel().getSelectedItem().getValue()+" "+pdMonthCombo.getValue().name());
+            Label label1 = new Label();
             label1.setAlignment(Pos.CENTER);
             label2.setAlignment(Pos.CENTER);
+            
+            Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                label1.setText(LocalDateTime.now().format(formatter));
+            }), new KeyFrame(Duration.seconds(1)));
+            clock.setCycleCount(Animation.INDEFINITE);
+            clock.play();
             
             label2.setOnMouseClicked((evt) -> {
                 Stage stage = (Stage) (label1.getScene()).getWindow();
@@ -2822,6 +2753,18 @@ public class PDController implements Initializable {
             lab.setOnMouseClicked((event) -> {
                 ContextMenu conMenu = new ContextMenu(pdNewRecord, new SeparatorMenuItem(), pdUpdate, pdDelete, new SeparatorMenuItem(), pdSave, new SeparatorMenuItem(), pdStickyNote, new SeparatorMenuItem(), pdPrintReceipt);
                 conMenu.show(payIcon, event.getScreenX(), event.getScreenY());
+            });
+            Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
+            getChildren().addAll(circle, lab);
+        }
+    }
+    
+    public class repairsMenuIcon extends StackPane {
+        public repairsMenuIcon() {
+            Label lab = new Label("•••");
+            lab.setStyle("-fx-text-fill:white");
+            lab.setOnMouseClicked((event) -> {
+                
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
             getChildren().addAll(circle, lab);
