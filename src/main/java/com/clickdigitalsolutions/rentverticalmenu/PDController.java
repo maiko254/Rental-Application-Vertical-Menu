@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -106,17 +107,14 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.view.JasperViewer;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  * FXML Controller class
@@ -405,6 +403,8 @@ public class PDController implements Initializable {
     Preferences prefs;
     
     String loc = "location";
+    
+    XSSFWorkbook workBook;
     
     public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
@@ -957,9 +957,9 @@ public class PDController implements Initializable {
         if (tenantDataExists.exists()) {
             try {
                 FileInputStream inputStream = new FileInputStream(tenantDataExists);
-                Workbook workbookExists = WorkbookFactory.create(inputStream);
+                workBook = (XSSFWorkbook) WorkbookFactory.create(inputStream);
 
-                Sheet sheet = workbookExists.getSheetAt(0);
+                Sheet sheet = workBook.getSheetAt(0);
 
                 Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
 
@@ -982,27 +982,30 @@ public class PDController implements Initializable {
                 inputStream.close();
 
                 FileOutputStream outputStream = new FileOutputStream(tenantDataExists);
-                workbookExists.write(outputStream);
-                workbookExists.close();
+                workBook.write(outputStream);
+                workBook.close();
                 outputStream.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            HSSFWorkbook workbook = new HSSFWorkbook();
-            HSSFSheet sheet = workbook.createSheet("Tenant Data");
+            workBook = new XSSFWorkbook();
+            XSSFSheet sheet = workBook.createSheet("Tenant Data");
 
-            Font boldFont = workbook.createFont();
+            XSSFFont boldFont = workBook.createFont();
+            boldFont.setFontName("Arial");
             boldFont.setBold(true);
-            CellStyle headerRowStyle = workbook.createCellStyle();
+            XSSFCellStyle headerRowStyle = workBook.createCellStyle();
+            headerRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerRowStyle.setFont(boldFont);
 
-            CellStyle style = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setFontHeightInPoints((short) 11);
-            font.setFontName(HSSFFont.FONT_ARIAL);
-            font.setBold(true);
-            style.setFont(font);
+            XSSFFont defaultFont = workBook.createFont();
+            defaultFont.setFontHeightInPoints((short) 11);
+            defaultFont.setFontName("Arial");
+            defaultFont.setBold(false);
+            
+            CellStyle style = workBook.createCellStyle();
+            style.setFont(defaultFont);
             style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
@@ -1036,9 +1039,9 @@ public class PDController implements Initializable {
 
             try {
                 FileOutputStream out = new FileOutputStream(fileLocation);
-                workbook.write(out);
+                workBook.write(out);
                 out.close();
-                workbook.close();
+                workBook.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1048,10 +1051,10 @@ public class PDController implements Initializable {
 
     public void createAndWriteExcelSheet(File fileLocation, String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
         File tenantDataExists = fileLocation;
-        HSSFWorkbook workbook;
+        XSSFWorkbook workbook;
 
         if (tenantDataExists.exists() == false) {
-            workbook = new HSSFWorkbook();
+            return;
         } else {
             try {
                 FileInputStream inputStream = new FileInputStream(tenantDataExists);
@@ -1060,10 +1063,12 @@ public class PDController implements Initializable {
                 Sheet spreadSheet = workbookExists.getSheet("Payment Details");
 
                 Font boldFont = workbookExists.createFont();
+                boldFont.setFontName("Arial");
                 boldFont.setBold(true);
                 CellStyle headerRowStyle = workbookExists.createCellStyle();
+                headerRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 headerRowStyle.setFont(boldFont);
-
+                
                 Map<String, Object[]> tenantData = new TreeMap<String, Object[]>();
                 tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Amount", "MonthlyRent", "Payment Date", "Payment Method"});
                 tenantData.put("2", new Object[]{hNo, tName, amount, monthlyRent, paymentDate, paymentMethod});
@@ -1125,7 +1130,8 @@ public class PDController implements Initializable {
         }
 
     }
-
+    
+    
     public void readExcelFile(File tenantDataExists) throws FileNotFoundException {
         String hNo = null;
         String tName = null;
@@ -1243,7 +1249,7 @@ public class PDController implements Initializable {
                             tdLeaseEndDate.setValue(null);
                         }
                         if (tdHbox1.getChildren().contains(detIcon)) {
-                            System.out.println("detIcon already showing");
+                            return;
                         } else {
                             tdHbox1.getChildren().add(detIcon);
                         }
@@ -1257,7 +1263,6 @@ public class PDController implements Initializable {
 
             try {
                 String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
-                Class.forName("org.sqlite.JDBC");
                 Connection conn = DriverManager.getConnection(databaseURL);
 
                 PreparedStatement pstmt = conn.prepareStatement(searchPDSql);
@@ -1291,7 +1296,7 @@ public class PDController implements Initializable {
                         payLabel.setText(rs.getString("PaymentMethod"));
                         Object sticky = rs.getObject("StickyNote");
                         if (pdHbox1.getChildren().contains(payIcon)) {
-                            System.out.println("payIcon already showing");
+                            return;
                         } else {
                             pdHbox1.getChildren().add(payIcon);
                         }
@@ -1349,7 +1354,7 @@ public class PDController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
@@ -1374,6 +1379,7 @@ public class PDController implements Initializable {
                     blockC.setValue("Block C");
                 }
             });
+            System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
         }
     };
     
@@ -1423,6 +1429,33 @@ public class PDController implements Initializable {
     
     private void startBlinkAnimation() {
         timeline.playFromStart();
+    }
+    
+    public void findAndDeleteExcelRow(String houseNumber, String tenantName) {
+        prefs = Preferences.userRoot().node(this.getClass().getName());
+        try {
+            File file = new File(prefs.get(loc, "location"));
+            System.out.println(file.getPath());
+            workBook = new XSSFWorkbook(file);
+            for (int sheetIndex = 0; sheetIndex < workBook.getNumberOfSheets(); sheetIndex++) {
+                XSSFSheet sheet = workBook.getSheetAt(sheetIndex);
+                int count = 0;
+                for (int rowIndex = 0; rowIndex < sheet.getLastRowNum(); rowIndex++) {
+                    XSSFRow row = sheet.getRow(rowIndex);
+                    if (row != null && row.getCell(0).getStringCellValue().equals(houseNumber) && row.getCell(1).getStringCellValue().equals(tenantName)) {
+                        sheet.shiftRows(row.getRowNum() + 1, sheet.getLastRowNum(), -1);
+                        count++;
+                    }
+                }
+                System.out.println(count);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        } catch (InvalidFormatException ex) {
+            Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
     }
     
     @Override
@@ -1725,15 +1758,7 @@ public class PDController implements Initializable {
                     pstmt.setInt(1, payRowId);
                     pstmt.executeUpdate();
                 }
-                /*
-                int one = pstmt.executeUpdate();
-                if (one == 0) {
-                    Alert noRecordAlert = new Alert(AlertType.ERROR);
-                    noRecordAlert.setTitle("Missing Record");
-                    noRecordAlert.setHeaderText(null);
-                    noRecordAlert.setContentText("No reocrd found for " + blockTreeView.getSelectionModel().getSelectedItem().getValue() + " for " + pdMonthCombo.getValue().name());
-                    noRecordAlert.showAndWait();
-                }*/
+                
                 pstmt.close();
                 conn.close();
                 setEmpty();
@@ -1746,6 +1771,21 @@ public class PDController implements Initializable {
         });
         
         tdDelete.setOnAction((event) -> {
+            String deleteTDString = "DELETE FROM TenantDetails WHERE RowID = ?";
+            try {
+                Connection conn = DriverManager.getConnection(databaseURL);
+                PreparedStatement pstmt = conn.prepareStatement(deleteTDString);
+                pstmt.setInt(1, tenantRowId);
+                pstmt.executeUpdate();
+                pstmt.close();
+                conn.close();
+                setTDEmpty1();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        
+        /**tdDelete.setOnAction((event) -> {
             try {
                 Connection conn = DriverManager.getConnection(databaseURL);
                 
@@ -1766,6 +1806,7 @@ public class PDController implements Initializable {
                     deletePD.executeUpdate();
                     conn.commit();
                     setTDEmpty1();
+                    findAndDeleteExcelRow(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText());
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (conn != null) {
@@ -1777,6 +1818,9 @@ public class PDController implements Initializable {
                         }
                     }
                 } finally {
+                    if (conn != null) {
+                        conn.close();
+                    }
                     if (deleteTD != null) {
                         deleteTD.close();
                     }
@@ -1786,8 +1830,9 @@ public class PDController implements Initializable {
                 }
             } catch (SQLException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             }
-        });
+        });*/
         
         tdSaveAs.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
@@ -1799,7 +1844,8 @@ public class PDController implements Initializable {
                 emptyFieldAlert.showAndWait();
             } else {
                 try {
-                    if (prefs.get(loc, "location").equals("location")) {
+                    File initialFile = new File(prefs.get(loc, "location"));
+                    if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
                         FileChooser initialLoc = new FileChooser();
                         File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
                         prefs.put(loc, initFile.getPath());
@@ -1810,9 +1856,9 @@ public class PDController implements Initializable {
                         setTDEmpty1();
                     } else if (!prefs.get(loc, "location").equals("location")) {
                         FileChooser savedLoc = new FileChooser();
-                        File savedFile = new File(prefs.get(loc, "location"));
-                        savedLoc.setInitialDirectory(savedFile.getParentFile());
-                        savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        savedLoc.setInitialDirectory(initialFile.getParentFile());
+                        File savedFile = savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        prefs.put(loc, savedFile.getPath());
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
@@ -1836,21 +1882,21 @@ public class PDController implements Initializable {
                 emptyFieldAlert.showAndWait();
             } else {
                 try {
-                    if (prefs.get(loc, "location").equals("location")) {
+                    File initialFile = new File(prefs.get(loc, "location"));
+                    if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
                         FileChooser initialLoc = new FileChooser();
-                        File initialFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                        prefs.put(loc, initialFile.getPath());
+                        File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        prefs.put(loc, initFile.getPath());
+                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
+                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
+                        createExcelSheet(initFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                        setTDEmpty1();
+                    } else if (!prefs.get(loc, "location").equals("location")) {   
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
                         createExcelSheet(initialFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        setTDEmpty1();
-                    } else if (!prefs.get(loc, "location").equals("location")) {
-                        File savedFile = new File(prefs.get(loc, "location"));
-                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         setTDEmpty1();
                     }
                 } catch (Exception e) {
@@ -2128,13 +2174,21 @@ public class PDController implements Initializable {
             jasperViewer.setVisible(true);
         });*/
         
-        tdName.setOnKeyPressed((event) -> {
-            if (tdHbox1.getChildren().contains(detIcon)) {
-                System.out.println("tdIcon already showing");
+        tdName.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty()) {
+                if (tdHbox1.getChildren().contains(detIcon)) {
+                    return;
+                } else {
+                    tdHbox1.getChildren().add(detIcon);
+                }
             } else {
-                tdHbox1.getChildren().add(detIcon);
+                if (tdHbox1.getChildren().contains(detIcon)) {
+                    tdHbox1.getChildren().remove(detIcon);
+                }
             }
         });
+        
+        detIcon.visibleProperty().bind(tdName.textProperty().isEmpty().not());
         
         rdRepairDate.getEditor().setOnMouseClicked((event) -> {
             rdEditMenu.hide();

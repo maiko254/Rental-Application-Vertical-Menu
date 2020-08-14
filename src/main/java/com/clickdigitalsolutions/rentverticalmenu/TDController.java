@@ -46,6 +46,7 @@ import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 
 
 /**
@@ -196,11 +197,11 @@ public class TDController implements Initializable {
     }
     
     static CellStyle getPrefferedCellStyle(Cell cell) {
-        CellStyle cellstyle = cell.getCellStyle();
-        if ((cell instanceof HSSFCell && cellstyle.getIndex() == 15)) cellstyle = cell.getRow().getRowStyle();
-        if (cellstyle == null) cellstyle = cell.getSheet().getColumnStyle(cell.getColumnIndex());
-        if (cellstyle == null) cellstyle = cell.getCellStyle();
-        return cellstyle;
+        CellStyle cellStyle = cell.getCellStyle();
+        if ((cell instanceof XSSFCell && cellStyle.getIndex() == 0) || (cell instanceof HSSFCell && cellStyle.getIndex() == 15)) cellStyle = cell.getRow().getRowStyle();
+        if (cellStyle == null) cellStyle = cell.getSheet().getColumnStyle(cell.getColumnIndex());
+        if (cellStyle == null) cellStyle = cell.getCellStyle();
+        return cellStyle;
     }
     
     public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
