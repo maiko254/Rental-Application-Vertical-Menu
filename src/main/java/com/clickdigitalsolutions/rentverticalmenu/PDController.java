@@ -110,6 +110,7 @@ import net.sf.jasperreports.view.JasperViewer;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -1207,14 +1208,10 @@ public class PDController implements Initializable {
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
             try {
                 String searchTenantDetails = "SELECT * FROM TenantDetails WHERE HouseNumber = ?";
-                String rowIdSql = "SELECT ROWID FROM TenantDetails WHERE HouseNumber = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
                 PreparedStatement pstmt = conn.prepareStatement(searchTenantDetails);
-                PreparedStatement pstmt1 = conn.prepareStatement(rowIdSql);
                 pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                pstmt1.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 ResultSet rs = pstmt.executeQuery();
-                ResultSet rs1 = pstmt1.executeQuery();
                 if (!rs.next()) {
                     setTDEmpty1();
                     if (tdHbox1.getChildren().contains(detIcon)) {
@@ -1249,22 +1246,22 @@ public class PDController implements Initializable {
                             tdLeaseEndDate.setValue(null);
                         }
                         if (tdHbox1.getChildren().contains(detIcon)) {
-                            return;
+                            System.out.println("Icon already showing. Do nothing");
                         } else {
                             tdHbox1.getChildren().add(detIcon);
                         }
                     } while (rs.next());
+                    
                 }
                 pstmt.close();
                 conn.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            
             try {
                 String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
-
                 PreparedStatement pstmt = conn.prepareStatement(searchPDSql);
                 pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 ResultSet rs = pstmt.executeQuery();
@@ -1296,7 +1293,7 @@ public class PDController implements Initializable {
                         payLabel.setText(rs.getString("PaymentMethod"));
                         Object sticky = rs.getObject("StickyNote");
                         if (pdHbox1.getChildren().contains(payIcon)) {
-                            return;
+                            System.out.println("PayIcon already showing. Do nothing");
                         } else {
                             pdHbox1.getChildren().add(payIcon);
                         }
@@ -1323,7 +1320,7 @@ public class PDController implements Initializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            
             try {
                 String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -1358,6 +1355,7 @@ public class PDController implements Initializable {
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
+                    System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
                     blockA.setExpanded(false);
                     blockB.setValue("Block B");
                     blockC.setValue("Block C");
@@ -1379,7 +1377,6 @@ public class PDController implements Initializable {
                     blockC.setValue("Block C");
                 }
             });
-            System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
         }
     };
     
@@ -1431,30 +1428,60 @@ public class PDController implements Initializable {
         timeline.playFromStart();
     }
     
-    public void findAndDeleteExcelRow(String houseNumber, String tenantName) {
-        prefs = Preferences.userRoot().node(this.getClass().getName());
-        try {
-            File file = new File(prefs.get(loc, "location"));
-            System.out.println(file.getPath());
-            workBook = new XSSFWorkbook(file);
-            for (int sheetIndex = 0; sheetIndex < workBook.getNumberOfSheets(); sheetIndex++) {
-                XSSFSheet sheet = workBook.getSheetAt(sheetIndex);
-                int count = 0;
-                for (int rowIndex = 0; rowIndex < sheet.getLastRowNum(); rowIndex++) {
-                    XSSFRow row = sheet.getRow(rowIndex);
-                    if (row != null && row.getCell(0).getStringCellValue().equals(houseNumber) && row.getCell(1).getStringCellValue().equals(tenantName)) {
-                        sheet.shiftRows(row.getRowNum() + 1, sheet.getLastRowNum(), -1);
-                        count++;
-                    }
-                }
-                System.out.println(count);
+       
+    /*private int removeEmptyRows(final Sheet sheet) {
+        int i;
+        for (i = 0; i <= sheet.getLastRowNum(); i++) {
+            boolean isRowEmpty;
+            if (sheet.getRow(i) == null) {
+                sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
+                i--;
+                continue;
             }
-        } catch (IOException ex) {
-            Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace();
-        } catch (InvalidFormatException ex) {
-            Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace();
+            final Row actualRow = sheet.getRow(i);
+            isRowEmpty
+                    = actualRow.getCell(1).toString().trim().equals("");
+            if (isRowEmpty) {
+                if (i == sheet.getLastRowNum()) {
+                    sheet.removeRow(actualRow);
+                } else {
+                    sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
+                }
+                i--;
+            }
+        }
+        return i;
+    }*/
+    
+    public void removeExcelRowValue(File file) throws IOException, InvalidFormatException {
+        workBook = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = workBook.getSheet("Tenant Data");
+        /**int rowCount = 0;
+        rowCount = sheet.getLastRowNum();
+        if (rowCount == 0) {
+            rowCount = sheet.getPhysicalNumberOfRows();
+        }*/
+        for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow row = sheet.getRow(i);
+            if (row.getRowNum() == sheet.getLastRowNum() && row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(tdName.getText())) {
+                sheet.removeRow(row);
+                continue;
+            } if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(tdName.getText())) {
+                sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
+            }
+        }
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(file);
+            workBook.write(fileOut);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOut.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
     
@@ -1771,21 +1798,13 @@ public class PDController implements Initializable {
         });
         
         tdDelete.setOnAction((event) -> {
-            String deleteTDString = "DELETE FROM TenantDetails WHERE RowID = ?";
+            prefs = Preferences.userRoot().node(this.getClass().getName());
+            File file = new File(prefs.get(loc, "location"));
             try {
-                Connection conn = DriverManager.getConnection(databaseURL);
-                PreparedStatement pstmt = conn.prepareStatement(deleteTDString);
-                pstmt.setInt(1, tenantRowId);
-                pstmt.executeUpdate();
-                pstmt.close();
-                conn.close();
-                setTDEmpty1();
-            } catch (Exception e) {
-                e.printStackTrace();
+                removeExcelRowValue(file);
+            } catch (IOException | InvalidFormatException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
-        
-        /**tdDelete.setOnAction((event) -> {
             try {
                 Connection conn = DriverManager.getConnection(databaseURL);
                 
@@ -1806,7 +1825,6 @@ public class PDController implements Initializable {
                     deletePD.executeUpdate();
                     conn.commit();
                     setTDEmpty1();
-                    findAndDeleteExcelRow(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText());
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (conn != null) {
@@ -1832,7 +1850,7 @@ public class PDController implements Initializable {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
             }
-        });*/
+        });
         
         tdSaveAs.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
@@ -2251,6 +2269,8 @@ public class PDController implements Initializable {
                             payLabel.textProperty().unbind();
                             payLabel.setText("");
                         } while (rs.next());
+                        pstmt.close();
+                        conn.close();
                         addBlinkAnimation();
                         if (timeline.getStatus().equals(Animation.Status.STOPPED)) {
                             timeline.playFromStart();
@@ -2324,6 +2344,8 @@ public class PDController implements Initializable {
                                     PreparedStatement stmt = con.prepareStatement(deleteSticky);
                                     stmt.setInt(1, payRowId);
                                     stmt.executeUpdate();
+                                    stmt.close();
+                                    con.close();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -2413,8 +2435,8 @@ public class PDController implements Initializable {
                             }
                            rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
                         } while (rs.next());
-                        conn.close();
                         pstmt.close();
+                        conn.close();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
