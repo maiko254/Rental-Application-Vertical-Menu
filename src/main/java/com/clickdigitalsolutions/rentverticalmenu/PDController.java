@@ -407,7 +407,7 @@ public class PDController implements Initializable {
     
     XSSFWorkbook workBook;
     
-    public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
+    public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
         try {
             Connection conn = DriverManager.getConnection(databaseURL);
@@ -418,7 +418,10 @@ public class PDController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        
+        prefs = Preferences.userRoot().node(this.getClass().getName()); //Preference to store file location for saving to excel file later
+        File file = new File(prefs.get(loc, "location"));
+        
         String insertTDSql = "INSERT INTO TenantDetails(HouseNumber, TenantName, TenantPhoneNumber, RentAmount, Deposit, DueDate, MoveInDate, MoveOutDate, LeaseStartDate, LeaseEndDate) VALUES(?,?,?,?,?,?,?,?,?,?)";
         try {
             Connection conn = DriverManager.getConnection(databaseURL);
@@ -436,6 +439,7 @@ public class PDController implements Initializable {
             pstmt.execute();
             conn.close();
             pstmt.close();
+            createExcelSheet(file, houseNumber, tenantName, tenantPhoneNumber, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate);
         } catch (SQLException e) {
             if (e.getMessage().equals("[SQLITE_CONSTRAINT]  Abort due to constraint violation (UNIQUE constraint failed: TenantDetails.HouseNumber)")) {
                 Alert insertErrorAlert = new Alert(Alert.AlertType.ERROR);
@@ -954,6 +958,23 @@ public class PDController implements Initializable {
     }
 
     public void createExcelSheet(File fileLocation, String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+        //Check for duplicates in table before inserting to excel file
+        try {
+            String searchTable = "SELECT * FROM TenantDetails WHERE HouseNumber = ? AND TenantName = ?";
+            Connection conn = DriverManager.getConnection(databaseURL);
+            PreparedStatement pstmt = conn.prepareStatement(searchTable);
+            pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+            pstmt.setString(2, tdName.getText());
+            ResultSet rs = pstmt.executeQuery();
+            if (!rs.next()) {
+                return;
+            }
+            pstmt.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         File tenantDataExists = fileLocation;
         if (tenantDataExists.exists()) {
             try {
@@ -961,7 +982,7 @@ public class PDController implements Initializable {
                 workBook = (XSSFWorkbook) WorkbookFactory.create(inputStream);
 
                 Sheet sheet = workBook.getSheetAt(0);
-
+                
                 Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
 
                 int rowCount = sheet.getPhysicalNumberOfRows();
@@ -1453,6 +1474,39 @@ public class PDController implements Initializable {
         return i;
     }*/
     
+    public void updateExcelRowValue(File file) throws FileNotFoundException, IOException {
+        workBook = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = workBook.getSheet("Tenant Data");
+        
+        for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow row = sheet.getRow(i);
+            if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                row.getCell(1).setCellValue(tdName.getText());
+                row.getCell(2).setCellValue(tdPhone.getText());
+                row.getCell(3).setCellValue(tdAmount.getText());
+                row.getCell(4).setCellValue(tdDeposit.getText());
+                row.getCell(5).setCellValue(tdDueDate.getText());
+                row.getCell(6).setCellValue(getDateValueAsString(tdMoveInDate.getValue()));
+                row.getCell(7).setCellValue(getDateValueAsString(tdMoveOutDate.getValue()));
+                row.getCell(8).setCellValue(getDateValueAsString(tdLeaseStartDate.getValue()));
+                row.getCell(9).setCellValue(getDateValueAsString(tdLeaseEndDate.getValue()));
+            }
+        }
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(file);
+            workBook.write(fileOut);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOut.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public void removeExcelRowValue(File file) throws IOException, InvalidFormatException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Tenant Data");
@@ -1720,6 +1774,16 @@ public class PDController implements Initializable {
             } catch (SQLException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
+            
+            prefs = Preferences.userRoot().node(this.getClass().getName());
+            File file = new File(prefs.get(loc, "location"));
+            
+            try {
+                updateExcelRowValue(file);
+            } catch (IOException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            setAllEmpty();
         });
         
         pdUpdate.setOnAction((event) -> {
@@ -1870,7 +1934,6 @@ public class PDController implements Initializable {
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        createExcelSheet(initFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         setTDEmpty1();
                     } else if (!prefs.get(loc, "location").equals("location")) {
                         FileChooser savedLoc = new FileChooser();
@@ -1880,7 +1943,6 @@ public class PDController implements Initializable {
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        createExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         setTDEmpty1();
                     }
                 } catch (FileNotFoundException ex) {
@@ -1908,13 +1970,11 @@ public class PDController implements Initializable {
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        createExcelSheet(initFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         setTDEmpty1();
                     } else if (!prefs.get(loc, "location").equals("location")) {   
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                         createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        createExcelSheet(initialFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         setTDEmpty1();
                     }
                 } catch (Exception e) {
