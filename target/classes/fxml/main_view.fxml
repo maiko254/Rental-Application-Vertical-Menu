@@ -27,8 +27,6 @@
                <Menu mnemonicParsing="false" text="File">
                    <items>
                        <MenuItem fx:id="Search" mnemonicParsing="false" onAction="#searchAction" text="Search" />
-                       <MenuItem fx:id="Save" mnemonicParsing="false" text="Save" />
-                       <MenuItem fx:id="SaveAs" mnemonicParsing="false" text="Save As..." />
                        <MenuItem fx:id="Import" mnemonicParsing="false" text="Import" />
                        <MenuItem fx:id="print" mnemonicParsing="false" text="Print Receipt" />
                    </items>
