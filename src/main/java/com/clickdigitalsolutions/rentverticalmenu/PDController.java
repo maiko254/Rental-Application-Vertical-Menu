@@ -10,6 +10,7 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXRadioButton;
+import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
@@ -56,6 +57,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -214,7 +217,7 @@ public class PDController implements Initializable {
     Button rdDeleteButton = new Button("Delete");
     Button rdCancelbutton = new Button("Cancel");
     
-    int tenantRowId;
+    int tenantRowId = 0;
     int payRowId;
     int repairRowId = 0;
     
@@ -1034,8 +1037,10 @@ public class PDController implements Initializable {
             conn = DriverManager.getConnection(databaseURL);
             pstmt = conn.prepareStatement(searchTable);
             pstmt.setInt(1, tenantRowId);
+            System.out.println(tenantRowId);
             rs = pstmt.executeQuery();
             if (rs.next()) {
+                System.out.println("Failed. Don't insert");
                 return;
             }
         } catch (SQLException e) {
@@ -1361,6 +1366,7 @@ public class PDController implements Initializable {
                 pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 rs = pstmt.executeQuery();
                 if (!rs.next()) {
+                    tenantRowId = 0;
                     setTDEmpty1();
                     if (tdHbox1.getChildren().contains(detIcon)) {
                         tdHbox1.getChildren().remove(detIcon);
@@ -1746,9 +1752,44 @@ public class PDController implements Initializable {
         }
     }
     
+    private void runTask() {
+        JFXSpinner loadSpinner = new JFXSpinner();
+        loadSpinner.getStylesheets().add("/styles/spinnerCss.css");
+        loadSpinner.setRadius(10.0);
+        tdHbox1.getChildren().add(3, loadSpinner);
+        
+        Task insertTask = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                int maxIterations = 1;
+                for (int i = 1; i <= maxIterations; i++) {
+                    if (isCancelled()) {
+                        break;
+                    }
+                    updateProgress(i, maxIterations);
+                    
+                    Thread.sleep(1000);
+                }
+                return null;
+            }
+        };
+        
+        insertTask.setOnSucceeded((event) -> {
+            tdHbox1.getChildren().remove(loadSpinner);
+        });
+        
+        insertTask.setOnFailed((event) -> {
+            System.out.println("Faled insert");
+        });
+        
+        loadSpinner.progressProperty().bind(insertTask.progressProperty());
+        
+        new Thread(insertTask).start();
+    }
+    
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
         l1.setMinSize(120, 20);
         l2.setMinSize(120, 20);
         l3.setMinSize(120, 20);
@@ -2181,7 +2222,7 @@ public class PDController implements Initializable {
                 }
             }
         });
-        
+        //Use button with progress indicator to show success or failure of CRUD opertaions
         tdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
             boolean firstEntry = false;
@@ -2201,6 +2242,7 @@ public class PDController implements Initializable {
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         
                         if (excelInsertFailed == true) {
+                            System.out.println("Failed");
                             excelInsertFailed = false;
                             return;
                         } 
@@ -2240,12 +2282,13 @@ public class PDController implements Initializable {
                             createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                             createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
                         }
-
                         setTDEmpty1();
                     } else if (!prefs.get(loc, "location").equals("location")) {
+                        runTask();
                         createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
                         
                         if (excelInsertFailed == true) {
+                            System.out.println("Failed");
                             excelInsertFailed = false;
                             return;
                         }
@@ -2285,7 +2328,6 @@ public class PDController implements Initializable {
                             createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
                             createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
                         }
-                        
                         setTDEmpty1();
                     }
                 } catch (Exception e) {
