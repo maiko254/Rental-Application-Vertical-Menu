@@ -35,6 +35,11 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -58,7 +63,6 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -74,6 +78,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
@@ -85,6 +90,7 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
@@ -105,16 +111,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.view.JasperViewer;
 import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -137,8 +136,6 @@ public class PDController implements Initializable {
     private JFXDatePicker rentPaymentDatePD;
 
     private JFXTreeView<String> paymentMethodPD;
-
-    
 
     @FXML
     private SplitPane sp1;
@@ -190,37 +187,37 @@ public class PDController implements Initializable {
     public TableColumn<RModel, String> dateOfRepair = new TableColumn("Repair Date");
     public TableColumn<RModel, String> miscExpenses = new TableColumn<>("Miscellaneous Expenses");
     public TableView<RModel> repairsTable = new TableView<>();
-    
+
     String newEntryCheck = "";
-    
+
     ObservableList<PDModel> rentPaymentList1 = FXCollections.observableArrayList();
-    
+
     MenuItem tdNewRecord = new MenuItem("New Entry");
     MenuItem tdUpdate = new MenuItem("Update");
     MenuItem tdDelete = new MenuItem("Delete");
     MenuItem tdSave = new MenuItem("Save");
     MenuItem tdSaveAs = new MenuItem("Save As...");
-    
+
     MenuItem pdNewRecord = new MenuItem("New Entry");
     MenuItem pdUpdate = new MenuItem("Update");
     MenuItem pdDelete = new MenuItem("Delete");
     MenuItem pdSave = new MenuItem("Save");
     MenuItem pdStickyNote = new MenuItem("Sticky Note");
     MenuItem pdPrintReceipt = new MenuItem("Print Receipt");
-    
+
     ContextMenu rdEditMenu = new ContextMenu();
     MenuItem rdEdit = new MenuItem("Edit");
     MenuItem rdNewEntry = new MenuItem("New Entry");
     MenuItem rdClear = new MenuItem("Clear Selection");
-    
+
     Button rdUpdateButton = new Button("Update");
     Button rdDeleteButton = new Button("Delete");
     Button rdCancelbutton = new Button("Cancel");
-    
+
     int tenantRowId = 0;
-    int payRowId;
+    int payRowId = 0;
     int repairRowId = 0;
-    
+
     public JFXTreeView<String> blockTreeView = new JFXTreeView<>();
 
     private TreeItem<String> rootBlock = new TreeItem<>();
@@ -311,6 +308,7 @@ public class PDController implements Initializable {
     public JFXDatePicker tdMoveOutDate = new JFXDatePicker();
     public JFXDatePicker tdLeaseStartDate = new JFXDatePicker();
     public JFXDatePicker tdLeaseEndDate = new JFXDatePicker();
+    public JFXSpinner databaseActivityIndicator = new JFXSpinner();
 
     public JFXTextField pdName = new JFXTextField();
     public JFXComboBox<PDModel.Strings> pdMonthCombo = new JFXComboBox<>();
@@ -325,6 +323,7 @@ public class PDController implements Initializable {
     public ToggleGroup payOptionGroup = new ToggleGroup();
     public Label payLabel = new Label();
     public Label rentArrearslabel = new Label();
+    public JFXSpinner databaseActivityIndicatorPD = new JFXSpinner();
 
     public JFXTextField pdCashTextfield = new JFXTextField();
     public JFXTextField pdbankTextfield = new JFXTextField();
@@ -342,7 +341,7 @@ public class PDController implements Initializable {
     public JFXTextField rdMiscCost = new JFXTextField();
     public JFXButton rdTableViewButton = new JFXButton("Show details >>");
 
-    HBox tdHbox1 = new HBox(10, l1, tdName);
+    HBox tdHbox1 = new HBox(10, l1, tdName, databaseActivityIndicator);
     HBox tdHbox2 = new HBox(10, l2, tdPhone);
     HBox tdHbox3 = new HBox(10, l3, tdAmount);
     HBox tdHbox4 = new HBox(10, l4, tdDeposit);
@@ -352,7 +351,7 @@ public class PDController implements Initializable {
     HBox tdHbox8 = new HBox(10, l8, tdLeaseStartDate);
     HBox tdHbox9 = new HBox(10, l9, tdLeaseEndDate);
 
-    HBox pdHbox1 = new HBox(10, l10, pdName);
+    HBox pdHbox1 = new HBox(10, l10, pdName, databaseActivityIndicatorPD);
     HBox pdHbox2 = new HBox(10, l11, pdMonthCombo);
     HBox pdHbox3 = new HBox(10, l12, pdAmount, rentArrearslabel);
     HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
@@ -365,65 +364,66 @@ public class PDController implements Initializable {
     HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
     HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
     HBox rdHbox6 = new HBox(rdTableViewButton);
-    
+
     HBox rdUpdateHbox = new HBox(70, rdUpdateButton, rdDeleteButton, rdCancelbutton);
-   
+
     HBox pdPayOptionHbox = new HBox(10);
     HBox pdBankHbox = new HBox(10);
     HBox pdMpesaHbox = new HBox(10);
-   
+
     double xCursorPos = 0;
     double yCursorPos = 0;
     double rdXCursorPos = 0;
     double rdYCursorPos = 0;
     double tdXCursorPos = 0;
     double tdYCursorPos = 0;
-    
+
     Stage stickyStage = null;
-    
+
     Stage parentStickyStage = null;
-    
+
     TextArea stickyTextArea = new TextArea();
-    
+
     Button save = new Button("Save");
-    
+
     Label label2 = new Label("X");
-    
+
     ObservableList<String> months = FXCollections.observableArrayList("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     ObservableList<PDModel> payTenantDetails = FXCollections.observableArrayList();
     ObservableList<RModel> houseRepairDetails = FXCollections.observableArrayList();
-    
+
     String databaseURL = "jdbc:sqlite:C:\\NetbeansProjects\\SQLite\\RVM.db";
-    
+
     Icons icon = new Icons("¡");
-    
+
     DetailsIcon detIcon = new DetailsIcon();
     PayMenuIcon payIcon = new PayMenuIcon();
     repairsMenuIcon repairsIcon = new repairsMenuIcon();
-    
+
     final TranslateTransition translateTransition = new TranslateTransition(Duration.millis(200), icon);
-    
+
     Timeline timeline = new Timeline();
-    
+
     Preferences prefs;
-    
+
     String loc = "location";
-    
+
     XSSFWorkbook workBook;
-    
+
     Connection conn = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
     PreparedStatement pstmt1 = null;
-    ResultSet  rs1 = null;
-    
+    ResultSet rs1 = null;
+
     boolean excelInsertFailed = false;
-    
-    public void createTenantDetailsTable(String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+
+    public static final Logger logger = Logger.getLogger(PDController.class.getName());
+
+    public void createTenantDetailsTable(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
         try {
-            conn = DriverManager.getConnection(databaseURL);
-            pstmt = conn.prepareStatement(createTDSql);
+            pstmt = con.prepareStatement(createTDSql);
             pstmt.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -446,8 +446,7 @@ public class PDController implements Initializable {
         }
         String insertTDSql = "INSERT INTO TenantDetails(HouseNumber, TenantName, TenantPhoneNumber, RentAmount, Deposit, DueDate, MoveInDate, MoveOutDate, LeaseStartDate, LeaseEndDate) VALUES(?,?,?,?,?,?,?,?,?,?)";
         try {
-            conn = DriverManager.getConnection(databaseURL);
-            pstmt = conn.prepareStatement(insertTDSql);
+            pstmt = con.prepareStatement(insertTDSql);
             pstmt.setString(1, houseNumber);
             pstmt.setString(2, tenantName);
             pstmt.setString(3, tenantPhoneNumber);
@@ -477,7 +476,7 @@ public class PDController implements Initializable {
             }
         } finally {
             try {
-                conn.close();
+                con.close();
                 pstmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -501,7 +500,7 @@ public class PDController implements Initializable {
                 e.printStackTrace();
             }
         }
-        
+
         try {
             String insertPDSql = "INSERT INTO PaymentDetails(HouseNumber, TenantName, Amount, Month, PaymentDate, PaymentMethod) VALUES(?,?,?,?,?,?)";
             conn = DriverManager.getConnection(databaseURL);
@@ -566,8 +565,6 @@ public class PDController implements Initializable {
         }
     }
 
-    
-
     public String getDateValueAsString(LocalDate dateConvert) {
         String repairsDateString = null;
         if (dateConvert == null) {
@@ -623,8 +620,12 @@ public class PDController implements Initializable {
     }
 
     public void setEmpty() {
-        pdAmount.setText("");
+        pdName.clear();
+        pdAmount.clear();
+        pdMonthCombo.setValue(PDModel.Strings.NONE);
         pdPaymentDate.setValue(null);
+        payLabel.textProperty().unbind();
+        payLabel.setText("");
     }
 
     public void setTDEmpty1() {
@@ -715,7 +716,7 @@ public class PDController implements Initializable {
 
     public ObservableList<RModel> getRepairsDetails() {
         ObservableList<RModel> repairsData = FXCollections.observableArrayList();
-        
+
         if (rdMonthCombo.getSelectionModel().getSelectedItem().getMonth().equals("All")) {
             try {
                 String repairsTableQuery = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
@@ -813,9 +814,11 @@ public class PDController implements Initializable {
 
     private Map getReceiptParameters() {
         HashMap map = new HashMap();
-        /**if (comboboxPDCheck.equals("Block A")) {
-            map.put("houseNumber", blockTreeView.getSelectionModel().getSelectedItem().getValue());
-        }*/
+        /**
+         * if (comboboxPDCheck.equals("Block A")) { map.put("houseNumber",
+         * blockTreeView.getSelectionModel().getSelectedItem().getValue());
+        }
+         */
         map.put("PayMonth", monthComboPD.getSelectionModel().getSelectedItem());
         /*map.put("PayMethod", payMethodCheck);*/
         return map;
@@ -906,6 +909,7 @@ public class PDController implements Initializable {
         methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
         methodCol.setCellValueFactory(cellData -> cellData.getValue().paymentMethodPDProperty());
     }
+
     /*
     class MyRepairStringTableCell extends TableCell<RModel, String> {
 
@@ -929,8 +933,8 @@ public class PDController implements Initializable {
             return cell;
         }
     };
-    */
-    
+     */
+
     class MyRepairEventHandler implements EventHandler<MouseEvent> {
 
         @Override
@@ -995,11 +999,12 @@ public class PDController implements Initializable {
         repairMonthCol.setPrefWidth(90);
         repairMonthCol.setCellValueFactory(cellData -> cellData.getValue().monthTableRProperty());
     }
-    
+
     private void setupRepairsDoneColumn() {
         repairDone.setPrefWidth(90);
         repairDone.setCellValueFactory(cellData -> cellData.getValue().repairsDoneTableRProperty());
     }
+
     /*
     private void updateRepairsTableData(String column, String newValue, String houseNumber, String repairsDate) {
         try {
@@ -1031,7 +1036,7 @@ public class PDController implements Initializable {
     }
 
     public void createExcelSheet(File fileLocation, String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
-        //Check for duplicates in table before inserting to excel file
+       /* //Check for duplicates in table before inserting to excel file
         try {
             String searchTable = "SELECT * FROM TenantDetails WHERE RowID = ?";
             conn = DriverManager.getConnection(databaseURL);
@@ -1053,8 +1058,8 @@ public class PDController implements Initializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
-        
+        }*/
+
         File tenantDataExists = fileLocation;
         if (tenantDataExists.exists()) {
             try {
@@ -1062,7 +1067,7 @@ public class PDController implements Initializable {
                 workBook = (XSSFWorkbook) WorkbookFactory.create(inputStream);
 
                 Sheet sheet = workBook.getSheetAt(0);
-                
+
                 Object[][] tData = {{hNo, tName, phoneNo, monthlyRent, deposit, dueDate, moveInDate, moveOutDate, leaseStartDate, leaseEndDate}};
 
                 int rowCount = sheet.getPhysicalNumberOfRows();
@@ -1082,9 +1087,9 @@ public class PDController implements Initializable {
                     }
                 }
                 inputStream.close();
-                
+
                 FileOutputStream fileOut = null;
-                
+
                 try {
                     fileOut = new FileOutputStream(tenantDataExists);
                     workBook.write(fileOut);
@@ -1098,7 +1103,7 @@ public class PDController implements Initializable {
                         excelInsertError.setContentText("Could not save data because Excel file is open. Please close it and try again.");
                         excelInsertError.showAndWait();
                     }
-                    
+
                 } finally {
                     try {
                         fileOut.close();
@@ -1124,7 +1129,7 @@ public class PDController implements Initializable {
             defaultFont.setFontHeightInPoints((short) 11);
             defaultFont.setFontName("Arial");
             defaultFont.setBold(false);
-            
+
             CellStyle style = workBook.createCellStyle();
             style.setFont(defaultFont);
             style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -1157,9 +1162,9 @@ public class PDController implements Initializable {
                 sheet.autoSizeColumn(c); //autosize, merged cells should be ignored
                 //sheet.autoSizeColumn(rownum, true); //autosize, merged cells should be considered
             }
-            
+
             FileOutputStream fileOut = null;
-            
+
             try {
                 fileOut = new FileOutputStream(fileLocation);
                 workBook.write(fileOut);
@@ -1185,7 +1190,7 @@ public class PDController implements Initializable {
     }
 
     public void createAndWriteExcelSheet(File fileLocation, String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
-        try {
+        /*try {
             String searchPaymentsTable = "SELECT * FROM PaymentDetails WHERE RowID = ?";
             conn = DriverManager.getConnection(databaseURL);
             pstmt = conn.prepareStatement(searchPaymentsTable);
@@ -1204,8 +1209,8 @@ public class PDController implements Initializable {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
-        
+        }*/
+
         File tenantDataExists = fileLocation;
 
         if (tenantDataExists.exists() == false) {
@@ -1222,7 +1227,7 @@ public class PDController implements Initializable {
                 CellStyle headerRowStyle = workbookExists.createCellStyle();
                 headerRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 headerRowStyle.setFont(boldFont);
-                
+
                 Map<String, Object[]> tenantData = new TreeMap<>();
                 tenantData.put("1", new Object[]{"House Number", "Tenant Name", "Amount", "MonthlyRent", "Payment Date", "Payment Method"});
                 tenantData.put("2", new Object[]{hNo, tName, amount, monthlyRent, paymentDate, paymentMethod});
@@ -1284,8 +1289,7 @@ public class PDController implements Initializable {
         }
 
     }
-    
-    
+
     public void readExcelFile(File tenantDataExists) throws FileNotFoundException {
         String hNo = null;
         String tName = null;
@@ -1354,12 +1358,12 @@ public class PDController implements Initializable {
             rentArrearslabel.setVisible(false);
         }
     }
-    
-      
+
     ChangeListener houseListener = new ChangeListener() {
         @Override
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-            try {
+            fetchTenantDetailsFromDatabaseToUI(tdName, pdName,tdPhone, tdAmount, tdDeposit, tdDueDate, tdMoveInDate, tdMoveOutDate, tdLeaseStartDate, tdLeaseEndDate);
+            /*try {
                 String searchTenantDetails = "SELECT * FROM TenantDetails WHERE HouseNumber = ?";
                 conn = DriverManager.getConnection(databaseURL);
                 pstmt = conn.prepareStatement(searchTenantDetails);
@@ -1405,20 +1409,20 @@ public class PDController implements Initializable {
                             tdHbox1.getChildren().add(detIcon);
                         }
                     } while (rs.next());
-                    
+
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
                 try {
-                   conn.close();
-                   pstmt.close();
-                   rs.close();
+                    conn.close();
+                    pstmt.close();
+                    rs.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            
+
             try {
                 String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
                 conn = DriverManager.getConnection(databaseURL);
@@ -1469,7 +1473,7 @@ public class PDController implements Initializable {
                                 pdHbox1.getChildren().remove(icon);
                             }
                         }
-                        
+
                     } while (rs.next());
                     pdTableViewButton.setVisible(true);
                     newEntryCheck = "";
@@ -1485,7 +1489,7 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
-            
+
             try {
                 String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
                 conn = DriverManager.getConnection(databaseURL);
@@ -1522,7 +1526,7 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
-            
+
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
             Platform.runLater(() -> {
                 if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
@@ -1547,10 +1551,10 @@ public class PDController implements Initializable {
                     blockB.setValue("Block B");
                     blockC.setValue("Block C");
                 }
-            });
+            });*/
         }
     };
-    
+
     private void addJumpAnimation(Node node) {
         final double start = 0.0;
         final double end = start - 3.0;
@@ -1561,16 +1565,16 @@ public class PDController implements Initializable {
         translateTransition.setInterpolator(Interpolator.EASE_BOTH);
         translateTransition.play();
     }
-    
+
     private void stopJumpAnimation() {
         translateTransition.stop();
     }
-    
-    EventHandler<MouseEvent> keyEventHandler =
-        (MouseEvent keyEvent) -> {
-            addJumpAnimation(icon);
-    };
-   
+
+    EventHandler<MouseEvent> keyEventHandler
+            = (MouseEvent keyEvent) -> {
+                addJumpAnimation(icon);
+            };
+
     public boolean checkIfNode(Node node) {
         while (node != null) {
             if (node.equals(pdMonthCombo) || node.equals(pdPaymentOption) || node.equals(tdMoveInDate) || node.equals(tdMoveOutDate) || node.equals(tdLeaseStartDate) || node.equals(tdLeaseEndDate) || node.equals(rdMonthCombo) || node.equals(rdRepairDate) || node.equals(detIcon)) {
@@ -1580,7 +1584,7 @@ public class PDController implements Initializable {
         }
         return false;
     }
-    
+
     private void addBlinkAnimation() {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.setAutoReverse(true);
@@ -1589,17 +1593,16 @@ public class PDController implements Initializable {
         timeline.getKeyFrames().add(kf);
         timeline.play();
     }
-    
-    EventHandler<MouseEvent> tableViewHandler =
-        (MouseEvent keyEvent) -> {
-            addBlinkAnimation();
-    };
-    
+
+    EventHandler<MouseEvent> tableViewHandler
+            = (MouseEvent keyEvent) -> {
+                addBlinkAnimation();
+            };
+
     private void startBlinkAnimation() {
         timeline.playFromStart();
     }
-    
-       
+
     /*private int removeEmptyRows(final Sheet sheet) {
         int i;
         for (i = 0; i <= sheet.getLastRowNum(); i++) {
@@ -1623,13 +1626,10 @@ public class PDController implements Initializable {
         }
         return i;
     }*/
-    
-    
-    
     public void updateTDExcelRowValue(File file) throws FileNotFoundException, IOException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Tenant Data");
-        
+
         for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
             XSSFRow row = sheet.getRow(i);
             if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue())) {
@@ -1658,12 +1658,11 @@ public class PDController implements Initializable {
             }
         }
     }
-    
+
     public void updatePDExcelRowValue(File file) throws FileNotFoundException, IOException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Payment Details");
-        
-        
+
         for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
             XSSFRow row = sheet.getRow(i);
             if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(3).getStringCellValue().equals(pdMonthCombo.getValue().name())) {
@@ -1672,7 +1671,7 @@ public class PDController implements Initializable {
                 row.getCell(5).setCellValue(payLabel.getText());
             }
         }
-        
+
         FileOutputStream fileOut = null;
         try {
             fileOut = new FileOutputStream(file);
@@ -1687,26 +1686,26 @@ public class PDController implements Initializable {
             }
         }
     }
-    
+
     public void removeExcelRowValue(File file) throws IOException, InvalidFormatException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Tenant Data");
-        /**int rowCount = 0;
-        rowCount = sheet.getLastRowNum();
-        if (rowCount == 0) {
-            rowCount = sheet.getPhysicalNumberOfRows();
-        }*/
+        /**
+         * int rowCount = 0; rowCount = sheet.getLastRowNum(); if (rowCount ==
+         * 0) { rowCount = sheet.getPhysicalNumberOfRows();
+        }
+         */
         for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
             XSSFRow row = sheet.getRow(i);
             if (row.getRowNum() == sheet.getLastRowNum() && row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(tdName.getText())) {
                 sheet.removeRow(row);
                 continue;
-            } 
+            }
             if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(tdName.getText())) {
                 sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
             }
         }
-        
+
         FileOutputStream fileOut = null;
         try {
             fileOut = new FileOutputStream(file);
@@ -1721,11 +1720,11 @@ public class PDController implements Initializable {
             }
         }
     }
-    
-    public  void removeTDExcelRow(File file) throws FileNotFoundException, IOException {
+
+    public void removeTDExcelRow(File file) throws FileNotFoundException, IOException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Payment Details");
-        
+
         for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
             XSSFRow row = sheet.getRow(i);
             if (row.getRowNum() == sheet.getLastRowNum() && row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(3).getStringCellValue().equals(pdMonthCombo.getValue().name())) {
@@ -1736,7 +1735,7 @@ public class PDController implements Initializable {
                 sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
             }
         }
-        
+
         FileOutputStream fileOut = null;
         try {
             fileOut = new FileOutputStream(file);
@@ -1751,8 +1750,8 @@ public class PDController implements Initializable {
             }
         }
     }
-    
-    private void runTask() {
+
+    /*private void runTask() {
         JFXSpinner loadSpinner = new JFXSpinner();
         loadSpinner.getStylesheets().add("/styles/spinnerCss.css");
         loadSpinner.setRadius(10.0);
@@ -1785,11 +1784,258 @@ public class PDController implements Initializable {
         loadSpinner.progressProperty().bind(insertTask.progressProperty());
         
         new Thread(insertTask).start();
+    }*/
+    private void resetHouseSeletion() {
+        if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
+                blockA.setExpanded(false);
+                blockB.setValue("Block B");
+                blockC.setValue("Block C");
+                nasraBlock.setValue("Nasra Block");
+            } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockB)) {
+                blockB.setExpanded(false);
+                blockA.setValue("Block A");
+                blockC.setValue("Block C");
+                nasraBlock.setValue("Nasra Block");
+            } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockC)) {
+                blockC.setExpanded(false);
+                blockA.setValue("Block A");
+                blockB.setValue("Block B");
+                nasraBlock.setValue("Nasra Block");
+            } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(nasraBlock)) {
+                nasraBlock.setExpanded(false);
+                blockA.setValue("Block A");
+                blockB.setValue("Block B");
+                blockC.setValue("Block C");
+            }
     }
     
+    private void fetchTenantDetailsFromDatabaseToUI(JFXTextField tdName, JFXTextField pdName, JFXTextField tdPhone, JFXTextField monthlyRent, JFXTextField tdDeposit, JFXTextField dueDate, JFXDatePicker moveInDate, JFXDatePicker moveOutDate, JFXDatePicker leaseStartDate, JFXDatePicker leaseEndDate) {
+        final FetchTenantDetailsTask fetchTdTask = new FetchTenantDetailsTask();
+
+        fetchTdTask.setOnSucceeded((event) -> {
+            if (fetchTdTask.getValue().isEmpty()) {
+                pdName.clear();
+                pdMonthCombo.setValue(PDModel.Strings.NONE);
+                setTDEmpty1();
+                blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                resetHouseSeletion();
+                return;
+            }
+
+            tdName.setText(fetchTdTask.getValue().get(0));
+            pdName.setText(fetchTdTask.getValue().get(0));
+            tdPhone.setText(fetchTdTask.getValue().get(1));
+            monthlyRent.setText(fetchTdTask.getValue().get(2));
+            tdDeposit.setText(fetchTdTask.getValue().get(3));
+            dueDate.setText(fetchTdTask.getValue().get(4));
+
+            if (fetchTdTask.getValue().get(5) != null) {
+                moveInDate.setValue(LocalDate.parse(fetchTdTask.getValue().get(5), DateTimeFormatter.ISO_DATE));
+            } else {
+                moveInDate.setValue(null);
+            }
+
+            if (fetchTdTask.getValue().get(6) != null) {
+                moveOutDate.setValue(LocalDate.parse(fetchTdTask.getValue().get(6), DateTimeFormatter.ISO_DATE));
+            } else {
+                moveOutDate.setValue(null);
+            }
+
+            if (fetchTdTask.getValue().get(7) != null) {
+                leaseStartDate.setValue(LocalDate.parse(fetchTdTask.getValue().get(7), DateTimeFormatter.ISO_DATE));
+            } else {
+                leaseStartDate.setValue(null);
+            }
+
+            if (fetchTdTask.getValue().get(8) != null) {
+                leaseEndDate.setValue(LocalDate.parse(fetchTdTask.getValue().get(8), DateTimeFormatter.ISO_DATE));
+            } else {
+                leaseEndDate.setValue(null);
+            }
+            
+            pdMonthCombo.setValue(PDModel.Strings.NONE);
+            
+            if (tdHbox1.getChildren().contains(detIcon)) {
+                System.out.println("detIcon already showing. Do nothing");
+            } else {
+                tdHbox1.getChildren().add(2, detIcon);
+            }
+            
+            if (pdHbox1.getChildren().contains(payIcon)) {
+                System.out.println("payIcon already showing");
+            } else {
+                pdHbox1.getChildren().add(2, payIcon);
+            }
+            
+            blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+            resetHouseSeletion();
+
+        });
+
+        MainApp.databaseExecutor.submit(fetchTdTask);
+    }
+    
+    private void fetchPaymentDetailsFromDBToUI(JFXTextField amount, JFXDatePicker paymentDate, Label paymentMethod) {
+        final FetchPaymentDetailsTask fetchPaymentDetails = new FetchPaymentDetailsTask();
+        
+        fetchPaymentDetails.setOnSucceeded((event) -> {
+            if (fetchPaymentDetails.getValue().isEmpty()) {
+                amount.clear();
+                paymentDate.setValue(null);
+                paymentMethod.textProperty().unbind();
+                paymentMethod.setText("");
+                System.out.println("No entry found");
+                return;
+            }
+            
+            amount.setText(fetchPaymentDetails.getValue().get(2));
+            if (fetchPaymentDetails.getValue().get(4) != null) {
+                paymentDate.setValue(LocalDate.parse(fetchPaymentDetails.getValue().get(4), DateTimeFormatter.ISO_DATE));
+            } else {
+                paymentDate.setValue(null);
+            }
+            paymentMethod.textProperty().unbind();
+            paymentMethod.setText(fetchPaymentDetails.getValue().get(5
+            ));
+        });
+        
+        MainApp.databaseExecutor.submit(fetchPaymentDetails);
+    }
+    
+    private void saveToTenantDetailsTable(final JFXSpinner databaseActivityIndicator) {
+        final SaveTenantDetailsTask saveTenantDetails = new SaveTenantDetailsTask();
+        
+        databaseActivityIndicator.visibleProperty().bind(saveTenantDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(saveTenantDetails.progressProperty());
+        
+        saveTenantDetails.setOnSucceeded((event) -> {
+            setTDEmpty1();
+        });
+        
+        MainApp.databaseExecutor.submit(saveTenantDetails);
+    }
+    
+    private void saveToPaymentDetailsTable(final JFXSpinner databaseActivityIndicator) {
+        final savePaymentDetailsTask savePaymentDetails = new savePaymentDetailsTask();
+        
+        databaseActivityIndicator.visibleProperty().bind(savePaymentDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(savePaymentDetails.progressProperty());
+        
+        savePaymentDetails.setOnSucceeded((event) -> {
+            
+            pdMonthCombo.setValue(PDModel.Strings.NONE);
+            pdAmount.clear();
+            pdPaymentDate.setValue(null);
+            payLabel.textProperty().unbind();
+            payLabel.setText("");
+        });
+        
+        MainApp.databaseExecutor.submit(savePaymentDetails);
+    }
+    
+    private void updateTenantDetails(final JFXSpinner databaseActivityIndicator) {
+        final UpdateTenantDetailsTask updateTenantDetails = new UpdateTenantDetailsTask();
+
+        databaseActivityIndicator.visibleProperty().bind(updateTenantDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(updateTenantDetails.progressProperty());
+
+        updateTenantDetails.setOnSucceeded((event) -> {
+            try {
+                prefs = Preferences.userRoot().node(this.getClass().getName());
+                File file = new File(prefs.get(loc, "location"));
+                updateTDExcelRowValue(file);
+            } catch (IOException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            setTDEmpty1();
+        });
+        
+        MainApp.databaseExecutor.submit(updateTenantDetails);
+    }
+    
+    private void updatePaymentDetails(final JFXSpinner databaseActivityIndicator) {
+        final UpdatePaymentDetailsTask updatePaymentDetails = new UpdatePaymentDetailsTask();
+
+        databaseActivityIndicator.visibleProperty().bind(updatePaymentDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(updatePaymentDetails.progressProperty());
+
+        updatePaymentDetails.setOnSucceeded((event) -> {
+            try {
+                prefs = Preferences.userRoot().node(this.getClass().getName());
+                File file = new File(prefs.get(loc, "location"));
+                updatePDExcelRowValue(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            pdMonthCombo.setValue(PDModel.Strings.NONE);
+            pdAmount.clear();
+            pdPaymentDate.setValue(null);
+            payLabel.textProperty().unbind();
+            payLabel.setText("");
+        });
+        
+        MainApp.databaseExecutor.submit(updatePaymentDetails);
+    }
+    
+    private void deleteFromTenantDetails(final JFXSpinner databaseActivityIndicator) {
+        final DeleteFromTenantDetailsTask deleteFromTenantDetails = new DeleteFromTenantDetailsTask();
+
+        databaseActivityIndicator.visibleProperty().bind(deleteFromTenantDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(deleteFromTenantDetails.progressProperty());
+
+        deleteFromTenantDetails.setOnSucceeded((event) -> {
+            try {
+                prefs = Preferences.userRoot().node(this.getClass().getName());
+                File file = new File(prefs.get(loc, "location"));
+                removeExcelRowValue(file);
+            } catch (IOException | InvalidFormatException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
+            }
+            setTDEmpty1();
+        });
+
+        MainApp.databaseExecutor.submit(deleteFromTenantDetails);
+    }
+    
+    private void deleteFromPaymentDetails(final JFXSpinner databaseActivityIndicator) {
+        final DeleteFromPaymentDetailsTask deleteFromPaymentDetails = new DeleteFromPaymentDetailsTask();
+        
+        databaseActivityIndicator.visibleProperty().bind(deleteFromPaymentDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(deleteFromPaymentDetails.progressProperty());
+        
+        deleteFromPaymentDetails.setOnSucceeded((event) -> {
+            try {
+                prefs = Preferences.userRoot().node(this.getClass().getName());
+                File file = new File(prefs.get(loc, "location"));
+                removeTDExcelRow(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            pdMonthCombo.setValue(PDModel.Strings.NONE);
+            pdAmount.clear();
+            pdPaymentDate.setValue(null);
+            payLabel.textProperty().unbind();
+            payLabel.setText("");
+        });
+        
+        MainApp.databaseExecutor.submit(deleteFromPaymentDetails);
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        databaseActivityIndicator.setVisible(false);
+        databaseActivityIndicator.getStylesheets().add("/styles/spinnerCss.css");
+        databaseActivityIndicator.setRadius(8.5);
+        
+        databaseActivityIndicatorPD.setVisible(false);
+        databaseActivityIndicatorPD.getStylesheets().add("/styles/spinnerCssPD.css");
+        databaseActivityIndicatorPD.setRadius(8.5);
+        
         l1.setMinSize(120, 20);
         l2.setMinSize(120, 20);
         l3.setMinSize(120, 20);
@@ -1816,7 +2062,7 @@ public class PDController implements Initializable {
         setupMonthColumn();
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
-        
+
         setupHouseNoColumn();
         setupRepairMonthColumn();
         setupRepairsDoneColumn();
@@ -1854,7 +2100,6 @@ public class PDController implements Initializable {
         cashRadioButton.setToggleGroup(payOptionGroup);
         bankRadioButton.setToggleGroup(payOptionGroup);
         mpesaRadioButton.setToggleGroup(payOptionGroup);
-
         
         cashRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             radioVbox.getChildren().clear();
@@ -1874,7 +2119,7 @@ public class PDController implements Initializable {
             radioVbox.getChildren().add(pdPayOptionHbox);
             payLabel.textProperty().bind(Bindings.concat("Deposit slip: ").concat(pdbankTextfield.textProperty()));
         });
-        
+
         mpesaRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             System.out.println("Mpesa button selected");
             radioVbox.getChildren().clear();
@@ -1970,22 +2215,23 @@ public class PDController implements Initializable {
             blockC.setExpanded(false);
             nasraBlock.setExpanded(false);
         });
-        
+
         tdUpdate.setOnAction((event) -> {
-            try {
+            updateTenantDetails(databaseActivityIndicator);
+            /*try {
                 Connection conn = DriverManager.getConnection(databaseURL);
-                
+
                 PreparedStatement updateTD = null;
                 PreparedStatement updatePDName = null;
-                
+
                 String updateTDString = "UPDATE TenantDetails SET TenantName = ?, TenantPhoneNumber = ?, RentAmount = ?, Deposit = ?, DueDate = ?, MoveInDate = ?, MoveOutDate = ?, LeaseStartDate = ?, LeaseEndDate = ? WHERE RowID = ?";
                 String updatePDNameString = "UPDATE PaymentDetails SET TenantName = ? WHERE HouseNumber = ?";
-                
+
                 try {
                     conn.setAutoCommit(false);
                     updateTD = conn.prepareStatement(updateTDString);
                     updatePDName = conn.prepareStatement(updatePDNameString);
-                    
+
                     updateTD.setString(1, tdName.getText());
                     updateTD.setString(2, tdPhone.getText());
                     updateTD.setString(3, tdAmount.getText());
@@ -2022,20 +2268,21 @@ public class PDController implements Initializable {
             } catch (SQLException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+
             prefs = Preferences.userRoot().node(this.getClass().getName());
             File file = new File(prefs.get(loc, "location"));
-            
+
             try {
                 updateTDExcelRowValue(file);
             } catch (IOException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            setAllEmpty();
+            setAllEmpty();*/
         });
-        
+
         pdUpdate.setOnAction((event) -> {
-            if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
+            updatePaymentDetails(databaseActivityIndicatorPD);
+            /*if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
                 Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
                 emptyFieldAlert.setTitle("No month selected");
                 emptyFieldAlert.setHeaderText(null);
@@ -2088,19 +2335,20 @@ public class PDController implements Initializable {
             setEmpty();
             payLabel.textProperty().unbind();
             payLabel.setText("");
-            pdTableViewButton.setDisable(false);
+            pdTableViewButton.setDisable(false);*/
         });
-        
+
         pdDelete.setOnAction((event) -> {
-            prefs = Preferences.userRoot().node(this.getClass().getName());
+            deleteFromPaymentDetails(databaseActivityIndicatorPD);
+            /*prefs = Preferences.userRoot().node(this.getClass().getName());
             File file = new File(prefs.get(loc, "location"));
-            
+
             try {
                 removeTDExcelRow(file);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-            
+
             try {
                 String deletePaySql = "DELETE FROM PaymentDetails WHERE RowID = ?";
                 conn = DriverManager.getConnection(databaseURL);
@@ -2116,8 +2364,8 @@ public class PDController implements Initializable {
                     pstmt.executeUpdate();
                 }
                 setEmpty();
-            payLabel.textProperty().unbind();
-            payLabel.setText("");
+                payLabel.textProperty().unbind();
+                payLabel.setText("");
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
@@ -2128,12 +2376,13 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
-            
-            pdTableViewButton.setDisable(false);
+
+            pdTableViewButton.setDisable(false);*/
         });
-        
+
         tdDelete.setOnAction((event) -> {
-            prefs = Preferences.userRoot().node(this.getClass().getName());
+            deleteFromTenantDetails(databaseActivityIndicator);
+            /*prefs = Preferences.userRoot().node(this.getClass().getName());
             File file = new File(prefs.get(loc, "location"));
             try {
                 removeExcelRowValue(file);
@@ -2142,18 +2391,18 @@ public class PDController implements Initializable {
             }
             try {
                 Connection conn = DriverManager.getConnection(databaseURL);
-                
+
                 PreparedStatement deleteTD = null;
                 PreparedStatement deletePD = null;
-                
+
                 String deleteTDString = "DELETE FROM TenantDetails WHERE RowID = ?";
                 String deletePDString = "DELETE FROM PaymentDetails WHERE HouseNumber = ?";
-                
+
                 try {
                     conn.setAutoCommit(false);
                     deleteTD = conn.prepareStatement(deleteTDString);
                     deletePD = conn.prepareStatement(deletePDString);
-                    
+
                     deleteTD.setInt(1, tenantRowId);
                     deleteTD.executeUpdate();
                     deletePD.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
@@ -2184,9 +2433,9 @@ public class PDController implements Initializable {
             } catch (SQLException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
-            }
+            }*/
         });
-        
+
         tdSaveAs.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
             if (blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block C") || blockTreeView.getSelectionModel().getSelectedItem().equals("Nasra Block")) {
@@ -2196,37 +2445,26 @@ public class PDController implements Initializable {
                 emptyFieldAlert.setContentText("Please select a house.");
                 emptyFieldAlert.showAndWait();
             } else {
-                try {
-                    File initialFile = new File(prefs.get(loc, "location"));
-                    if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
-                        FileChooser initialLoc = new FileChooser();
-                        File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                        prefs.put(loc, initFile.getPath());
-                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        setTDEmpty1();
-                    } else if (!prefs.get(loc, "location").equals("location")) {
-                        FileChooser savedLoc = new FileChooser();
-                        savedLoc.setInitialDirectory(initialFile.getParentFile());
-                        File savedFile = savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
-                        prefs.put(loc, savedFile.getPath());
-                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                        createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        setTDEmpty1();
-                    }
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-                    ex.printStackTrace();
+                File initialFile = new File(prefs.get(loc, "location"));
+                if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
+                    FileChooser initialLoc = new FileChooser();
+                    File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                    prefs.put(loc, initFile.getPath());
+                    saveToTenantDetailsTable(databaseActivityIndicator);
+                } else if (!prefs.get(loc, "location").equals("location")) {
+                    FileChooser savedLoc = new FileChooser();
+                    savedLoc.setInitialDirectory(initialFile.getParentFile());
+                    File savedFile = savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                    prefs.put(loc, savedFile.getPath());
+                    saveToTenantDetailsTable(databaseActivityIndicator);
                 }
             }
         });
-        //Use button with progress indicator to show success or failure of CRUD opertaions
+        
         tdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
             boolean firstEntry = false;
-            if (blockTreeView.getSelectionModel().getSelectedItem() == null || blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B")) {
+            if (blockTreeView.getSelectionModel().getSelectedItem() == null || blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block C") || blockTreeView.getSelectionModel().getSelectedItem().equals("Nasra Block")) {
                 Alert emptyFieldAlert = new Alert(Alert.AlertType.ERROR);
                 emptyFieldAlert.setTitle("No Apartment Selected");
                 emptyFieldAlert.setHeaderText(null);
@@ -2235,107 +2473,21 @@ public class PDController implements Initializable {
             } else {
                 try {
                     File initialFile = new File(prefs.get(loc, "location"));
+                    
                     if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
                         FileChooser initialLoc = new FileChooser();
                         File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
                         prefs.put(loc, initFile.getPath());
-                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        
-                        if (excelInsertFailed == true) {
-                            System.out.println("Failed");
-                            excelInsertFailed = false;
-                            return;
-                        } 
-                        //Prevent entry of null values in table
-                        try {
-                            String searchFirstEntry = "SELECT (count(*) > 0) as found FROM PaymentDetails WHERE HouseNumber = ? AND TenantName = ? AND Month = ?";
-                            conn = DriverManager.getConnection(databaseURL);
-                            pstmt = conn.prepareStatement(searchFirstEntry);
-                            pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                            pstmt.setString(2, tdName.getText());
-                            pstmt.setString(3, PDModel.Strings.NONE.name());
-                            rs = pstmt.executeQuery();
-
-                            if (rs.next()) {
-                                boolean rowExists = rs.getBoolean(1);
-                                if (rowExists) {
-                                    System.out.println("Row exists. Don't insert");
-                                } else {
-                                    System.out.println("Row doesn't exist");
-                                    firstEntry = true;
-                                }
-                            }
-                            
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        } finally {
-                            try {
-                                conn.close();
-                                pstmt.close();
-                                rs.close();
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        if (firstEntry) {
-                            createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                            createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        }
-                        setTDEmpty1();
+                        saveToTenantDetailsTable(databaseActivityIndicator);
                     } else if (!prefs.get(loc, "location").equals("location")) {
-                        runTask();
-                        createTenantDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                        
-                        if (excelInsertFailed == true) {
-                            System.out.println("Failed");
-                            excelInsertFailed = false;
-                            return;
-                        }
-                        
-                        try {
-                            String searchFirstEntry = "SELECT (count(*) > 0) as found FROM PaymentDetails WHERE HouseNumber = ? AND TenantName = ? AND Month = ?";
-                            conn = DriverManager.getConnection(databaseURL);
-                            pstmt = conn.prepareStatement(searchFirstEntry);
-                            pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                            pstmt.setString(2, tdName.getText());
-                            pstmt.setString(3, PDModel.Strings.NONE.name());
-                            rs = pstmt.executeQuery();
-
-                            if (rs.next()) {
-                                boolean rowExists = rs.getBoolean(1);
-                                if (rowExists) {
-                                    System.out.println("Row exists. Don't insert");
-                                } else {
-                                    System.out.println("Row doesn't exist");
-                                    firstEntry = true;
-                                }
-                            }
-                            
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        } finally {
-                            try {
-                                conn.close();
-                                pstmt.close();
-                                rs.close();
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        if (firstEntry) {
-                            createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), null, PDModel.Strings.NONE, null, null);
-                            createRepairsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), RModel.Strings.NONE, null, null, null, null);
-                        }
-                        setTDEmpty1();
+                        saveToTenantDetailsTable(databaseActivityIndicator);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
-        
+
         pdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
             if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
@@ -2344,35 +2496,17 @@ public class PDController implements Initializable {
                 emptyFieldAlert.setHeaderText(null);
                 emptyFieldAlert.setContentText("Please select a month");
                 emptyFieldAlert.showAndWait();
-            } else if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE) || "".equals(pdAmount.getText()) || "".equals(pdPaymentDate.getEditor().getText()) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
+            } else if ("".equals(pdName.getText()) || "".equals(pdAmount.getText()) || "".equals(pdPaymentDate.getEditor().getText()) || payLabel.getText().isEmpty() || payLabel.getText().equals("Received by: ") || payLabel.getText().equals("Deposit slip: ") || payLabel.getText().equals("Transaction code: ") || payLabel.getText().equals("Alternative: ")) {
                 Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
                 emptyFieldAlert.setTitle("Empty Field!");
                 emptyFieldAlert.setHeaderText(null);
                 emptyFieldAlert.setContentText("Empty field is not allowed");
                 emptyFieldAlert.showAndWait();
             } else {
-                try {
-                    File savedFile = new File(prefs.get(loc, "location"));
-                    if (pdMonthCombo.getValue().equals(PDModel.Strings.NONE)) {
-                        Alert emptyFieldAlert = new Alert(Alert.AlertType.INFORMATION);
-                        emptyFieldAlert.setTitle("No month selected");
-                        emptyFieldAlert.setHeaderText(null);
-                        emptyFieldAlert.setContentText("Select Month");
-                        emptyFieldAlert.showAndWait();
-                    } else {
-                        createPaymentDetailsTable(blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
-                        createAndWriteExcelSheet(savedFile, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
-                        setEmpty();
-                        payLabel.textProperty().unbind();
-                        payLabel.setText("");
-                        newEntryCheck = "";
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                saveToPaymentDetailsTable(databaseActivityIndicatorPD);
             }
         });
-        
+
         rdUpdateButton.setOnAction((event) -> {
             if ("".equals(rdRepairsDone.getText()) || "".equals(rdRepairCost.getText()) || "".equals(rdRepairDate.getEditor().getText())) {
                 Alert emptyFieldAlert = new Alert(AlertType.INFORMATION);
@@ -2411,12 +2545,12 @@ public class PDController implements Initializable {
             rdVbox.getChildren().remove(rdUpdateHbox);
             rdTableViewButton.setDisable(false);
         });
-        
+
         rdCancelbutton.setOnAction((event) -> {
             rdVbox.getChildren().remove(rdUpdateHbox);
             rdVbox.setDisable(false);
         });
-        
+
         tdNewRecord.setOnAction((event) -> {
             if (blockTreeView.getSelectionModel().getSelectedItem().getValue().startsWith("A")) {
                 blockTreeView.getSelectionModel().getSelectedItem().setValue("Block A");
@@ -2432,7 +2566,7 @@ public class PDController implements Initializable {
             payRowId = 0;
             repairRowId = 0;
         });
-        
+
         pdNewRecord.setOnAction((event) -> {
             pdMonthCombo.setValue(PDModel.Strings.NONE);
             pdAmount.clear();
@@ -2441,7 +2575,7 @@ public class PDController implements Initializable {
             payLabel.setText("");
             newEntryCheck = "Payments Tab New Entry";
         });
-        
+
         rdNewEntry.setOnAction((event) -> {
             rdMonthCombo.setValue(RModel.Strings.NONE);
             rdRepairsDone.clear();
@@ -2451,7 +2585,7 @@ public class PDController implements Initializable {
             rentArrearslabel.setVisible(false);
             newEntryCheck = "Repairs Tab New Entry";
         });
-        
+
         rdEdit.setOnAction((event) -> {
             if (repairRowId == 0) {
                 Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
@@ -2478,7 +2612,7 @@ public class PDController implements Initializable {
             }
             rdTableViewButton.setDisable(true);
         });
-        
+
         pdStickyNote.setOnAction((event) -> {
             if (payRowId == 0) {
                 Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
@@ -2513,7 +2647,7 @@ public class PDController implements Initializable {
                 popUp.showAndWait();
             }
         });
-        
+
         save.setOnAction((event) -> {
             try {
                 Connection conn = DriverManager.getConnection(databaseURL);
@@ -2522,7 +2656,7 @@ public class PDController implements Initializable {
                 pstmt.setString(1, stickyTextArea.getText());
                 pstmt.setInt(2, payRowId);
                 pstmt.executeUpdate();
-                
+
                 if (pdHbox1.getChildren().contains(icon)) {
                     (label2.getScene()).getWindow().hide();
                 } else if (!pdHbox1.getChildren().contains(icon)) {
@@ -2531,9 +2665,9 @@ public class PDController implements Initializable {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            } 
+            }
         });
-        
+
         icon.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 try {
@@ -2542,14 +2676,14 @@ public class PDController implements Initializable {
                     MyPopUp popUp = new MyPopUp();
                     stickyStage = (Stage) popUp.getScene().getWindow();
                     System.out.println(stickyStage.getClass());
-                    double centerXPosition = parentStickyStage.getX() + parentStickyStage.getWidth()/2d;;
-                    double centerYPsition = parentStickyStage.getY() + parentStickyStage.getHeight()/2d;
-                    
+                    double centerXPosition = parentStickyStage.getX() + parentStickyStage.getWidth() / 2d;;
+                    double centerYPsition = parentStickyStage.getY() + parentStickyStage.getHeight() / 2d;
+
                     stickyStage.setOnShowing((e) -> stickyStage.hide());
-                    
+
                     stickyStage.setOnShown((e) -> {
-                        stickyStage.setX(centerXPosition - stickyStage.getWidth()/2);
-                        stickyStage.setY(centerYPsition - stickyStage.getHeight()/2);
+                        stickyStage.setX(centerXPosition - stickyStage.getWidth() / 2);
+                        stickyStage.setY(centerYPsition - stickyStage.getHeight() / 2);
                         stickyStage.show();
                     });
                     popUp.showAndWait();
@@ -2558,12 +2692,12 @@ public class PDController implements Initializable {
                 }
             }
         });
-        
+
         icon.addEventHandler(MouseEvent.MOUSE_ENTERED, keyEventHandler);
         icon.addEventHandler(MouseEvent.MOUSE_EXITED, (event) -> {
             stopJumpAnimation();
         });
-        
+
         /*printReceipt.setOnAction((event) -> {
             Map map = null;
             try {
@@ -2610,7 +2744,7 @@ public class PDController implements Initializable {
                 if (tdHbox1.getChildren().contains(detIcon)) {
                     return;
                 } else {
-                    tdHbox1.getChildren().add(detIcon);
+                    tdHbox1.getChildren().add(2, detIcon);
                 }
             } else {
                 if (tdHbox1.getChildren().contains(detIcon)) {
@@ -2618,13 +2752,14 @@ public class PDController implements Initializable {
                 }
             }
         });
-        
+
         detIcon.visibleProperty().bind(tdName.textProperty().isEmpty().not());
-        
+        payIcon.visibleProperty().bind(pdName.textProperty().isEmpty().not());
+
         rdRepairDate.getEditor().setOnMouseClicked((event) -> {
             rdEditMenu.hide();
         });
-        
+
         Platform.runLater(() -> {
             rdScrollPane.getScene().addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, (event) -> {
                 if (checkIfNode((Node) event.getTarget())) {
@@ -2633,11 +2768,10 @@ public class PDController implements Initializable {
                 }
             });
         });
-        
+
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
-        
-        
+
         pdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             if (stickyStage == null || !stickyStage.isShowing()) {
                 System.out.println("Not showing");
@@ -2645,7 +2779,7 @@ public class PDController implements Initializable {
                 stickyStage.close();
             }
         });
-        
+
         rdScrollPane.setOnContextMenuRequested((event) -> {
             rdEditMenu.getItems().clear();
             rdEditMenu.setAutoHide(true);
@@ -2657,9 +2791,10 @@ public class PDController implements Initializable {
         rdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             rdEditMenu.hide();
         });
-        
+
         pdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newEntryCheck.equals("Payments Tab New Entry")) {
+            fetchPaymentDetailsFromDBToUI(pdAmount, pdPaymentDate, payLabel);
+            /*if (newEntryCheck.equals("Payments Tab New Entry")) {
                 System.out.println("Do nothing. New selection");
             } else if (newValue.getMonth().equals("All")) {
                 try {
@@ -2776,7 +2911,7 @@ public class PDController implements Initializable {
                         if (payRowId != 0) {
                             timeline.stop();
                         }
-                        
+
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2791,9 +2926,9 @@ public class PDController implements Initializable {
                         e.printStackTrace();
                     }
                 }
-            }  
-        });
-        
+            }
+        */});
+
         pdMonthCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
             payTenantDetails = getPaymentDetails();
             FilteredList<PDModel> filteredList = new FilteredList<>(payTenantDetails);
@@ -2811,7 +2946,7 @@ public class PDController implements Initializable {
             sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
             paymentsTable.setItems(sortedData);
         });
-        
+
         rdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newEntryCheck.equals("Repairs Tab New Entry")) {
                 System.out.println("Do nothing. New entry");
@@ -2827,10 +2962,10 @@ public class PDController implements Initializable {
                         setRepairsEmpty();
                     } else {
                         do {
-                          rdRepairsDone.clear();
-                          rdRepairCost.clear();
-                          rdRepairDate.setValue(null);
-                          rdMiscCost.clear();
+                            rdRepairsDone.clear();
+                            rdRepairCost.clear();
+                            rdRepairDate.setValue(null);
+                            rdMiscCost.clear();
                         } while (rs.next());
                     }
                 } catch (SQLException e) {
@@ -2846,7 +2981,7 @@ public class PDController implements Initializable {
             } else if (newValue.getMonth().equals("")) {
 
             } else {
-                
+
                 try {
                     String selectRepairs = "SELECT * FROM RepairsTable WHERE HouseNumber = ? AND Month = ?";
                     conn = DriverManager.getConnection(databaseURL);
@@ -2857,17 +2992,17 @@ public class PDController implements Initializable {
                     if (!rs.next()) {
                         setRepairsEmpty();
                     } else {
-                        do {                          
-                          repairRowId = rs.getInt("RowID");
-                          rdRepairsDone.setText(rs.getString("Repairs"));
-                          rdRepairCost.setText(rs.getString("CostOfRepairs"));
-                          Object repairsDate = rs.getObject("DateOfRepairs");
+                        do {
+                            repairRowId = rs.getInt("RowID");
+                            rdRepairsDone.setText(rs.getString("Repairs"));
+                            rdRepairCost.setText(rs.getString("CostOfRepairs"));
+                            Object repairsDate = rs.getObject("DateOfRepairs");
                             if (repairsDate == null) {
                                 rdRepairDate.setValue(null);
                             } else {
                                 rdRepairDate.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
                             }
-                           rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
+                            rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
                         } while (rs.next());
                     }
                 } catch (SQLException e) {
@@ -2883,7 +3018,7 @@ public class PDController implements Initializable {
                 }
             }
         });
-        
+
         rdMonthCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
             houseRepairDetails = getRepairsDetails();
             FilteredList<RModel> filteredList = new FilteredList<>(houseRepairDetails);
@@ -2901,13 +3036,13 @@ public class PDController implements Initializable {
             sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());
             repairsTable.setItems(houseRepairDetails);
         });
-        
+
         paymentsTable.setRowFactory((TableView<PDModel> tableView) -> {
             final TableRow<PDModel> row = new TableRow<>();
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
-            
+
             row.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
                 if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
                     TableRow c = (TableRow) event.getSource();
@@ -2928,7 +3063,7 @@ public class PDController implements Initializable {
                     }
                 }
             });
-            
+
             contextMenu.getItems().addAll(editPay, deletePay);
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(
@@ -2944,7 +3079,7 @@ public class PDController implements Initializable {
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
-            
+
             row.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
                 if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
                     TableRow c = (TableRow) event.getSource();
@@ -2964,7 +3099,7 @@ public class PDController implements Initializable {
                     }
                 }
             });
-            
+
             contextMenu.getItems().addAll(editPay, deletePay);
             row.contextMenuProperty().bind(
                     Bindings.when(row.emptyProperty())
@@ -3018,7 +3153,7 @@ public class PDController implements Initializable {
                 MainApp.changeWindowSize(stage, 500);
             }
         });
-        
+
         repairDetails.setOnSelectionChanged((event) -> {
             if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
@@ -3028,7 +3163,7 @@ public class PDController implements Initializable {
                 MainApp.changeWindowSize(stage, 500);
             }
         });
-        
+
         pdCashTextfield.setPrefWidth(50);
         pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue.length();
@@ -3090,16 +3225,16 @@ public class PDController implements Initializable {
                 });
             }
         });
-        
+
         pdTableViewButton.addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, (event) -> {
             timeline.stop();
             pdTableViewButton.setOpacity(1.0);
         });
-        
+
         pdTableViewButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             timeline.stop();
         });
-        
+
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -3175,7 +3310,7 @@ public class PDController implements Initializable {
         blockTreeView.setMinWidth(120);
         selectionPane.setCenter(blockTreeView);
     }
-    
+
     public class MyPopUp extends Stage {
 
         public MyPopUp() {
@@ -3188,28 +3323,28 @@ public class PDController implements Initializable {
             this.initStyle(StageStyle.UNDECORATED);
             this.initModality(Modality.APPLICATION_MODAL);
             this.setOpacity(0.9);
-            
+
             BorderPane borderPaneOptionPane = new BorderPane();
-            
+
             stickyTextArea.setPromptText("Add a comment...");
             stickyTextArea.setPrefSize(200, 150);
-            
+
             Region filler = new Region();
             Region bottomFiller = new Region();
-            
+
             HBox stickyHbox = new HBox();
             HBox.setHgrow(filler, Priority.ALWAYS);
             Label label1 = new Label();
             label1.setAlignment(Pos.CENTER);
             label2.setAlignment(Pos.CENTER);
-            
+
             Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 label1.setText(LocalDateTime.now().format(formatter));
             }), new KeyFrame(Duration.seconds(1)));
             clock.setCycleCount(Animation.INDEFINITE);
             clock.play();
-            
+
             label2.setOnMouseClicked((evt) -> {
                 Stage stage = (Stage) (label1.getScene()).getWindow();
                 stage.close();
@@ -3217,17 +3352,17 @@ public class PDController implements Initializable {
             label1.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
             label2.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
             stickyHbox.getChildren().addAll(label1, filler, label2);
-            
+
             HBox stickyHboxBottom = new HBox();
             HBox.setHgrow(bottomFiller, Priority.ALWAYS);
             stickyHboxBottom.setAlignment(Pos.BASELINE_LEFT);
             stickyHboxBottom.setPadding(new Insets(3, 0, 0, 0));
             stickyHboxBottom.getChildren().addAll(bottomFiller, save);
-            
+
             Rectangle stickyRec = new Rectangle(200, 150);
             stickyRec.setArcWidth(10.0);
             stickyRec.setArcHeight(10.0);
-            
+
             borderPaneOptionPane.setShape(stickyRec);
             borderPaneOptionPane.setCenter(stickyTextArea);
             borderPaneOptionPane.setTop(stickyHbox);
@@ -3242,14 +3377,14 @@ public class PDController implements Initializable {
             this.setY(yCursorPos);
             ResizeHelper.addResizeListener(this);
         }
-        
+
         public void setStickyEmpty() {
             stickyTextArea.clear();
         }
     }
-    
+
     public class DetailsIcon extends StackPane {
-        
+
         public DetailsIcon() {
             Label lab = new Label("•••");
             lab.setStyle("-fx-text-fill:white");
@@ -3261,8 +3396,9 @@ public class PDController implements Initializable {
             getChildren().addAll(circle, lab);
         }
     }
-    
+
     public class PayMenuIcon extends StackPane {
+
         public PayMenuIcon() {
             Label lab = new Label("•••");
             lab.setStyle("-fx-text-fill:white");
@@ -3274,16 +3410,492 @@ public class PDController implements Initializable {
             getChildren().addAll(circle, lab);
         }
     }
-    
+
     public class repairsMenuIcon extends StackPane {
+
         public repairsMenuIcon() {
             Label lab = new Label("•••");
             lab.setStyle("-fx-text-fill:white");
             lab.setOnMouseClicked((event) -> {
-                
+
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
             getChildren().addAll(circle, lab);
+        }
+    }
+    
+    class FetchTenantDetailsTask extends DBTask<ObservableList<String>> {
+
+        @Override
+        protected ObservableList<String> call() throws Exception {
+            try (Connection con = getConnection()) {
+                return fetchTenantDetails(con);
+            }
+        }
+
+        private ObservableList<String> fetchTenantDetails(Connection con) {
+            logger.info("Fetching Tenant's Details from database");
+            ObservableList<String> tenantData = FXCollections.observableArrayList();
+
+            try {
+                String searchTenantDetails = "SELECT * FROM TenantDetails WHERE HouseNumber = ?";
+                pstmt = con.prepareStatement(searchTenantDetails);
+                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                rs = pstmt.executeQuery();
+
+                if (!rs.next()) {
+                    logger.info("No entry found in database");
+                } else {
+                    do {
+                        tenantRowId = rs.getInt("RowID");
+                        tenantData.addAll(rs.getString("TenantName"), rs.getString("TenantPhoneNumber"), rs.getString("RentAmount"), rs.getString("Deposit"), rs.getString("DueDate"), rs.getString("MoveInDate"), rs.getString("MoveOutDate"), rs.getString("LeaseStartDate"), rs.getString("LeaseEndDate"));
+                    } while (rs.next());
+                    logger.info("Found 1 entry");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    rs.close();
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return tenantData;
+        }
+    }
+    
+    class FetchPaymentDetailsTask extends DBTask<ObservableList<String>> {
+        @Override
+        protected ObservableList<String> call() throws Exception {
+            try (Connection con = getConnection()) {
+                return fetchPaymentDetails(con);
+            }
+        }
+        
+        public ObservableList<String> fetchPaymentDetails(Connection con) {
+            logger.info("Fetching Payment Details from database");
+            ObservableList<String> paymentDetails = FXCollections.observableArrayList();
+            
+            try {
+                String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
+                pstmt = con.prepareStatement(searchPDTable);
+                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                pstmt.setString(2, pdMonthCombo.getValue().name());
+                rs = pstmt.executeQuery();
+                
+                if (!rs.next()) {
+                    logger.info("No entry found in database");
+                } else {
+                    do {                        
+                       payRowId = rs.getInt("RowID");
+                       paymentDetails.addAll(rs.getString("HouseNumber"), rs.getString("TenantName"), rs.getString("Amount"), rs.getString("Month"), rs.getString("PaymentDate"), rs.getString("PaymentMethod"));
+                    } while (rs.next());
+                    logger.info("Found entry");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    rs.close();
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            return paymentDetails;
+        }
+    }
+    
+    class SaveTenantDetailsTask extends DBTask {
+
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+
+            try (Connection con = getConnection()) {
+                saveToTenantDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+            }
+            return null;
+        }
+
+        private void saveToTenantDetails(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
+            logger.info("Inserting into Tenant Details.");
+
+            try {
+                String insertToTenantTable = "INSERT INTO TenantDetails(HouseNumber, TenantName, TenantPhoneNumber, RentAmount, Deposit, DueDate, MoveInDate, MoveOutDate, LeaseStartDate, LeaseEndDate) VALUES(?,?,?,?,?,?,?,?,?,?)";
+                pstmt = con.prepareStatement(insertToTenantTable);
+                pstmt.setString(1, houseNumber);
+                pstmt.setString(2, tenantName);
+                pstmt.setString(3, tenantPhoneNumber);
+                pstmt.setString(4, monthlyRent);
+                pstmt.setString(5, deposit);
+                pstmt.setString(6, dueDate);
+                pstmt.setString(7, moveInDate);
+                pstmt.setString(8, moveOutDate);
+                pstmt.setString(9, leaseStartDate);
+                pstmt.setString(10, leaseEndDate);
+                if (pstmt.execute()) {
+                    System.out.println(pstmt.execute());
+                    try {
+                        prefs = Preferences.userRoot().node(this.getClass().getName()); //Preference to store file location for saving to excel file later
+                        File file = new File(prefs.get(loc, "location"));
+                        createExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } catch (SQLException e) {
+                logger.info("Insert into Tenant Details table failed.");
+                e.printStackTrace();
+            } finally {
+                try {
+                    con.close();
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    class savePaymentDetailsTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+            
+            try (Connection con = getConnection()) {
+                savePaymentDetailsToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getValue(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+            }
+            return null;
+        }
+        
+        private void savePaymentDetailsToTable(Connection con, String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
+            logger.info("Inserting into Payment Detils table.");
+            try {
+                String insertToPaymentDetails = "INSERT INTO PaymentDetails(HouseNumber, TenantName, Amount, Month, PaymentDate, PaymentMethod) VALUES(?,?,?,?,?,?)";
+                pstmt = con.prepareStatement(insertToPaymentDetails);
+                pstmt.setString(1, HouseNumber);
+                pstmt.setString(2, TenantName);
+                pstmt.setString(3, Amount);
+                pstmt.setString(4, Month.name());
+                pstmt.setString(5, PaymentDate);
+                pstmt.setString(6, PaymentMethod);
+                if (pstmt.execute()) {
+                    try {
+                        prefs = Preferences.userRoot().node(this.getClass().getName());
+                        File file = new File(prefs.get(loc, "location"));
+                        createAndWriteExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (SQLException e) {
+                logger.info("Insert into Payment Details table failed.");
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    class UpdateTenantDetailsTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+            
+            try (Connection con = getConnection()) {
+                updateTenantDetails(con, tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()), tenantRowId);
+            }
+            
+            return null;
+        }
+        
+        private void updateTenantDetails(Connection con, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate, int rowID) {
+            logger.info("Updatimg Tenant Details table");
+            
+            try {
+                String updateTD = "UPDATE TenantDetails SET TenantName = ?, TenantPhoneNumber = ?, RentAmount = ?, Deposit = ?, DueDate = ?, MoveInDate = ?, MoveOutDate = ?, LeaseStartDate = ?, LeaseEndDate = ? WHERE RowID = ?";
+                pstmt = con.prepareStatement(updateTD);
+                pstmt.setString(1, tenantName);
+                pstmt.setString(2, tenantPhoneNumber);
+                pstmt.setString(3, monthlyRent);
+                pstmt.setString(4, deposit);
+                pstmt.setString(5, dueDate);
+                pstmt.setString(6, moveInDate);
+                pstmt.setString(7, moveOutDate);
+                pstmt.setString(8, leaseStartDate);
+                pstmt.setString(9, leaseEndDate);
+                pstmt.setInt(10, rowID);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                logger.info("Updating Tenant Details table failed.");
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    class UpdatePaymentDetailsTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+            
+            try (Connection con = getConnection()) {
+                updateTenantDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText(), payRowId);
+            }
+            
+            return null;
+        }
+        
+        private void updateTenantDetails(Connection con, String Amount, String PaymentDate, String PaymentMethod, int rowID) {
+            logger.info("Updating Payment Details");
+            
+            try {
+                String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?  WHERE RowID = ?";
+                pstmt = con.prepareStatement(updateAmountSql);
+                pstmt.setString(1, Amount);
+                pstmt.setString(2, PaymentDate);
+                pstmt.setString(3, PaymentMethod);
+                pstmt.setInt(4, rowID);
+                pstmt.execute();
+            } catch (SQLException e) {
+                logger.info("Updating Payment Details table failed.");
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    class  DeleteFromTenantDetailsTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+            
+            try (Connection con = getConnection()) {
+                deleteFromTenantDetails(con, tenantRowId, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+            }
+            
+            return null;
+        }
+        
+        private void deleteFromTenantDetails(Connection con, int rowID, String houseNummber) {
+            logger.info("Deleting entry from Tenant Details");
+            
+            try {
+
+                String deleteTDString = "DELETE FROM TenantDetails WHERE RowID = ?";
+                String deletePDString = "DELETE FROM PaymentDetails WHERE HouseNumber = ?";
+
+                try {
+                    con.setAutoCommit(false);
+                    pstmt = con.prepareStatement(deleteTDString);
+                    pstmt1 = con.prepareStatement(deletePDString);
+
+                    pstmt.setInt(1, rowID);
+                    pstmt.executeUpdate();
+                    pstmt1.setString(1, houseNummber);
+                    pstmt1.executeUpdate();
+                    con.commit();
+                } catch (SQLException e) {
+                    logger.info("Tenant Details update failed.");
+                    e.printStackTrace();
+                    if (con != null) {
+                        try {
+                            System.err.println("Transaction is being rolled back");
+                            con.rollback();
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                } finally {
+                    if (pstmt != null) {
+                        pstmt.close();
+                    }
+                    if (pstmt1 != null) {
+                        pstmt1.close();
+                    }
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
+            }
+        } 
+        
+    }
+    
+    class  DeleteFromPaymentDetailsTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            Thread.sleep(1000);
+            
+            try (Connection con = getConnection()) {
+                deleteFromPaymentDetailsTask(con, payRowId);
+            }
+            
+            return null;
+        }
+        
+        private void deleteFromPaymentDetailsTask (Connection con, int rowID) {
+           logger.info("Deleting entry from Payment Details");
+           
+            try {
+                String deletePaySql = "DELETE FROM PaymentDetails WHERE RowID = ?";
+                pstmt = con.prepareStatement(deletePaySql);
+                pstmt.setInt(1, rowID);
+                pstmt.execute();
+            } catch (SQLException e) {
+                logger.info("Failed to delete from Tenant Details.");
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        } 
+    }
+    
+    abstract class DBTask<T> extends Task<T> {
+
+        DBTask() {
+            setOnFailed((event) -> {
+                logger.log(Level.SEVERE, null, getException());
+            });
+        }
+    }
+
+    class DBSetupTask extends DBTask {
+
+        @Override
+        protected Void call() throws Exception {
+            try (Connection con = getConnection()) {
+                if (!schemaExists(con) && !schemaExists2(con)) {
+                    createSchema(con);
+                    createSchema2(con);
+                } else if (!schemaExists(con) && schemaExists2(con)) {
+                    createSchema(con);
+                } else if (schemaExists(con) && !schemaExists2(con)) {
+                    createSchema2(con);
+                }
+            }
+
+            return null;
+        }
+
+        public boolean schemaExists(Connection con) {
+            logger.info("Checking for schema exictence");
+            try {
+                String searchTenantDetails = "SELECT * FROM TenantDetails";
+                pstmt = con.prepareStatement(searchTenantDetails);
+                pstmt.executeQuery();
+                logger.info("Schema exists");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.info("Existing DB not found. Create new one");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return true;
+        }
+        
+        public boolean schemaExists2(Connection con) {
+            logger.info("Checking for schema2 existence");
+            try {
+                String searchPaymentDetails = "SELECT * FROM PaymentDetails";
+                pstmt = con.prepareStatement(searchPaymentDetails);
+                pstmt.executeQuery();
+                logger.info("Schema2 Exists");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.info("Table not in DB. Create new one.");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+        
+        private void createSchema(Connection con) {
+            logger.info("Creating schema");
+            String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
+            try {
+                pstmt = con.prepareStatement(createTDSql);
+                pstmt.execute();
+                logger.info("Created schema");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+        }
+        
+        private void createSchema2(Connection con) {
+            logger.info("Creating second schema");
+            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text CHECK(TenantName<>''), Amount text, Month text, PaymentDate text, PaymentMethod text, StickyNote text, UNIQUE(HouseNumber, Month))";
+            try {
+                pstmt = con.prepareStatement(createPDSql);
+                pstmt.execute();
+                logger.info("Created second schema");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private Connection getConnection() throws ClassNotFoundException, SQLException {
+        Class.forName("org.sqlite.JDBC");
+        return DriverManager.getConnection(databaseURL);
+    }
+
+    static class DatabaseThreadFactory implements ThreadFactory {
+
+        static final AtomicInteger POOLNUMBER = new AtomicInteger(1);
+
+        @Override
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread(runnable, "Database-Connection-" + POOLNUMBER.getAndIncrement() + "-thread");
+            thread.setDaemon(true);
+
+            return thread;
         }
     }
 }
