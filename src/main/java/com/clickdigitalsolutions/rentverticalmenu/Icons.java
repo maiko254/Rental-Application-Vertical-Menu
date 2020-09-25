@@ -46,7 +46,7 @@ public class Icons extends StackPane {
         stickyMenu.getItems().add(stickyMenuItem);
         lab.setContextMenu(stickyMenu);
         lab.setStyle("-fx-text-fill:white");
-        Rectangle rect = new Rectangle(15, 15);
+        Rectangle rect = new Rectangle(20, 20);
         rect.setFill(Color.rgb(0, 122, 255));
         rect.setArcHeight(2);
         rect.setArcHeight(2);

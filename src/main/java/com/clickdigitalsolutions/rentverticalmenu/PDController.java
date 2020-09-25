@@ -94,6 +94,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -315,6 +316,7 @@ public class PDController implements Initializable {
     public JFXTextField pdAmount = new JFXTextField();
     public JFXDatePicker pdPaymentDate = new JFXDatePicker();
     public TitledPane pdPaymentOption = new TitledPane();
+    public HBox pdContentPane = new HBox();
     public JFXButton pdTableViewButton = new JFXButton("Show details >>");
     public JFXRadioButton cashRadioButton = new JFXRadioButton("Cash");
     public JFXRadioButton bankRadioButton = new JFXRadioButton("Bank Deposit");
@@ -324,7 +326,6 @@ public class PDController implements Initializable {
     public Label payLabel = new Label();
     public Label rentArrearslabel = new Label();
     public JFXSpinner databaseActivityIndicatorPD = new JFXSpinner();
-
     public JFXTextField pdCashTextfield = new JFXTextField();
     public JFXTextField pdbankTextfield = new JFXTextField();
     public JFXTextField pdMpesaTextfield = new JFXTextField();
@@ -404,9 +405,11 @@ public class PDController implements Initializable {
 
     Timeline timeline = new Timeline();
 
-    Preferences prefs;
+    public Preferences prefs;
+    
+    public String excelFileLocation = "location";
 
-    String loc = "location";
+    public String loc = "location";
 
     XSSFWorkbook workBook;
 
@@ -1720,8 +1723,38 @@ public class PDController implements Initializable {
             }
         }
     }
+    
+    public void removePDExcelRowFromTD(File file) throws FileNotFoundException, IOException {
+        workBook = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = workBook.getSheet("Payment Details");
 
-    public void removeTDExcelRow(File file) throws FileNotFoundException, IOException {
+        for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow row = sheet.getRow(i);
+            if (row.getRowNum() == sheet.getLastRowNum() && row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                sheet.removeRow(row);
+                continue;
+            }
+            if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
+            }
+        }
+
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(file);
+            workBook.write(fileOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOut.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }   
+    
+    public void removePDExcelRow(File file) throws FileNotFoundException, IOException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Payment Details");
 
@@ -1811,9 +1844,12 @@ public class PDController implements Initializable {
     
     private void fetchTenantDetailsFromDatabaseToUI(JFXTextField tdName, JFXTextField pdName, JFXTextField tdPhone, JFXTextField monthlyRent, JFXTextField tdDeposit, JFXTextField dueDate, JFXDatePicker moveInDate, JFXDatePicker moveOutDate, JFXDatePicker leaseStartDate, JFXDatePicker leaseEndDate) {
         final FetchTenantDetailsTask fetchTdTask = new FetchTenantDetailsTask();
-
+        
+        prefs = Preferences.userRoot().node(this.getClass().getName());
+        
         fetchTdTask.setOnSucceeded((event) -> {
             if (fetchTdTask.getValue().isEmpty()) {
+                excelFileLocation = prefs.get(loc, "location"); 
                 pdName.clear();
                 pdMonthCombo.setValue(PDModel.Strings.NONE);
                 setTDEmpty1();
@@ -1878,25 +1914,62 @@ public class PDController implements Initializable {
     private void fetchPaymentDetailsFromDBToUI(JFXTextField amount, JFXDatePicker paymentDate, Label paymentMethod) {
         final FetchPaymentDetailsTask fetchPaymentDetails = new FetchPaymentDetailsTask();
         
+        prefs = Preferences.userRoot().node(this.getClass().getName());
+        
         fetchPaymentDetails.setOnSucceeded((event) -> {
             if (fetchPaymentDetails.getValue().isEmpty()) {
+                excelFileLocation = prefs.get(loc, "location");
                 amount.clear();
                 paymentDate.setValue(null);
                 paymentMethod.textProperty().unbind();
                 paymentMethod.setText("");
-                System.out.println("No entry found");
+                if (pdHbox1.getChildren().contains(icon)) {
+                    pdHbox1.getChildren().remove(icon);
+                }
+                pdTableViewButton.setVisible(false);
                 return;
             }
             
             amount.setText(fetchPaymentDetails.getValue().get(2));
+            
             if (fetchPaymentDetails.getValue().get(4) != null) {
                 paymentDate.setValue(LocalDate.parse(fetchPaymentDetails.getValue().get(4), DateTimeFormatter.ISO_DATE));
             } else {
                 paymentDate.setValue(null);
             }
+            
             paymentMethod.textProperty().unbind();
-            paymentMethod.setText(fetchPaymentDetails.getValue().get(5
-            ));
+            paymentMethod.setText(fetchPaymentDetails.getValue().get(5));
+            
+            if (fetchPaymentDetails.getValue().get(6) != null) {
+                if (!pdHbox1.getChildren().contains(icon)) {
+                    icon.stickyMenuItem.setOnAction((eventx) -> {
+                        try {
+                            String deleteSticky = "UPDATE PaymentDetails SET StickyNote = null WHERE RowID = ?";
+                            Connection con = DriverManager.getConnection(databaseURL);
+                            PreparedStatement stmt = con.prepareStatement(deleteSticky);
+                            stmt.setInt(1, payRowId);
+                            stmt.executeUpdate();
+                            stmt.close();
+                            con.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        pdHbox1.getChildren().remove(icon);
+                    });
+                    stickyTextArea.setText(fetchPaymentDetails.getValue().get(6));
+                    pdHbox1.getChildren().add(3, icon);
+                } else if (pdHbox1.getChildren().contains(icon)) {
+                    stickyTextArea.setText(fetchPaymentDetails.getValue().get(6));
+                }
+            } else {
+                if (pdHbox1.getChildren().contains(icon)) {
+                    pdHbox1.getChildren().remove(icon);
+                }
+            }
+
+            
+            pdTableViewButton.setVisible(true);
         });
         
         MainApp.databaseExecutor.submit(fetchPaymentDetails);
@@ -1907,6 +1980,11 @@ public class PDController implements Initializable {
         
         databaseActivityIndicator.visibleProperty().bind(saveTenantDetails.runningProperty());
         databaseActivityIndicator.progressProperty().bind(saveTenantDetails.progressProperty());
+        
+        saveTenantDetails.setOnFailed((event) -> {
+            System.err.println("The task failed with the following exception:");
+            saveTenantDetails.getException().printStackTrace(System.err);
+        });
         
         saveTenantDetails.setOnSucceeded((event) -> {
             setTDEmpty1();
@@ -1922,7 +2000,6 @@ public class PDController implements Initializable {
         databaseActivityIndicator.progressProperty().bind(savePaymentDetails.progressProperty());
         
         savePaymentDetails.setOnSucceeded((event) -> {
-            
             pdMonthCombo.setValue(PDModel.Strings.NONE);
             pdAmount.clear();
             pdPaymentDate.setValue(null);
@@ -1940,14 +2017,6 @@ public class PDController implements Initializable {
         databaseActivityIndicator.progressProperty().bind(updateTenantDetails.progressProperty());
 
         updateTenantDetails.setOnSucceeded((event) -> {
-            try {
-                prefs = Preferences.userRoot().node(this.getClass().getName());
-                File file = new File(prefs.get(loc, "location"));
-                updateTDExcelRowValue(file);
-            } catch (IOException ex) {
-                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
             setTDEmpty1();
         });
         
@@ -1961,14 +2030,6 @@ public class PDController implements Initializable {
         databaseActivityIndicator.progressProperty().bind(updatePaymentDetails.progressProperty());
 
         updatePaymentDetails.setOnSucceeded((event) -> {
-            try {
-                prefs = Preferences.userRoot().node(this.getClass().getName());
-                File file = new File(prefs.get(loc, "location"));
-                updatePDExcelRowValue(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             pdMonthCombo.setValue(PDModel.Strings.NONE);
             pdAmount.clear();
             pdPaymentDate.setValue(null);
@@ -1986,14 +2047,6 @@ public class PDController implements Initializable {
         databaseActivityIndicator.progressProperty().bind(deleteFromTenantDetails.progressProperty());
 
         deleteFromTenantDetails.setOnSucceeded((event) -> {
-            try {
-                prefs = Preferences.userRoot().node(this.getClass().getName());
-                File file = new File(prefs.get(loc, "location"));
-                removeExcelRowValue(file);
-            } catch (IOException | InvalidFormatException ex) {
-                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-            }
             setTDEmpty1();
         });
 
@@ -2007,14 +2060,6 @@ public class PDController implements Initializable {
         databaseActivityIndicator.progressProperty().bind(deleteFromPaymentDetails.progressProperty());
         
         deleteFromPaymentDetails.setOnSucceeded((event) -> {
-            try {
-                prefs = Preferences.userRoot().node(this.getClass().getName());
-                File file = new File(prefs.get(loc, "location"));
-                removeTDExcelRow(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             pdMonthCombo.setValue(PDModel.Strings.NONE);
             pdAmount.clear();
             pdPaymentDate.setValue(null);
@@ -2027,7 +2072,7 @@ public class PDController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
+        
         databaseActivityIndicator.setVisible(false);
         databaseActivityIndicator.getStylesheets().add("/styles/spinnerCss.css");
         databaseActivityIndicator.setRadius(8.5);
@@ -2092,7 +2137,36 @@ public class PDController implements Initializable {
 
         blockTreeView.setRoot(rootBlock);
         blockTreeView.setShowRoot(false);
+        
+        radioVbox.setMaxWidth(200);
+        radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
+        
+        pdContentPane.setAlignment(Pos.CENTER_LEFT);
+        pdContentPane.setPadding(new Insets(0, 0, 0, 3));
+        pdContentPane.minWidthProperty().bind(pdPaymentOption.widthProperty());
+        /*HBox region = new HBox();
+        region.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(region, Priority.ALWAYS);*/
+        pdContentPane.getChildren().addAll(payLabel);
+        
+        pdPaymentOption.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
+            if (wasExpanded) {
+                System.out.println(pdPaymentOption.getText());
+                cashRadioButton.setSelected(false);
+                bankRadioButton.setSelected(false);
+                mpesaRadioButton.setSelected(false);
+                otherRadioButton.setSelected(false);
+            } else if (isNowExpanded) {
 
+            }
+
+        });
+        pdPaymentOption.setAlignment(Pos.CENTER);
+        pdPaymentOption.setGraphic(pdContentPane);
+        pdPaymentOption.setContent(radioVbox);
+        pdPaymentOption.setExpanded(false);
+        pdPaymentOption.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
+        
         cashRadioButton.setUserData("Cash");
         bankRadioButton.setUserData("Bank");
         mpesaRadioButton.setUserData("Mpesa");
@@ -2107,59 +2181,46 @@ public class PDController implements Initializable {
             pdCashTextfield.setPromptText("Name");
             pdPayOptionHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
             radioVbox.getChildren().add(pdPayOptionHbox);
-            payLabel.textProperty().bind(Bindings.concat("Received by: ").concat(pdCashTextfield.textProperty()));
+            payLabel.textProperty().bind(Bindings.concat("Cash: ").concat(pdCashTextfield.textProperty()));
         });
 
         bankRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             System.out.println("Bank button selected");
             radioVbox.getChildren().clear();
             pdPayOptionHbox.getChildren().clear();
-            pdbankTextfield.setPromptText("Deposit Slip");
             pdPayOptionHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
             radioVbox.getChildren().add(pdPayOptionHbox);
-            payLabel.textProperty().bind(Bindings.concat("Deposit slip: ").concat(pdbankTextfield.textProperty()));
+            payLabel.textProperty().bind(Bindings.concat("Bank Deposit: ").concat(pdbankTextfield.textProperty()));
         });
 
         mpesaRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             System.out.println("Mpesa button selected");
             radioVbox.getChildren().clear();
             pdPayOptionHbox.getChildren().clear();
-            pdMpesaTextfield.setPromptText("Transaction Code");
+            pdMpesaTextfield.setPromptText("Code");
             pdPayOptionHbox.getChildren().addAll(pdMpesaTextfield, pdMpesaButton);
             radioVbox.getChildren().add(pdPayOptionHbox);
-            payLabel.textProperty().bind(Bindings.concat("Transaction code: ").concat(pdMpesaTextfield.textProperty()));
+            payLabel.textProperty().bind(Bindings.concat("Mpesa: ").concat(pdMpesaTextfield.textProperty()));
         });
 
         otherRadioButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             radioVbox.getChildren().clear();
             pdPayOptionHbox.getChildren().clear();
-            pdOtherExpenseField.setPromptText("Alternative Payment");
             pdPayOptionHbox.getChildren().addAll(pdOtherExpenseField, pdOtherButton);
             radioVbox.getChildren().add(pdPayOptionHbox);
-            payLabel.textProperty().bind(Bindings.concat("Alternative: ").concat(pdOtherExpenseField.textProperty()));
+            payLabel.textProperty().bind(Bindings.concat("Other: ").concat(pdOtherExpenseField.textProperty()));
         });
-
-        pdPaymentOption.setMinWidth(5);
-        pdPaymentOption.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
-            if (wasExpanded) {
-                System.out.println(pdPaymentOption.getText());
-                cashRadioButton.setSelected(false);
-                bankRadioButton.setSelected(false);
-                mpesaRadioButton.setSelected(false);
-                otherRadioButton.setSelected(false);
-            } else if (isNowExpanded) {
-
-            }
-
-        });
-
+        
+        pdCashButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        pdCashButton.setGraphic(new ImageView("/images/icons8_checkmark_16px.png"));
         pdCashButton.setOnAction((event) -> {
             radioVbox.getChildren().clear();
             radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
             pdPaymentOption.setExpanded(false);
-            System.out.println(payLabel.getText());
         });
-
+        
+        pdBankButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        pdBankButton.setGraphic(new ImageView("/images/icons8_checkmark_16px.png"));
         pdBankButton.setOnAction((event) -> {
             radioVbox.getChildren().clear();
             radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
@@ -2177,7 +2238,37 @@ public class PDController implements Initializable {
             radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
             pdPaymentOption.setExpanded(false);
         });
+        
+        pdCashTextfield.setPrefWidth(100);
+        /*pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdCashTextfield.setPrefWidth(length * 8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdCashTextfield.setPrefWidth(50);
+            }
+        });*/
 
+        pdbankTextfield.setPrefWidth(50);
+        pdbankTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdbankTextfield.setPrefWidth(length * 8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdbankTextfield.setPrefWidth(50);
+            }
+        });
+
+        pdMpesaTextfield.setPrefWidth(50);
+        pdMpesaTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            int length = newValue.length();
+            if (length > 6) {
+                pdMpesaTextfield.setPrefWidth(length * 8);
+            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdMpesaTextfield.setPrefWidth(50);
+            }
+        });
+        
         blockTreeView.getSelectionModel().selectedItemProperty().addListener(houseListener);
 
         blockA.expandedProperty().addListener((observable, oldValue, newValue) -> {
@@ -2463,7 +2554,6 @@ public class PDController implements Initializable {
         
         tdSave.setOnAction((event) -> {
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            boolean firstEntry = false;
             if (blockTreeView.getSelectionModel().getSelectedItem() == null || blockTreeView.getSelectionModel().getSelectedItem().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block B") || blockTreeView.getSelectionModel().getSelectedItem().equals("Block C") || blockTreeView.getSelectionModel().getSelectedItem().equals("Nasra Block")) {
                 Alert emptyFieldAlert = new Alert(Alert.AlertType.ERROR);
                 emptyFieldAlert.setTitle("No Apartment Selected");
@@ -2478,6 +2568,8 @@ public class PDController implements Initializable {
                         FileChooser initialLoc = new FileChooser();
                         File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
                         prefs.put(loc, initFile.getPath());
+                        System.out.println(prefs.get(loc, "location"));
+                        excelFileLocation = initFile.getPath();
                         saveToTenantDetailsTable(databaseActivityIndicator);
                     } else if (!prefs.get(loc, "location").equals("location")) {
                         saveToTenantDetailsTable(databaseActivityIndicator);
@@ -2660,10 +2752,10 @@ public class PDController implements Initializable {
                 if (pdHbox1.getChildren().contains(icon)) {
                     (label2.getScene()).getWindow().hide();
                 } else if (!pdHbox1.getChildren().contains(icon)) {
-                    pdHbox1.getChildren().add(icon);
+                    pdHbox1.getChildren().add(3, icon);
                     (label2.getScene()).getWindow().hide();
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
@@ -2672,10 +2764,8 @@ public class PDController implements Initializable {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 try {
                     parentStickyStage = (Stage) icon.getScene().getWindow();
-                    System.out.println(parentStickyStage.getClass());
                     MyPopUp popUp = new MyPopUp();
                     stickyStage = (Stage) popUp.getScene().getWindow();
-                    System.out.println(stickyStage.getClass());
                     double centerXPosition = parentStickyStage.getX() + parentStickyStage.getWidth() / 2d;;
                     double centerYPsition = parentStickyStage.getY() + parentStickyStage.getHeight() / 2d;
 
@@ -2686,6 +2776,7 @@ public class PDController implements Initializable {
                         stickyStage.setY(centerYPsition - stickyStage.getHeight() / 2);
                         stickyStage.show();
                     });
+                    
                     popUp.showAndWait();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -3164,36 +3255,6 @@ public class PDController implements Initializable {
             }
         });
 
-        pdCashTextfield.setPrefWidth(50);
-        pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
-            int length = newValue.length();
-            if (length > 6) {
-                pdCashTextfield.setPrefWidth(length * 8);
-            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
-                pdCashTextfield.setPrefWidth(50);
-            }
-        });
-
-        pdbankTextfield.setPrefWidth(50);
-        pdbankTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
-            int length = newValue.length();
-            if (length > 6) {
-                pdbankTextfield.setPrefWidth(length * 8);
-            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
-                pdbankTextfield.setPrefWidth(50);
-            }
-        });
-
-        pdMpesaTextfield.setPrefWidth(50);
-        pdMpesaTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
-            int length = newValue.length();
-            if (length > 6) {
-                pdMpesaTextfield.setPrefWidth(length * 8);
-            } else if (newValue.isEmpty() || oldValue.isEmpty()) {
-                pdMpesaTextfield.setPrefWidth(50);
-            }
-        });
-
         rdRepairsDone.setWrapText(true);
         rdRepairsDone.setPrefWidth(170);
         rdRepairsDone.sceneProperty().addListener((observable, oldValue, newValue) -> {
@@ -3277,15 +3338,6 @@ public class PDController implements Initializable {
 
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
 
-        radioVbox.setMinWidth(170);
-        radioVbox.getChildren().addAll(cashRadioButton, bankRadioButton, mpesaRadioButton, otherRadioButton);
-
-        pdPaymentOption.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        pdPaymentOption.setGraphic(payLabel);
-        pdPaymentOption.setContent(radioVbox);
-        pdPaymentOption.setExpanded(false);
-        pdPaymentOption.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
-
         pdHbox5.setPadding(new Insets(10, 0, 0, 0));
 
         pdMonthCombo.setPrefWidth(170);
@@ -3339,7 +3391,7 @@ public class PDController implements Initializable {
             label2.setAlignment(Pos.CENTER);
 
             Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                 label1.setText(LocalDateTime.now().format(formatter));
             }), new KeyFrame(Duration.seconds(1)));
             clock.setCycleCount(Animation.INDEFINITE);
@@ -3445,6 +3497,7 @@ public class PDController implements Initializable {
 
                 if (!rs.next()) {
                     logger.info("No entry found in database");
+                    tenantRowId = 0;
                 } else {
                     do {
                         tenantRowId = rs.getInt("RowID");
@@ -3487,10 +3540,11 @@ public class PDController implements Initializable {
                 
                 if (!rs.next()) {
                     logger.info("No entry found in database");
+                    payRowId = 0;
                 } else {
                     do {                        
                        payRowId = rs.getInt("RowID");
-                       paymentDetails.addAll(rs.getString("HouseNumber"), rs.getString("TenantName"), rs.getString("Amount"), rs.getString("Month"), rs.getString("PaymentDate"), rs.getString("PaymentMethod"));
+                       paymentDetails.addAll(rs.getString("HouseNumber"), rs.getString("TenantName"), rs.getString("Amount"), rs.getString("Month"), rs.getString("PaymentDate"), rs.getString("PaymentMethod"), rs.getString("StickyNote"));
                     } while (rs.next());
                     logger.info("Found entry");
                 }
@@ -3516,12 +3570,19 @@ public class PDController implements Initializable {
             Thread.sleep(1000);
 
             try (Connection con = getConnection()) {
-                saveToTenantDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                if (saveToTenantDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()))) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        createExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
             return null;
         }
 
-        private void saveToTenantDetails(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
+        private boolean saveToTenantDetails(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) {
             logger.info("Inserting into Tenant Details.");
 
             try {
@@ -3537,19 +3598,18 @@ public class PDController implements Initializable {
                 pstmt.setString(8, moveOutDate);
                 pstmt.setString(9, leaseStartDate);
                 pstmt.setString(10, leaseEndDate);
-                if (pstmt.execute()) {
-                    System.out.println(pstmt.execute());
-                    try {
-                        prefs = Preferences.userRoot().node(this.getClass().getName()); //Preference to store file location for saving to excel file later
-                        File file = new File(prefs.get(loc, "location"));
-                        createExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()));
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                pstmt.execute();
+
+                /*String lastRow = "Select last_insert_rowid()";
+                pstmt1 = con.prepareStatement(lastRow);
+                ResultSet rs = pstmt1.executeQuery();
+                int lastRowID = rs.getInt(0);
+                System.out.println(lastRowID);
+                 */
             } catch (SQLException e) {
                 logger.info("Insert into Tenant Details table failed.");
                 e.printStackTrace();
+                return false;
             } finally {
                 try {
                     con.close();
@@ -3558,6 +3618,7 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
+            return true;
         }
     }
     
@@ -3565,14 +3626,22 @@ public class PDController implements Initializable {
         @Override
         protected Void call() throws Exception {
             Thread.sleep(1000);
-            
+
             try (Connection con = getConnection()) {
-                savePaymentDetailsToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getValue(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+                if (savePaymentDetailsToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getValue(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText())) {
+                    try {
+                        System.out.println(excelFileLocation);
+                        File file = new File(excelFileLocation);
+                        createAndWriteExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return null;
         }
         
-        private void savePaymentDetailsToTable(Connection con, String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
+        private boolean savePaymentDetailsToTable(Connection con, String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
             logger.info("Inserting into Payment Detils table.");
             try {
                 String insertToPaymentDetails = "INSERT INTO PaymentDetails(HouseNumber, TenantName, Amount, Month, PaymentDate, PaymentMethod) VALUES(?,?,?,?,?,?)";
@@ -3583,18 +3652,11 @@ public class PDController implements Initializable {
                 pstmt.setString(4, Month.name());
                 pstmt.setString(5, PaymentDate);
                 pstmt.setString(6, PaymentMethod);
-                if (pstmt.execute()) {
-                    try {
-                        prefs = Preferences.userRoot().node(this.getClass().getName());
-                        File file = new File(prefs.get(loc, "location"));
-                        createAndWriteExcelSheet(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdName.getText(), pdAmount.getText(), pdMonthCombo.getSelectionModel().getSelectedItem().name(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText());
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
+                pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Insert into Payment Details table failed.");
                 e.printStackTrace();
+                return false;
             } finally {
                 try {
                     pstmt.close();
@@ -3602,24 +3664,33 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
+            return true;
         }
     }
     
     class UpdateTenantDetailsTask extends DBTask {
+
         @Override
         protected Void call() throws Exception {
             Thread.sleep(1000);
-            
+
             try (Connection con = getConnection()) {
-                updateTenantDetails(con, tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()), tenantRowId);
+                if (updateTenantDetails(con, tdName.getText(), tdPhone.getText(), tdAmount.getText(), tdDeposit.getText(), tdDueDate.getText(), getDateValueAsString(tdMoveInDate.getValue()), getDateValueAsString(tdMoveOutDate.getValue()), getDateValueAsString(tdLeaseStartDate.getValue()), getDateValueAsString(tdLeaseEndDate.getValue()), tenantRowId)) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        updateTDExcelRowValue(file);
+                    } catch (IOException ex) {
+                        Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
-            
+
             return null;
         }
-        
-        private void updateTenantDetails(Connection con, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate, int rowID) {
+
+        private boolean updateTenantDetails(Connection con, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate, int rowID) {
             logger.info("Updatimg Tenant Details table");
-            
+
             try {
                 String updateTD = "UPDATE TenantDetails SET TenantName = ?, TenantPhoneNumber = ?, RentAmount = ?, Deposit = ?, DueDate = ?, MoveInDate = ?, MoveOutDate = ?, LeaseStartDate = ?, LeaseEndDate = ? WHERE RowID = ?";
                 pstmt = con.prepareStatement(updateTD);
@@ -3637,6 +3708,7 @@ public class PDController implements Initializable {
             } catch (SQLException e) {
                 logger.info("Updating Tenant Details table failed.");
                 e.printStackTrace();
+                return false;
             } finally {
                 try {
                     pstmt.close();
@@ -3644,24 +3716,33 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
+            return true;
         }
     }
     
     class UpdatePaymentDetailsTask extends DBTask {
+
         @Override
         protected Void call() throws Exception {
             Thread.sleep(1000);
-            
+
             try (Connection con = getConnection()) {
-                updateTenantDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText(), payRowId);
+                if (updatePaymentDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payLabel.getText(), payRowId)) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        updatePDExcelRowValue(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            
+
             return null;
         }
-        
-        private void updateTenantDetails(Connection con, String Amount, String PaymentDate, String PaymentMethod, int rowID) {
+
+        private boolean updatePaymentDetails(Connection con, String Amount, String PaymentDate, String PaymentMethod, int rowID) {
             logger.info("Updating Payment Details");
-            
+
             try {
                 String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?  WHERE RowID = ?";
                 pstmt = con.prepareStatement(updateAmountSql);
@@ -3673,6 +3754,7 @@ public class PDController implements Initializable {
             } catch (SQLException e) {
                 logger.info("Updating Payment Details table failed.");
                 e.printStackTrace();
+                return false;
             } finally {
                 try {
                     pstmt.close();
@@ -3680,24 +3762,35 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
+            return true;
         }
     }
     
-    class  DeleteFromTenantDetailsTask extends DBTask {
+    class DeleteFromTenantDetailsTask extends DBTask {
+
         @Override
         protected Void call() throws Exception {
             Thread.sleep(1000);
-            
+
             try (Connection con = getConnection()) {
-                deleteFromTenantDetails(con, tenantRowId, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                if (deleteFromTenantDetails(con, tenantRowId, blockTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        removeExcelRowValue(file);
+                        removePDExcelRowFromTD(file);
+                    } catch (IOException | InvalidFormatException ex) {
+                        Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                        ex.printStackTrace();
+                    }
+                }
             }
-            
+
             return null;
         }
-        
-        private void deleteFromTenantDetails(Connection con, int rowID, String houseNummber) {
+
+        private boolean deleteFromTenantDetails(Connection con, int rowID, String houseNummber) {
             logger.info("Deleting entry from Tenant Details");
-            
+
             try {
 
                 String deleteTDString = "DELETE FROM TenantDetails WHERE RowID = ?";
@@ -3724,6 +3817,7 @@ public class PDController implements Initializable {
                             ex.printStackTrace();
                         }
                     }
+                    return false;
                 } finally {
                     if (pstmt != null) {
                         pstmt.close();
@@ -3736,25 +3830,34 @@ public class PDController implements Initializable {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
             }
-        } 
-        
+            return true;
+        }
+
     }
     
-    class  DeleteFromPaymentDetailsTask extends DBTask {
+    class DeleteFromPaymentDetailsTask extends DBTask {
+
         @Override
         protected Void call() throws Exception {
             Thread.sleep(1000);
-            
+
             try (Connection con = getConnection()) {
-                deleteFromPaymentDetailsTask(con, payRowId);
+                if (deleteFromPaymentDetailsTask(con, payRowId)) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        removePDExcelRow(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            
+
             return null;
         }
-        
-        private void deleteFromPaymentDetailsTask (Connection con, int rowID) {
-           logger.info("Deleting entry from Payment Details");
-           
+
+        private boolean deleteFromPaymentDetailsTask(Connection con, int rowID) {
+            logger.info("Deleting entry from Payment Details");
+
             try {
                 String deletePaySql = "DELETE FROM PaymentDetails WHERE RowID = ?";
                 pstmt = con.prepareStatement(deletePaySql);
@@ -3763,6 +3866,7 @@ public class PDController implements Initializable {
             } catch (SQLException e) {
                 logger.info("Failed to delete from Tenant Details.");
                 e.printStackTrace();
+                return false;
             } finally {
                 try {
                     pstmt.close();
@@ -3770,7 +3874,8 @@ public class PDController implements Initializable {
                     e.printStackTrace();
                 }
             }
-        } 
+            return true;
+        }
     }
     
     abstract class DBTask<T> extends Task<T> {
