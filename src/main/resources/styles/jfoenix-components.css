@@ -300,11 +300,24 @@ and open the template in the editor.
     -fx-stroke: #007AFF;
 }
 
-.animated-header-button {
+.animated-header-buttonTD {
     -fx-background-color: #F1F1F1;
     -fx-background-radius: 30px;
     -fx-pref-height: 30px;
-    -fx-pref-width: 30px;
+    -fx-pref-width: 110px;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+    /*-fx-shape: "M 0 -3.5 v 7 l 4 -3.5 z";*/
+    -jfx-button-type: RAISED;
+}
+
+.animated-option-buttonTD {
+    -fx-background-color: #F1F1F1;
+    -fx-background-radius: 30px;
+    -fx-pref-height: 20px;
+    -fx-pref-width: 100px;
     -fx-min-width: -fx-pref-width;
     -fx-max-width: -fx-pref-width;
     -fx-min-height: -fx-pref-height;
@@ -312,10 +325,22 @@ and open the template in the editor.
     -jfx-button-type: RAISED;
 }
 
-.animated-option-button {
+.animated-header-button {
     -fx-background-color: #F1F1F1;
     -fx-background-radius: 30px;
     -fx-pref-height: 30px;
+    -fx-pref-width: 90px;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+    /*-jfx-button-type: RAISED;*/
+}
+
+.animated-option-button {
+    -fx-background-color: #F1F1F1;
+    -fx-background-radius: 30px;
+    -fx-pref-height: 20px;
     -fx-pref-width: 70px;
     -fx-min-width: -fx-pref-width;
     -fx-max-width: -fx-pref-width;

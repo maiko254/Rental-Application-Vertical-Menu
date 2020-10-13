@@ -5,6 +5,8 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import com.jfoenix.controls.RecursiveTreeItem;
+import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,7 +16,7 @@ import javafx.beans.property.StringProperty;
  *
  * @author Mike254
  */
-public class PDModel {
+public class PDModel extends RecursiveTreeObject<PDModel>{
     
     public enum Strings {
         ALL("All"),
