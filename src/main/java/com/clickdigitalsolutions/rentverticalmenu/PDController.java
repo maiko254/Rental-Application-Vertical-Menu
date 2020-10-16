@@ -16,7 +16,13 @@ import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.JFXTreeTableColumn;
+import com.jfoenix.controls.JFXTreeTableView;
 import com.jfoenix.controls.JFXTreeView;
+import com.jfoenix.controls.RecursiveTreeItem;
+import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -89,6 +95,8 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTablePosition;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -139,7 +147,9 @@ public class PDController implements Initializable {
 
     @FXML
     private SplitPane sp2;
-
+    
+    public  JFXTreeTableView<PDModel> paymentsTable = new JFXTreeTableView<>();
+    
     private BorderPane tableViewPane = new BorderPane();
 
     @FXML
@@ -162,13 +172,13 @@ public class PDController implements Initializable {
 
     private Button saveButtonPD;
 
-    private TableColumn<PDModel, String> houseNoCol = new TableColumn("House Number");
-    private TableColumn<PDModel, String> tenantNameCol = new TableColumn("Tenant Name");
-    private TableColumn<PDModel, String> amountCol = new TableColumn<>("Amount");
-    private TableColumn<PDModel, PDModel.Strings> monthCol = new TableColumn<>("Month");
-    private TableColumn<PDModel, String> dateCol = new TableColumn<>("Payment Date");
-    private TableColumn<PDModel, String> methodCol = new TableColumn<>("Payment Method");
-    public TableView<PDModel> paymentsTable = new TableView<>();
+    private JFXTreeTableColumn<PDModel, String> houseNoCol = new JFXTreeTableColumn("House Number");
+    private JFXTreeTableColumn<PDModel, String> tenantNameCol = new JFXTreeTableColumn("Tenant Name");
+    private JFXTreeTableColumn<PDModel, String> amountCol = new JFXTreeTableColumn("Amount");
+    private JFXTreeTableColumn<PDModel, PDModel.Strings> monthCol = new JFXTreeTableColumn("Month");
+    private JFXTreeTableColumn<PDModel, String> dateCol = new JFXTreeTableColumn("Payment Date");
+    private JFXTreeTableColumn<PDModel, String> methodCol = new JFXTreeTableColumn("Payment Method");
+    
 
     public TableColumn<RModel, String> houseNo = new TableColumn("House Number");
     public TableColumn<RModel, String> tenantName = new TableColumn("Tenant Name");
@@ -258,14 +268,19 @@ public class PDController implements Initializable {
 
     TreeItem<String> d1 = new TreeItem<>("D1");
     TreeItem<String> d2 = new TreeItem<>("D2");
-
+    
+    JFXButton backButton = new JFXButton("Back");
+    
+    public GridPane pdPayGrid = new GridPane();
+    public StackPane pdStackPane = new StackPane();
+    
     public ScrollPane tdScrollPane = new ScrollPane(tdVbox);
     public ScrollPane pdScrollPane = new ScrollPane(payLayout);
     public ScrollPane rdScrollPane = new ScrollPane(rdVbox);
 
     public JFXTabPane tenantDataPane = new JFXTabPane();
     public Tab tenantDetails = new Tab("Tenant Details", tdScrollPane);
-    public Tab paymentDetails = new Tab("Payment Details", pdScrollPane);
+    public Tab paymentDetails = new Tab("Payment Details", pdStackPane);
     public Tab repairDetails = new Tab("Repairs Details", rdScrollPane);
 
     Label l1 = new Label("Tenant Name");
@@ -282,6 +297,7 @@ public class PDController implements Initializable {
     Label l11 = new Label("Month");
     Label l12 = new Label("Amount Paid");
     Label l13 = new Label("Payment Date");
+    Label l14 = new Label("Payment Options");
 
     Label l20 = new Label("Month");
     Label l16 = new Label("Repairs Done");
@@ -289,7 +305,6 @@ public class PDController implements Initializable {
     Label l18 = new Label("Date of\nRepairs");
     Label l19 = new Label("Miscellaneous\nCosts");
     Label l21 = new Label("Reg. Dates");
-    Label l22 = new Label("Options");
     
     public JFXTextField tdName = new JFXTextField();
     public JFXTextField tdPhone = new JFXTextField();
@@ -333,8 +348,7 @@ public class PDController implements Initializable {
     public JFXButton pdMpesaButton = new JFXButton();
     public JFXButton pdOtherButton = new JFXButton();
     public Label payLabel = new Label();
-    public HBox pdPaymentOptionListHbox = new HBox(5);
-    public JFXNodesList paymentOptionsList = new JFXNodesList();
+    /*public JFXNodesList paymentOptionsList = new JFXNodesList();*/
     public JFXNodesList cashNodesList = new JFXNodesList();
     public JFXNodesList bankNodesList = new JFXNodesList();
     public JFXNodesList mpesaNodesList = new JFXNodesList();
@@ -375,7 +389,7 @@ public class PDController implements Initializable {
     HBox pdHbox2 = new HBox(10, l11, pdMonthCombo);
     HBox pdHbox3 = new HBox(10, l12, pdAmount, rentArrearslabel);
     HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
-    HBox pdHbox5 = new HBox(10, pdPaymentOptionListHbox);
+    HBox pdHbox5 = new HBox(10, l14, paymentOptionButton);
     HBox pdHbox6 = new HBox(pdTableViewButton);
 
     HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
@@ -791,6 +805,16 @@ public class PDController implements Initializable {
         return repairsData;
     }
 
+    private <T> void setupCellValueFactory(JFXTreeTableColumn<PDModel, T> column, Function<PDModel, ObservableValue<T>> mapper) {
+        column.setCellValueFactory((TreeTableColumn.CellDataFeatures<PDModel, T> param) -> {
+            if (column.validateValue(param)) {
+                return mapper.apply(param.getValue().getValue());
+            } else {
+                return column.getComputedValue(param);
+            }
+        });
+    }
+    
     class MyEventHandler implements EventHandler<MouseEvent> {
 
         @Override
@@ -833,33 +857,14 @@ public class PDController implements Initializable {
 
     @SuppressWarnings("unchecked")
     private void editFocusedCell() {
-        final TablePosition<PDModel, String> focusedCell = paymentsTable
+        final TreeTablePosition<PDModel, ?> focusedCell = paymentsTable
                 .focusModelProperty().get().focusedCellProperty().get();
         paymentsTable.edit(focusedCell.getRow(), focusedCell.getTableColumn());
     }
 
-    @SuppressWarnings("unchecked")
-    private void selectPrevious(TableView rentPaymentTable) {
-        if (rentPaymentTable.getSelectionModel().isCellSelectionEnabled()) {
-            TablePosition<PDModel, ?> pos = rentPaymentTable.getFocusModel().getFocusedCell();
-            if (pos.getColumn() - 1 >= 0) {
-                rentPaymentTable.getSelectionModel().select(pos.getRow(), getTableColumn(pos.getTableColumn(), -1));
-            } else if (pos.getRow() < rentPaymentTable.getItems().size()) {
-                rentPaymentTable.getSelectionModel().select(pos.getRow() - 1,
-                        rentPaymentTable.getVisibleLeafColumn(
-                                rentPaymentTable.getVisibleLeafColumns().size() - 1));
-            }
-        } else {
-            int focusindex = rentPaymentTable.getFocusModel().getFocusedIndex();
-            if (focusindex == -1) {
-                rentPaymentTable.getSelectionModel().select(rentPaymentTable.getItems().size() - 1);
-            } else if (focusindex > 0) {
-                rentPaymentTable.getSelectionModel().select(focusindex - 1);
-            }
-        }
-    }
+    
 
-    private TableColumn<PDModel, ?> getTableColumn(final TableColumn<PDModel, ?> column, int offset) {
+    private TreeTableColumn<PDModel, ?> getTableColumn(final JFXTreeTableColumn<PDModel, ?> column, int offset) {
         int columnIndex = paymentsTable.getVisibleLeafIndex(column);
         int newColumnIndex = columnIndex + offset;
         return paymentsTable.getVisibleLeafColumn(newColumnIndex);
@@ -873,18 +878,18 @@ public class PDController implements Initializable {
 
     private void setupHouseNumberColumn() {
         houseNoCol.setPrefWidth(90);
-        houseNoCol.setCellValueFactory(cellData -> cellData.getValue().houseNumberTablePDProperty());
+        houseNoCol.setCellValueFactory(cellData -> cellData.getValue().getValue().houseNumberTablePDProperty());
     }
 
     private void setupTenantNameColumn() {
         tenantNameCol.setPrefWidth(120);
         tenantNameCol.setStyle("-fx-alignment: CENTER RIGHT");
-        tenantNameCol.setCellValueFactory(cellData -> cellData.getValue().tenantNameTablePDProperty());
+        tenantNameCol.setCellValueFactory(cellData -> cellData.getValue().getValue().tenantNameTablePDProperty());
     }
 
     private void setupAmountColumn() {
         amountCol.setPrefWidth(90);
-        amountCol.setCellValueFactory(cellData -> cellData.getValue().amountTablePDProperty());
+        amountCol.setCellValueFactory(cellData -> cellData.getValue().getValue().amountTablePDProperty());
     }
 
     private void updatePaymentTableData(String column, String newValue, String houseNumber, String paymentDate) {
@@ -902,19 +907,19 @@ public class PDController implements Initializable {
 
     private void setupMonthColumn() {
         monthCol.setPrefWidth(90);
-        monthCol.setCellValueFactory(cellData -> cellData.getValue().monthTablePDProperty());
+        monthCol.setCellValueFactory(cellData -> cellData.getValue().getValue().monthTablePDProperty());
     }
 
     private void setupPaymentDateColumn() {
         dateCol.setPrefWidth(90);
-        dateCol.setCellValueFactory(cellData -> cellData.getValue().paymentDateTablePDProperty());
+        dateCol.setCellValueFactory(cellData -> cellData.getValue().getValue().paymentDateTablePDProperty());
     }
 
     private void setupPaymentMethodColumn() {
         DoubleBinding usedWidth = amountCol.widthProperty().add(monthCol.widthProperty()).add(dateCol.widthProperty());
         methodCol.prefWidthProperty().bind(paymentsTable.widthProperty().subtract(usedWidth));
         methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
-        methodCol.setCellValueFactory(cellData -> cellData.getValue().paymentMethodPDProperty());
+        methodCol.setCellValueFactory(cellData -> cellData.getValue().getValue().paymentMethodPDProperty());
     }
 
     /*
@@ -1562,7 +1567,7 @@ public class PDController implements Initializable {
         }
     };
 
-    private void addJumpAnimation(Node node) {
+    /*private void addJumpAnimation(Node node) {
         final double start = 0.0;
         final double end = start - 3.0;
         translateTransition.setFromY(start);
@@ -1580,7 +1585,7 @@ public class PDController implements Initializable {
     EventHandler<MouseEvent> keyEventHandler
             = (MouseEvent keyEvent) -> {
                 addJumpAnimation(icon);
-            };
+            };*/
 
     public boolean checkIfNode(Node node) {
         while (node != null) {
@@ -1592,7 +1597,7 @@ public class PDController implements Initializable {
         return false;
     }
 
-    private void addBlinkAnimation() {
+    /*private void addBlinkAnimation() {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.setAutoReverse(true);
         final KeyValue kv = new KeyValue(pdTableViewButton.opacityProperty(), 0.0);
@@ -1608,7 +1613,7 @@ public class PDController implements Initializable {
 
     private void startBlinkAnimation() {
         timeline.playFromStart();
-    }
+    }*/
 
     /*private int removeEmptyRows(final Sheet sheet) {
         int i;
@@ -1947,7 +1952,7 @@ public class PDController implements Initializable {
                 pdbankTextfield.clear();
                 pdMpesaTextfield.clear();
                 
-                if (paymentOptionsList.isExpanded()) {
+                /*if (paymentOptionsList.isExpanded()) {
                     if (cashNodesList.isExpanded()) {
                         cashNodesList.animateList(false);
                     }
@@ -1958,7 +1963,7 @@ public class PDController implements Initializable {
                         mpesaNodesList.animateList(false);
                     }
                     paymentOptionsList.animateList(false);
-                }
+                }*/
                 
                 if (pdHbox1.getChildren().contains(icon)) {
                     pdHbox1.getChildren().remove(icon);
@@ -1981,23 +1986,14 @@ public class PDController implements Initializable {
                 
                 switch (payArray[0]) {
                     case "Cash":
-                        if (!paymentOptionsList.isExpanded()) {
-                            paymentOptionsList.animateList(true);
-                        }
                         pdCashTextfield.setText(payArray[1]);
                         cashNodesList.animateList(true);
                         break;
                     case "Bank":
-                        if (!paymentOptionsList.isExpanded()) {
-                            paymentOptionsList.animateList(true);
-                        }
                         pdbankTextfield.setText(payArray[1]);
                         bankNodesList.animateList(true);
                         break;
                     case "Mpesa":
-                        if (!paymentOptionsList.isExpanded()) {
-                            paymentOptionsList.animateList(true);
-                        }
                         pdMpesaTextfield.setText(payArray[1]);
                         mpesaNodesList.animateList(true);
                         break;
@@ -2165,7 +2161,16 @@ public class PDController implements Initializable {
         MainApp.databaseExecutor.submit(deleteFromPaymentDetails);
     }
     
-    
+    private void setupPaymentsTable() {
+        setupCellValueFactory(houseNoCol, PDModel::houseNumberTablePDProperty);
+        setupCellValueFactory(tenantNameCol, PDModel::tenantNameTablePDProperty);
+        setupCellValueFactory(monthCol, PDModel::monthTablePDProperty);
+        setupCellValueFactory(amountCol, PDModel::amountTablePDProperty);
+        setupCellValueFactory(dateCol, PDModel::paymentDateTablePDProperty);
+        setupCellValueFactory(methodCol, PDModel::paymentMethodPDProperty);
+        
+        
+    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -2274,23 +2279,59 @@ public class PDController implements Initializable {
         mpesaContainerHbox.setAlignment(Pos.CENTER_RIGHT);
         mpesaContainerHbox.getChildren().addAll(pdMpesaTextfield, pdMpesaButton);
         
-        cashLabel.setFont(javafx.scene.text.Font.font("roboto", 13));
         cashButton.setButtonType(JFXButton.ButtonType.RAISED);
         cashButton.setGraphic(cashLabel);
         cashButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
-        bankLabel.setFont(javafx.scene.text.Font.font("roboto", 13));
         bankButton.setButtonType(JFXButton.ButtonType.RAISED);
         bankButton.setGraphic(bankLabel);
         bankButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
-        mpesaLabel.setFont(javafx.scene.text.Font.font("roboto", 13));
         mpesaButton.setButtonType(JFXButton.ButtonType.RAISED);
         mpesaButton.setGraphic(mpesaLabel);
         mpesaButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
         
-        paymentOptionButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);
-        paymentOptionButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        l22.setAlignment(Pos.CENTER_RIGHT);
-        paymentOptionButton.setGraphic(l22);
+        paymentOptionButton.setPadding(new Insets(0, 0, 8, 0));
+        paymentOptionButton.setText("Select Options");
+        paymentOptionButton.setAlignment(Pos.CENTER_LEFT);
+        paymentOptionButton.setGraphicTextGap(50);
+        /*paymentOptionButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);*/
+        paymentOptionButton.setContentDisplay(ContentDisplay.RIGHT);
+        paymentOptionButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ARROW_RIGHT, "20px"));
+        paymentOptionButton.setOnAction((event) -> {
+            Scene scene = paymentOptionButton.getScene();
+            pdStackPane.translateXProperty().set(-1 * scene.getWidth());
+            
+            pdStackPane.getChildren().remove(pdScrollPane);
+            pdStackPane.getChildren().add(pdPayGrid);
+            
+            Timeline timelinePayOptionScene = new Timeline();
+            KeyValue kv = new KeyValue(pdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
+            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+            timelinePayOptionScene.getKeyFrames().add(kf);
+            /*timelinePayOptionScene.setOnFinished(act -> {
+                pdStackPane.getChildren().remove(pdScrollPane);
+            });*/
+            timelinePayOptionScene.play();
+        });
+        
+        
+        backButton.setGraphicTextGap(15);
+        backButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ARROW_LEFT, "20px"));
+        backButton.setOnAction((event) -> {
+            Scene scene = backButton.getScene();
+            pdStackPane.translateXProperty().set(scene.getWidth());
+            
+            pdStackPane.getChildren().add(pdScrollPane);
+            
+            Timeline timelinePayOptionScene = new Timeline();
+            KeyValue kv = new KeyValue(pdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
+            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+            timelinePayOptionScene.getKeyFrames().add(kf);
+            timelinePayOptionScene.setOnFinished(act -> {
+                pdStackPane.getChildren().remove(pdPayGrid);
+            });
+            timelinePayOptionScene.play(); 
+            
+        });
         
         cashNodesList.setSpacing(95);
         cashNodesList.addAnimatedNode(cashButton);
@@ -2319,7 +2360,7 @@ public class PDController implements Initializable {
             bankNodesList.animateList(false);
         });
         
-        paymentOptionsList.setSpacing(5);
+        /*paymentOptionsList.setSpacing(5);
         paymentOptionsList.addAnimatedNode(paymentOptionButton);
         paymentOptionsList.addAnimatedNode(cashNodesList);
         paymentOptionsList.addAnimatedNode(bankNodesList);
@@ -2328,7 +2369,7 @@ public class PDController implements Initializable {
             cashNodesList.animateList(false);
             bankNodesList.animateList(false);
             mpesaNodesList.animateList(false);
-        });
+        });*/
         
         pdCashButton.setVisible(false);
         pdCashButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -2336,7 +2377,6 @@ public class PDController implements Initializable {
         pdCashButton.setOnAction((event) -> {
             payMethodString = "Cash:".concat(pdCashTextfield.getText());
             cashNodesList.animateList(false);
-            paymentOptionsList.animateList(false);
         });
         
         pdBankButton.setVisible(false);
@@ -2345,7 +2385,6 @@ public class PDController implements Initializable {
         pdBankButton.setOnAction((event) -> {
             payMethodString = "Bank: ".concat(pdbankTextfield.getText());
             bankNodesList.animateList(false);
-            paymentOptionsList.animateList(false);
         });
         
         pdMpesaButton.setVisible(false);
@@ -2354,47 +2393,64 @@ public class PDController implements Initializable {
         pdMpesaButton.setOnAction((event) -> {
             payMethodString = "Mpesa: ".concat(pdMpesaTextfield.getText());
             mpesaNodesList.animateList(false);
-            paymentOptionsList.animateList(false);
             
         });
         
         pdCashTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
         pdCashTextfield.setPromptText("Received by...");
         pdCashTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
-            pdCashTextfield.setFont(javafx.scene.text.Font.font(16));
+            pdCashTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
             pdCashButton.setVisible(true);
             
-            int length = newValue.length();
+            if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdCashTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+                pdCashButton.setVisible(false);
+            }
+            /*int length = newValue.length();
             if (length > 20) {
                 pdCashTextfield.setPrefWidth(length * 6);
             } else if (newValue.isEmpty() || oldValue.isEmpty()) {
                 pdCashTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
                 pdCashButton.setVisible(false);
-            }
+            }*/
         });
         
         pdbankTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
         pdbankTextfield.setPromptText("Deposit Slip...");
         pdbankTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
-            pdbankTextfield.setFont(javafx.scene.text.Font.font(16));
+            pdbankTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
             pdBankButton.setVisible(true);
             
-            int length = newValue.length();
+            if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdbankTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+                pdBankButton.setVisible(false);
+            }
+            /*int length = newValue.length();
             if (length > 20) {
                 pdbankTextfield.setPrefWidth(length * 6);
             } else if (newValue.isEmpty() || oldValue.isEmpty()) {
                 pdbankTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
                 pdBankButton.setVisible(false);
-            }
+            }*/
         });
 
         pdMpesaTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
         pdMpesaTextfield.setPromptText("Transaction code...");
+        pdMpesaTextfield.textProperty().addListener((observable, oldValue, newValue) -> {
+            pdMpesaTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
+            pdMpesaTextfield.setVisible(false);
+            
+            if (newValue.isEmpty() || oldValue.isEmpty()) {
+                pdMpesaTextfield.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+            }
+        });
         
         JFXNodesList.alignNodeToChild(cashContainerHbox, cashButton);
         JFXNodesList.alignNodeToChild(bankContainerHbox, bankButton);
         JFXNodesList.alignNodeToChild(mpesaContainerHbox, mpesaButton);
         //End of Payment Option Nodes List
+        
+        pdHbox5.setPadding(new Insets(10, 0, 0, 0));
         
         l1.setMinSize(120, 20);
         l2.setMinSize(120, 20);
@@ -2414,6 +2470,7 @@ public class PDController implements Initializable {
         l18.setMinSize(120, 20);
         l19.setMinSize(120, 20);
         l20.setMinSize(120, 20);
+        l14.setMinSize(120, 20);
         
         setupHouseNumberColumn();
         setupTenantNameColumn();
@@ -3014,10 +3071,10 @@ public class PDController implements Initializable {
             }
         });
 
-        icon.addEventHandler(MouseEvent.MOUSE_ENTERED, keyEventHandler);
+        /*icon.addEventHandler(MouseEvent.MOUSE_ENTERED, keyEventHandler);
         icon.addEventHandler(MouseEvent.MOUSE_EXITED, (event) -> {
             stopJumpAnimation();
-        });
+        });*/
 
         /*printReceipt.setOnAction((event) -> {
             Map map = null;
@@ -3264,8 +3321,8 @@ public class PDController implements Initializable {
                 return false;
             });
             SortedList<PDModel> sortedData = new SortedList<>(filteredList);
-            sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());
-            paymentsTable.setItems(sortedData);
+            /*sortedData.comparatorProperty().bind(paymentsTable.comparatorProperty());*/
+            paymentsTable.setRoot(new RecursiveTreeItem<>(payTenantDetails, RecursiveTreeObject::getChildren));
         });
 
         rdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -3357,8 +3414,8 @@ public class PDController implements Initializable {
             sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());
             repairsTable.setItems(houseRepairDetails);
         });
-
-        paymentsTable.setRowFactory((TableView<PDModel> tableView) -> {
+        
+        /*paymentsTable.setRowFactory((TreeTableView<PDModel> tableView) -> {
             final TableRow<PDModel> row = new TableRow<>();
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
@@ -3391,7 +3448,7 @@ public class PDController implements Initializable {
                             .otherwise(contextMenu)
             );
             return row;
-        });
+        });*/
 
         repairsTable.setRowFactory((TableView<RModel> tableView) -> {
             final TableRow<RModel> row = new TableRow<>();
@@ -3469,7 +3526,7 @@ public class PDController implements Initializable {
                 pdTableViewButton.setText("Show details >>");
                 Scene scene = paymentDetails.getTabPane().getScene();
                 Stage stage = (Stage) scene.getWindow();
-                MainApp.changeWindowSize(stage, 500);
+                MainApp.windowResize(stage);
             }
         });
 
@@ -3479,7 +3536,7 @@ public class PDController implements Initializable {
                 rdTableViewButton.setText("Show details >>");
                 Scene scene = repairDetails.getTabPane().getScene();
                 Stage stage = (Stage) scene.getWindow();
-                MainApp.changeWindowSize(stage, 500);
+                MainApp.windowResize(stage);
             }
         });
 
@@ -3515,20 +3572,21 @@ public class PDController implements Initializable {
             }
         });
 
-        pdTableViewButton.addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, (event) -> {
+        /*pdTableViewButton.addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, (event) -> {
             timeline.stop();
             pdTableViewButton.setOpacity(1.0);
         });
 
         pdTableViewButton.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
             timeline.stop();
-        });
+        });*/
 
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
                 paymentsTable.setMinHeight(200);
-                paymentsTable.setItems(getPaymentDetails());
+                paymentsTable.setRoot(new RecursiveTreeItem<>(getPaymentDetails(), RecursiveTreeObject::getChildren));
+                paymentsTable.setShowRoot(false);
                 tableViewPane.setCenter(paymentsTable);
                 sp1.getItems().add(tableViewPane);
                 pdTableViewButton.setText("Hide details >>");
@@ -3540,7 +3598,7 @@ public class PDController implements Initializable {
                 pdTableViewButton.setText("Show details >>");
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
-                MainApp.changeWindowSize(stage, 500);
+                MainApp.windowResize(stage);
             }
         });
 
@@ -3549,7 +3607,7 @@ public class PDController implements Initializable {
             if (sp1.getItems().size() == 1) {
                 repairsTable.setMinHeight(200);
                 repairsTable.setItems(getRepairsDetails());
-                tableViewPane.setCenter(repairsTable);
+                /*tableViewPane.setCenter(repairsTable);*/
                 sp1.getItems().add(tableViewPane);
                 rdTableViewButton.setText("Hide details >>");
                 Node source = (Node) event.getSource();
@@ -3569,22 +3627,29 @@ public class PDController implements Initializable {
         pdMonthCombo.setPrefWidth(170);
         rdMonthCombo.setPrefWidth(170);
 
-        pdPaymentOptionListHbox.getChildren().addAll(paymentOptionsList, payLabel);
-        
         payLayout.setVgap(10);
         payLayout.setPadding(new Insets(5));
         payLayout.add(pdHbox1, 0, 0);
         payLayout.add(pdHbox2, 0, 1);
         payLayout.add(pdHbox3, 0, 2);
         payLayout.add(pdHbox4, 0, 3);
-        payLayout.add(pdHbox6, 0, 5);
         payLayout.add(pdHbox5, 0, 4);
+        payLayout.add(pdHbox6, 0, 5);
         
         
         tdVbox.setPadding(new Insets(10, 10, 10, 10));
         tdVbox.getChildren().addAll(tdHbox1, tdHbox2, tdHbox3, tdHbox4, tdHbox5, tdHbox6);
         rdVbox.setPadding(new Insets(10, 10, 10, 10));
         rdVbox.getChildren().addAll(rdHbox7, rdHbox2, rdHbox3, rdHbox4, rdHbox5, rdHbox6);
+        
+        pdPayGrid.setVgap(10);
+        pdPayGrid.setPadding(new Insets(10));
+        pdPayGrid.add(cashNodesList, 0, 0);
+        pdPayGrid.add(bankNodesList, 0, 1);
+        pdPayGrid.add(mpesaNodesList, 0, 2);
+        pdPayGrid.add(backButton, 0, 3);
+        
+        pdStackPane.getChildren().add(pdScrollPane);
         
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);
