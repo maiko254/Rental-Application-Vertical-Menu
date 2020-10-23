@@ -7,9 +7,11 @@ package com.clickdigitalsolutions.rentverticalmenu;
  */
 import static com.clickdigitalsolutions.rentverticalmenu.TDController.getPrefferedCellStyle;
 import com.jfoenix.controls.JFXAlert;
+import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXDialogLayout;
 import com.jfoenix.controls.JFXNodesList;
 import com.jfoenix.controls.JFXSpinner;
@@ -23,6 +25,7 @@ import com.jfoenix.controls.RecursiveTreeItem;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -70,6 +73,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -111,6 +115,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -148,6 +153,9 @@ public class PDController implements Initializable {
     @FXML
     private SplitPane sp2;
     
+    @FXML
+    private StackPane wrapStackPane;
+    
     public  JFXTreeTableView<PDModel> paymentsTable = new JFXTreeTableView<>();
     
     private BorderPane tableViewPane = new BorderPane();
@@ -171,7 +179,15 @@ public class PDController implements Initializable {
     public JFXButton updatePDAmount;
 
     private Button saveButtonPD;
-
+    
+    public StackPane stickyIconPane = new StackPane();
+    public JFXBadge stickyBadge = new JFXBadge();
+    int value = 0;
+    public JFXButton saveStickyButton = new JFXButton("Save");
+    public JFXTextArea stickyArea = new JFXTextArea();
+    
+    public JFXDialog stickyDialog = new JFXDialog();
+    
     private JFXTreeTableColumn<PDModel, String> houseNoCol = new JFXTreeTableColumn("House Number");
     private JFXTreeTableColumn<PDModel, String> tenantNameCol = new JFXTreeTableColumn("Tenant Name");
     private JFXTreeTableColumn<PDModel, String> amountCol = new JFXTreeTableColumn("Amount");
@@ -353,6 +369,7 @@ public class PDController implements Initializable {
     public JFXNodesList bankNodesList = new JFXNodesList();
     public JFXNodesList mpesaNodesList = new JFXNodesList();
     public JFXButton paymentOptionButton = new JFXButton();
+    public Label paymentOptionButtonLabel = new Label(" ", paymentOptionButton);
     public Label cashLabel = new Label("Cash");
     public Label bankLabel = new Label("Bank");
     public Label mpesaLabel = new Label("Mpesa");
@@ -363,6 +380,7 @@ public class PDController implements Initializable {
     public HBox bankContainerHbox = new HBox();
     public HBox mpesaContainerHbox = new HBox();
     public String payMethodString = new String();
+    public String stickyAvailableStr = null;
     
     private static final String ANIMATED_OPTION_BUTTON = "animated-option-button";
     private static final String ANIMATED_OPTION_SUB_BUTTON = "animated-option-sub-button";
@@ -370,6 +388,9 @@ public class PDController implements Initializable {
     private static final String ANIMATED_HEADER_BUTTON = "animated-header-button";
     private static final String ANIMATED_HEADER_BUTTONTD = "animated-header-buttonTD";
     private static final String ANIMATED_OPTION_BUTTONTD = "animated-option-buttonTD";
+    private static final String TREE_TABLE_VIEW = "tree-table-view";
+    private static final String ICONS_BADGE = "icons-badge";
+    
     
     public JFXComboBox<RModel.Strings> rdMonthCombo = new JFXComboBox<>();
     public JFXTextArea rdRepairsDone = new JFXTextArea();
@@ -385,11 +406,11 @@ public class PDController implements Initializable {
     HBox tdHbox5 = new HBox(10, l5, tdDueDate);
     HBox tdHbox6 = new HBox(10, tdDateNodesList);
 
-    HBox pdHbox1 = new HBox(10, l10, pdName, databaseActivityIndicatorPD);
+    HBox pdHbox1 = new HBox(10, l10, pdName);
     HBox pdHbox2 = new HBox(10, l11, pdMonthCombo);
     HBox pdHbox3 = new HBox(10, l12, pdAmount, rentArrearslabel);
     HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
-    HBox pdHbox5 = new HBox(10, l14, paymentOptionButton);
+    HBox pdHbox5 = new HBox(10, l14, paymentOptionButtonLabel);
     HBox pdHbox6 = new HBox(pdTableViewButton);
 
     HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
@@ -453,9 +474,11 @@ public class PDController implements Initializable {
     ResultSet rs1 = null;
 
     boolean excelInsertFailed = false;
-
+    
     public static final Logger logger = Logger.getLogger(PDController.class.getName());
-   
+    
+    FontAwesomeIconView stickyErrorIcon = new FontAwesomeIconView();
+    
     public void createTenantDetailsTable(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
         try {
@@ -1924,10 +1947,10 @@ public class PDController implements Initializable {
                 tdHbox1.getChildren().add(2, detIcon);
             }
             
-            if (pdHbox1.getChildren().contains(payIcon)) {
+            if (payLayout.getChildren().contains(payIcon)) {
                 System.out.println("payIcon already showing");
             } else {
-                pdHbox1.getChildren().add(2, payIcon);
+                payLayout.add(payIcon, 1, 0);
             }
             
             blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
@@ -1969,6 +1992,20 @@ public class PDController implements Initializable {
                     pdHbox1.getChildren().remove(icon);
                 }
                 pdTableViewButton.setVisible(false);
+                
+                paymentOptionButtonLabel.setGraphicTextGap(135);
+                paymentOptionButtonLabel.setText(" ");
+                
+                if (cashNodesList.isExpanded()) {
+                    pdCashTextfield.clear();
+                    cashNodesList.animateList(false);
+                } else if (bankNodesList.isExpanded()) {
+                    pdbankTextfield.clear();
+                    bankNodesList.animateList(false);
+                } else if (mpesaNodesList.isExpanded()) {
+                    pdMpesaTextfield.clear();
+                    mpesaNodesList.animateList(false);
+                }
                 return;
             }
             
@@ -1986,14 +2023,20 @@ public class PDController implements Initializable {
                 
                 switch (payArray[0]) {
                     case "Cash":
+                        paymentOptionButtonLabel.setGraphicTextGap(100);
+                        paymentOptionButtonLabel.setText("CASH");
                         pdCashTextfield.setText(payArray[1]);
                         cashNodesList.animateList(true);
                         break;
                     case "Bank":
+                        paymentOptionButtonLabel.setGraphicTextGap(100);
+                        paymentOptionButtonLabel.setText("BANK");
                         pdbankTextfield.setText(payArray[1]);
                         bankNodesList.animateList(true);
                         break;
                     case "Mpesa":
+                        paymentOptionButtonLabel.setGraphicTextGap(100);
+                        paymentOptionButtonLabel.setText("MPESA");
                         pdMpesaTextfield.setText(payArray[1]);
                         mpesaNodesList.animateList(true);
                         break;
@@ -2004,30 +2047,9 @@ public class PDController implements Initializable {
             }
             
             if (fetchPaymentDetails.getValue().get(6) != null) {
-                if (!pdHbox1.getChildren().contains(icon)) {
-                    icon.stickyMenuItem.setOnAction((eventx) -> {
-                        try {
-                            String deleteSticky = "UPDATE PaymentDetails SET StickyNote = null WHERE RowID = ?";
-                            Connection con = DriverManager.getConnection(databaseURL);
-                            PreparedStatement stmt = con.prepareStatement(deleteSticky);
-                            stmt.setInt(1, payRowId);
-                            stmt.executeUpdate();
-                            stmt.close();
-                            con.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        pdHbox1.getChildren().remove(icon);
-                    });
-                    stickyTextArea.setText(fetchPaymentDetails.getValue().get(6));
-                    pdHbox1.getChildren().add(3, icon);
-                } else if (pdHbox1.getChildren().contains(icon)) {
-                    stickyTextArea.setText(fetchPaymentDetails.getValue().get(6));
-                }
+               
             } else {
-                if (pdHbox1.getChildren().contains(icon)) {
-                    pdHbox1.getChildren().remove(icon);
-                }
+                
             }
             pdTableViewButton.setVisible(true);
         });
@@ -2072,6 +2094,18 @@ public class PDController implements Initializable {
     private void saveToPaymentDetailsTable(final JFXSpinner databaseActivityIndicator) {
         final savePaymentDetailsTask savePaymentDetails = new savePaymentDetailsTask();
         
+        if (payLayout.getChildren().contains(stickyBadge)) {
+            if (payLayout.getChildren().contains(databaseActivityIndicatorPD)) {
+                payLayout.getChildren().remove(databaseActivityIndicatorPD);
+            }
+            payLayout.add(databaseActivityIndicatorPD, 3, 0);
+        } else {
+            if (payLayout.getChildren().contains(databaseActivityIndicatorPD)) {
+                payLayout.getChildren().remove(databaseActivityIndicatorPD);
+            }
+            payLayout.add(databaseActivityIndicatorPD, 2, 0);
+        }
+        
         databaseActivityIndicator.visibleProperty().bind(savePaymentDetails.runningProperty());
         databaseActivityIndicator.progressProperty().bind(savePaymentDetails.progressProperty());
         
@@ -2084,17 +2118,29 @@ public class PDController implements Initializable {
                 JFXAlert insertPDErrorAlert = new JFXAlert((Stage) pdScrollPane.getScene().getWindow());
                 insertPDErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 insertPDErrorAlert.setOverlayClose(false);
+                
                 JFXDialogLayout content = new JFXDialogLayout();
                 content.setHeading(new Label("Database Error"));
                 content.setBody(new Label("Insert into Payment Details table failed. Try agein. "));
+                
                 JFXButton okButton = new JFXButton("OK");
                 okButton.setStyle("-fx-background-color: red; -fx-text-fill: white");
                 okButton.setOnAction(act -> {
                     insertPDErrorAlert.hideWithAnimation();
+                    payLayout.getChildren().remove(stickyErrorIcon);
                 });
+                
                 content.setActions(okButton);
                 insertPDErrorAlert.setContent(content);
                 insertPDErrorAlert.show();
+                
+                payLayout.getChildren().remove(databaseActivityIndicatorPD);
+                if (payLayout.getChildren().contains(stickyBadge)) {
+                    payLayout.add(stickyErrorIcon, 3, 0);
+                } else {
+                    payLayout.add(stickyErrorIcon, 2, 0);
+                }
+                
             }
         });
         
@@ -2103,6 +2149,20 @@ public class PDController implements Initializable {
         });
         
         MainApp.databaseExecutor.submit(savePaymentDetails);
+    }
+    
+    private void saveToReminderNote() {
+        final saveReminderNoteTask saveReminderNote = new saveReminderNoteTask();
+        
+        saveReminderNote.setOnFailed((event) -> {
+            saveReminderNote.getException().printStackTrace();
+        });
+        
+        saveReminderNote.setOnSucceeded((event) -> {
+            System.out.println("Reminder Successfully set");
+        });
+        
+        MainApp.databaseExecutor.submit(saveReminderNote);
     }
     
     private void updateTenantDetails(final JFXSpinner databaseActivityIndicator) {
@@ -2120,7 +2180,7 @@ public class PDController implements Initializable {
     
     private void updatePaymentDetails(final JFXSpinner databaseActivityIndicator) {
         final UpdatePaymentDetailsTask updatePaymentDetails = new UpdatePaymentDetailsTask();
-
+        
         databaseActivityIndicator.visibleProperty().bind(updatePaymentDetails.runningProperty());
         databaseActivityIndicator.progressProperty().bind(updatePaymentDetails.progressProperty());
 
@@ -2167,9 +2227,37 @@ public class PDController implements Initializable {
         setupCellValueFactory(monthCol, PDModel::monthTablePDProperty);
         setupCellValueFactory(amountCol, PDModel::amountTablePDProperty);
         setupCellValueFactory(dateCol, PDModel::paymentDateTablePDProperty);
-        setupCellValueFactory(methodCol, PDModel::paymentMethodPDProperty);
-        
-        
+        setupCellValueFactory(methodCol, PDModel::paymentMethodPDProperty);   
+    }
+    
+    public void createStickyDialog(String houseNumber, StackPane pane) {
+        StackPane stickyContainer = new StackPane();
+
+        JFXDialogLayout content = new JFXDialogLayout();
+
+        stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+        stickyArea.textProperty().addListener((observable, oldValue, newValue) -> {
+            stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 15));
+            if (newValue.isEmpty() || oldValue.isEmpty()) {
+                stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+            }
+        });
+        stickyArea.setPromptText("Sticky Note");
+
+        Label stickyHouseLabel = new Label();
+        stickyHouseLabel.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 17));
+        stickyHouseLabel.setText(houseNumber);
+
+        content.setHeading(stickyHouseLabel);
+
+        content.setBody(stickyArea);
+
+        content.setActions(saveStickyButton);
+
+        stickyDialog.setDialogContainer(stickyContainer);
+        stickyDialog.setContent(content);
+        stickyDialog.setTransitionType(JFXDialog.DialogTransition.TOP);
+        stickyDialog.show(pane);
     }
     
     @Override
@@ -2180,6 +2268,9 @@ public class PDController implements Initializable {
         
         databaseActivityIndicatorPD.setVisible(false);
         databaseActivityIndicatorPD.setRadius(8.5);
+        
+        stickyErrorIcon.setGlyphSize(22);
+        stickyErrorIcon.setIcon(FontAwesomeIcon.EXCLAMATION_CIRCLE);
         
         //Start of Date Picker Nodes List
         l6.setFont(javafx.scene.text.Font.font("verdana", 13));
@@ -2289,12 +2380,12 @@ public class PDController implements Initializable {
         mpesaButton.setGraphic(mpesaLabel);
         mpesaButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
         
-        paymentOptionButton.setPadding(new Insets(0, 0, 8, 0));
-        paymentOptionButton.setText("Select Options");
-        paymentOptionButton.setAlignment(Pos.CENTER_LEFT);
-        paymentOptionButton.setGraphicTextGap(50);
-        /*paymentOptionButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);*/
-        paymentOptionButton.setContentDisplay(ContentDisplay.RIGHT);
+        l14.setPadding(new Insets(4, 0, 0, 0));
+        paymentOptionButtonLabel.setContentDisplay(ContentDisplay.RIGHT);
+        paymentOptionButtonLabel.setGraphicTextGap(135);
+        
+        paymentOptionButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        paymentOptionButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);
         paymentOptionButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ARROW_RIGHT, "20px"));
         paymentOptionButton.setOnAction((event) -> {
             Scene scene = paymentOptionButton.getScene();
@@ -2449,6 +2540,18 @@ public class PDController implements Initializable {
         JFXNodesList.alignNodeToChild(bankContainerHbox, bankButton);
         JFXNodesList.alignNodeToChild(mpesaContainerHbox, mpesaButton);
         //End of Payment Option Nodes List
+        stickyIconPane.setPadding(new Insets(10));
+        stickyBadge.setStyle(ICONS_BADGE);
+        stickyBadge.setText("0");
+        stickyBadge.setAlignment(Pos.TOP_RIGHT);
+        stickyIconPane.getChildren().add(GlyphsDude.createIcon(FontAwesomeIcon.STAR, "23"));
+        stickyBadge.setControl(stickyIconPane);
+        stickyBadge.setOnMouseClicked((event) -> {
+            stickyBadge.refreshBadge();
+        });
+        
+        
+        saveStickyButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
         
         pdHbox5.setPadding(new Insets(10, 0, 0, 0));
         
@@ -2993,20 +3096,81 @@ public class PDController implements Initializable {
         });
 
         pdStickyNote.setOnAction((event) -> {
-            if (payRowId == 0) {
-                Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
-                emptyHouseAlert.setTitle("No Entry");
-                emptyHouseAlert.setHeaderText("Empty Record");
-                emptyHouseAlert.setContentText("First make an entry then try again");
-                emptyHouseAlert.showAndWait();
-            } else if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
-                Alert emptyHouseAlert = new Alert(AlertType.INFORMATION);
-                emptyHouseAlert.setTitle("No Month Selected");
-                emptyHouseAlert.setHeaderText(null);
-                emptyHouseAlert.setContentText("Please select a month.");
-                emptyHouseAlert.showAndWait();
+            if (pdMonthCombo.getSelectionModel().getSelectedItem().equals(PDModel.Strings.NONE)) {
+                JFXAlert noMonthSelectedAlert = new JFXAlert((Stage) pdScrollPane.getScene().getWindow());
+                noMonthSelectedAlert.initModality(Modality.APPLICATION_MODAL);
+                noMonthSelectedAlert.setOverlayClose(true);
+
+                JFXDialogLayout content = new JFXDialogLayout();
+                content.setHeading(new Label("No month selected"));
+                content.setBody(new Label("Please choose a month"));
+
+                JFXButton okButton = new JFXButton("OK");
+                okButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+                okButton.setOnAction(act -> {
+                    noMonthSelectedAlert.hideWithAnimation();
+                });
+
+                content.setActions(okButton);
+                noMonthSelectedAlert.setContent(content);
+                noMonthSelectedAlert.showAndWait();
+            } else if (payRowId == 0) {
+                JFXAlert noRecordAlert = new JFXAlert((Stage) pdScrollPane.getScene().getWindow());
+                noRecordAlert.initModality(Modality.APPLICATION_MODAL);
+                noRecordAlert.setOverlayClose(true);
+
+                JFXDialogLayout content = new JFXDialogLayout();
+                content.setHeading(new Label("No Record"));
+                content.setBody(new Label("No entry found. First insert into database and try again."));
+
+                JFXButton okButton = new JFXButton("OK");
+                okButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+                okButton.setOnAction(act -> {
+                    noRecordAlert.hideWithAnimation();
+                });
+
+                content.setActions(okButton);
+                noRecordAlert.setContent(content);
+                noRecordAlert.showAndWait();
             } else {
-                MyPopUp popUp = new MyPopUp();
+                value = Integer.parseInt(stickyBadge.getText());
+                
+                if (value == 0) {
+                    stickyBadge.setEnabled(false);
+                } else {
+                    stickyBadge.setEnabled(true);
+                }
+                
+                if (!payLayout.getChildren().contains(stickyBadge)) {
+                    createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);
+                    saveStickyButton.setOnMouseClicked(act -> {
+                        saveToReminderNote();
+                        payLayout.add(stickyBadge, 2, 0);
+
+                        if (act.getButton() == MouseButton.PRIMARY) {
+                            value++;
+                        }
+                        stickyBadge.setText(String.valueOf(value));
+                        stickyDialog.close();
+                    });
+
+                    
+                } else {
+                    createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);
+                    saveStickyButton.setOnMouseClicked((act) -> {
+                        saveToReminderNote();
+                        if (act.getButton() == MouseButton.PRIMARY) {
+                            value++;
+                        }
+                        stickyBadge.setText(String.valueOf(value));
+                        stickyDialog.close();
+                    });
+                    
+                }
+                
+                
+
+                /*MyPopUp popUp = new MyPopUp();
 
                 stickyStage = (Stage) popUp.getScene().getWindow();
                 parentStickyStage = (Stage) detIcon.getScene().getWindow();
@@ -3023,7 +3187,7 @@ public class PDController implements Initializable {
                 });
 
                 stickyTextArea.clear();
-                popUp.showAndWait();
+                popUp.showAndWait();*/
             }
         });
 
@@ -3047,7 +3211,7 @@ public class PDController implements Initializable {
             }
         });
 
-        icon.setOnMouseClicked((event) -> {
+        /*icon.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 try {
                     parentStickyStage = (Stage) icon.getScene().getWindow();
@@ -3071,7 +3235,7 @@ public class PDController implements Initializable {
             }
         });
 
-        /*icon.addEventHandler(MouseEvent.MOUSE_ENTERED, keyEventHandler);
+        icon.addEventHandler(MouseEvent.MOUSE_ENTERED, keyEventHandler);
         icon.addEventHandler(MouseEvent.MOUSE_EXITED, (event) -> {
             stopJumpAnimation();
         });*/
@@ -3149,14 +3313,6 @@ public class PDController implements Initializable {
 
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
-
-        pdScrollPane.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
-            if (stickyStage == null || !stickyStage.isShowing()) {
-                System.out.println("Not showing");
-            } else if (stickyStage.isShowing()) {
-                stickyStage.close();
-            }
-        });
 
         rdScrollPane.setOnContextMenuRequested((event) -> {
             rdEditMenu.getItems().clear();
@@ -3621,12 +3777,14 @@ public class PDController implements Initializable {
                 MainApp.changeWindowSize(stage, 500);
             }
         });
-
+        
+        paymentsTable.setStyle(TREE_TABLE_VIEW);
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
 
         pdMonthCombo.setPrefWidth(170);
         rdMonthCombo.setPrefWidth(170);
-
+        
+        payLayout.setHgap(10);
         payLayout.setVgap(10);
         payLayout.setPadding(new Insets(5));
         payLayout.add(pdHbox1, 0, 0);
@@ -3635,7 +3793,6 @@ public class PDController implements Initializable {
         payLayout.add(pdHbox4, 0, 3);
         payLayout.add(pdHbox5, 0, 4);
         payLayout.add(pdHbox6, 0, 5);
-        
         
         tdVbox.setPadding(new Insets(10, 10, 10, 10));
         tdVbox.getChildren().addAll(tdHbox1, tdHbox2, tdHbox3, tdHbox4, tdHbox5, tdHbox6);
@@ -3647,7 +3804,7 @@ public class PDController implements Initializable {
         pdPayGrid.add(cashNodesList, 0, 0);
         pdPayGrid.add(bankNodesList, 0, 1);
         pdPayGrid.add(mpesaNodesList, 0, 2);
-        pdPayGrid.add(backButton, 0, 3);
+        pdPayGrid.add(backButton, 0, 5);
         
         pdStackPane.getChildren().add(pdScrollPane);
         
@@ -3660,78 +3817,6 @@ public class PDController implements Initializable {
         selectionPane.setCenter(blockTreeView);
     }
     
-    public class MyPopUp extends Stage {
-
-        public MyPopUp() {
-            super();
-            this.setHeight(200);
-            this.setWidth(270);
-            this.setMinHeight(200);
-            this.setMinWidth(270);
-            this.setResizable(true);
-            this.initStyle(StageStyle.UNDECORATED);
-            this.initModality(Modality.APPLICATION_MODAL);
-            this.setOpacity(0.9);
-
-            BorderPane borderPaneOptionPane = new BorderPane();
-
-            stickyTextArea.setPromptText("Add a comment...");
-            stickyTextArea.setPrefSize(200, 150);
-
-            Region filler = new Region();
-            Region bottomFiller = new Region();
-
-            HBox stickyHbox = new HBox();
-            HBox.setHgrow(filler, Priority.ALWAYS);
-            Label label1 = new Label();
-            label1.setAlignment(Pos.CENTER);
-            label2.setAlignment(Pos.CENTER);
-
-            Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                label1.setText(LocalDateTime.now().format(formatter));
-            }), new KeyFrame(Duration.seconds(1)));
-            clock.setCycleCount(Animation.INDEFINITE);
-            clock.play();
-
-            label2.setOnMouseClicked((evt) -> {
-                Stage stage = (Stage) (label1.getScene()).getWindow();
-                stage.close();
-            });
-            label1.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
-            label2.setStyle("-fx-font-family: Arial; -fx-font-weight: 700;");
-            stickyHbox.getChildren().addAll(label1, filler, label2);
-
-            HBox stickyHboxBottom = new HBox();
-            HBox.setHgrow(bottomFiller, Priority.ALWAYS);
-            stickyHboxBottom.setAlignment(Pos.BASELINE_LEFT);
-            stickyHboxBottom.setPadding(new Insets(3, 0, 0, 0));
-            stickyHboxBottom.getChildren().addAll(bottomFiller, save);
-
-            Rectangle stickyRec = new Rectangle(200, 150);
-            stickyRec.setArcWidth(10.0);
-            stickyRec.setArcHeight(10.0);
-
-            borderPaneOptionPane.setShape(stickyRec);
-            borderPaneOptionPane.setCenter(stickyTextArea);
-            borderPaneOptionPane.setTop(stickyHbox);
-            borderPaneOptionPane.setBottom(stickyHboxBottom);
-            borderPaneOptionPane.setPadding(new Insets(5));
-            borderPaneOptionPane.setStyle("-fx-border-color: Black;");
-
-            Scene s = new Scene(borderPaneOptionPane);
-            s.setFill(Color.TRANSPARENT);
-            this.setScene(s);
-            this.setX(xCursorPos);
-            this.setY(yCursorPos);
-            ResizeHelper.addResizeListener(this);
-        }
-
-        public void setStickyEmpty() {
-            stickyTextArea.clear();
-        }
-    }
-
     public class DetailsIcon extends StackPane {
 
         public DetailsIcon() {
@@ -3944,7 +4029,7 @@ public class PDController implements Initializable {
         }
         
         private boolean savePaymentDetailsToTable(Connection con, String HouseNumber, String TenantName, String Amount, PDModel.Strings Month, String PaymentDate, String PaymentMethod) {
-            logger.info("Inserting into Payment Detils table.");
+            logger.info("Inserting into Payment Details table.");
             try {
                 String insertToPaymentDetails = "INSERT INTO PaymentDetails(HouseNumber, TenantName, Amount, Month, PaymentDate, PaymentMethod) VALUES(?,?,?,?,?,?)";
                 pstmt = con.prepareStatement(insertToPaymentDetails);
@@ -3957,6 +4042,51 @@ public class PDController implements Initializable {
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Insert into Payment Details table failed.");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    }
+    
+    class saveReminderNoteTask extends DBTask<Boolean> {
+
+        @Override
+        protected Boolean call() throws Exception {
+            try (Connection con = getConnection()) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                if (saveReminderNoteToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), stickyArea.getText(), pdMonthCombo.getValue(), LocalDateTime.now().format(formatter))) {
+                    try {
+                        stickyAvailableStr = "Reminder Added";
+                        updatePaymentDetails(databaseActivityIndicator);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    return false;
+                }
+                stickyAvailableStr = null;
+            }
+            return true;
+        }
+        
+        private boolean saveReminderNoteToTable(Connection con, String Housenumber, String ReminderNote, PDModel.Strings Month, String DateTime) {
+            logger.info("Inserting into ReminderNote Table");
+            try {
+                String insertReminderTable = "INSERT INTO ReminderNoteTable(HouseNumber, RemNote, Month, DateTime) VALUES(?, ?, ?, ?)";
+                pstmt = con.prepareStatement(insertReminderTable);
+                pstmt.setString(1, Housenumber);
+                pstmt.setString(2, ReminderNote);
+                pstmt.setString(3, Month.name());
+                pstmt.setString(4, DateTime);
+                pstmt.execute();
+            } catch (SQLException e) {
+                logger.info("Insert into ReminderNoteTable failed.");
                 return false;
             } finally {
                 try {
@@ -4028,7 +4158,7 @@ public class PDController implements Initializable {
             Thread.sleep(1000);
 
             try (Connection con = getConnection()) {
-                if (updatePaymentDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payMethodString, payRowId)) {
+                if (updatePaymentDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payMethodString, stickyAvailableStr , payRowId)) {
                     try {
                         File file = new File(excelFileLocation);
                         updatePDExcelRowValue(file);
@@ -4041,16 +4171,17 @@ public class PDController implements Initializable {
             return null;
         }
 
-        private boolean updatePaymentDetails(Connection con, String Amount, String PaymentDate, String paymentMethod, int rowID) {
+        private boolean updatePaymentDetails(Connection con, String Amount, String PaymentDate, String paymentMethod, String reminderStatus, int rowID) {
             logger.info("Updating Payment Details");
 
             try {
-                String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?  WHERE RowID = ?";
+                String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?, StickyNote = ?  WHERE RowID = ?";
                 pstmt = con.prepareStatement(updateAmountSql);
                 pstmt.setString(1, Amount);
                 pstmt.setString(2, PaymentDate);
                 pstmt.setString(3, paymentMethod);
-                pstmt.setInt(4, rowID);
+                pstmt.setString(4, reminderStatus);
+                pstmt.setInt(5, rowID);
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Updating Payment Details table failed.");
@@ -4193,13 +4324,25 @@ public class PDController implements Initializable {
         @Override
         protected Void call() throws Exception {
             try (Connection con = getConnection()) {
-                if (!schemaExists(con) && !schemaExists2(con)) {
+                if (!schemaExists(con) && !schemaExists2(con) && !schemaExists3(con)) {
                     createSchema(con);
                     createSchema2(con);
-                } else if (!schemaExists(con) && schemaExists2(con)) {
+                    createSchema3(con);
+                } else if (!schemaExists(con) && schemaExists2(con) && schemaExists3(con)) {
                     createSchema(con);
-                } else if (schemaExists(con) && !schemaExists2(con)) {
+                } else if (schemaExists(con) && !schemaExists2(con) && schemaExists3(con)) {
                     createSchema2(con);
+                } else if (schemaExists(con) && schemaExists2(con) && !schemaExists3(con)) {
+                    createSchema3(con);
+                } else if (!schemaExists(con) && !schemaExists2(con) && schemaExists3(con)) {
+                    createSchema(con);
+                    createSchema2(con);
+                } else if (schemaExists(con) && !schemaExists2(con) && !schemaExists3(con)) {
+                    createSchema2(con);
+                    createSchema3(con);
+                } else if (!schemaExists(con) && schemaExists2(con) && !schemaExists3(con)) {
+                    createSchema(con);
+                    createSchema3(con);
                 }
             }
 
@@ -4215,12 +4358,12 @@ public class PDController implements Initializable {
                 logger.info("Schema exists");
             } catch (SQLException e) {
                 e.printStackTrace();
-                logger.info("Existing DB not found. Create new one");
+                logger.info("TenantDetails not in DB. Create new one");
                 return false;
             } finally {
                 try {
                     pstmt.close();
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
@@ -4237,12 +4380,33 @@ public class PDController implements Initializable {
                 logger.info("Schema2 Exists");
             } catch (SQLException e) {
                 e.printStackTrace();
-                logger.info("Table not in DB. Create new one.");
+                logger.info("PaymentDetails not in DB. Create new one.");
                 return false;
             } finally {
                 try {
                     pstmt.close();
-                } catch (Exception e) {
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+        
+        public boolean schemaExists3(Connection con) {
+            logger.info("Checking for schema3 existence");
+            try {
+                String searchRemNoteTable = "SELECT * FROM ReminderNoteTable";
+                pstmt = con.prepareStatement(searchRemNoteTable);
+                pstmt.executeQuery();
+                logger.info("Schema3 Exists");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.info("ReminderNoteTable not in DB. Create new one.");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
@@ -4275,6 +4439,24 @@ public class PDController implements Initializable {
                 pstmt = con.prepareStatement(createPDSql);
                 pstmt.execute();
                 logger.info("Created second schema");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        private void createSchema3(Connection con) {
+            logger.info("Creating third schema");
+            String createStickyTable = "CREATE TABLE IF NOT EXISTS ReminderNoteTable(HouseNumber text, RemNote text, Month text, DateTime text, UNIQUE(HouseNumber, Month, DateTime))";
+            try {
+                pstmt = con.prepareStatement(createStickyTable);
+                pstmt.execute();
+                logger.info("Created third schema");
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
