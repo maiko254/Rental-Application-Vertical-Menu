@@ -13,6 +13,7 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXDialogLayout;
+import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXNodesList;
 import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTabPane;
@@ -40,15 +41,20 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,14 +62,20 @@ import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javafx.animation.Animation;
+import javafx.animation.Animation.Status;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.StrokeTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -71,6 +83,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -114,6 +127,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
@@ -182,7 +196,7 @@ public class PDController implements Initializable {
     
     public StackPane stickyIconPane = new StackPane();
     public JFXBadge stickyBadge = new JFXBadge();
-    int value = 0;
+    int badgeValue = 0;
     public JFXButton saveStickyButton = new JFXButton("Save");
     public JFXTextArea stickyArea = new JFXTextArea();
     
@@ -380,7 +394,6 @@ public class PDController implements Initializable {
     public HBox bankContainerHbox = new HBox();
     public HBox mpesaContainerHbox = new HBox();
     public String payMethodString = new String();
-    public String stickyAvailableStr = null;
     
     private static final String ANIMATED_OPTION_BUTTON = "animated-option-button";
     private static final String ANIMATED_OPTION_SUB_BUTTON = "animated-option-sub-button";
@@ -478,6 +491,22 @@ public class PDController implements Initializable {
     public static final Logger logger = Logger.getLogger(PDController.class.getName());
     
     FontAwesomeIconView stickyErrorIcon = new FontAwesomeIconView();
+    
+    int stickyBadgeSize = 0;
+    
+    ArrayList<String> reminderNoteArrayList = new ArrayList<>();
+    
+    ArrayList<String> dateReminderArrayList = new ArrayList<>();
+    
+    ArrayList<String> dateReminderArrayList2 = new ArrayList<>();
+    
+    ArrayList<BorderPane> textAreaArrayList = new ArrayList<>();
+    
+    ArrayList<JFXTextArea> tempTextAreaArray = new ArrayList<>();
+    
+    ArrayList<FontAwesomeIconView> tempDeleteIconArray = new ArrayList<>();
+     
+    ObservableList<BorderPane> textAreaList = FXCollections.observableArrayList();
     
     public void createTenantDetailsTable(Connection con, String houseNumber, String tenantName, String tenantPhoneNumber, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
         String createTDSql = "CREATE TABLE IF NOT EXISTS TenantDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text UNIQUE CHECK(HouseNumber<>''), TenantName text CHECK(TenantName<>''), TenantPhoneNumber text, RentAmount text, Deposit text , DueDate text, MoveInDate text, MoveOutDate text, LeaseStartDate text, LeaseEndDate text) ";
@@ -838,34 +867,6 @@ public class PDController implements Initializable {
         });
     }
     
-    class MyEventHandler implements EventHandler<MouseEvent> {
-
-        @Override
-        public void handle(MouseEvent t) {
-
-            /*Getting value in selected cell
-            TablePosition cellPos = paymentsTable.getSelectionModel().getSelectedCells().get(0);
-            int row = cellPos.getRow();
-            PDModel payitem = paymentsTable.getItems().get(row);
-            TableColumn col = cellPos.getTableColumn();
-            String payData = (String) col.getCellObservableValue(payitem).getValue();
-            System.out.println(payData);*/
-            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
-                TableRow c = (TableRow) t.getSource();
-                int index = c.getIndex();
-                try {
-                    PDModel item = getPaymentDetails().get(index);
-                    pdName.setText(item.gettenantNameTablePD());
-                    pdAmount.setText(item.getamountTablePD());
-                    pdMonthCombo.setValue(item.getmonthTablePD());
-                    pdPaymentDate.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     private Map getReceiptParameters() {
         HashMap map = new HashMap();
         /**
@@ -1398,195 +1399,7 @@ public class PDController implements Initializable {
         @Override
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
             fetchTenantDetailsFromDatabaseToUI(tdName, pdName,tdPhone, tdAmount, tdDeposit, tdDueDate, tdMoveInDate, tdMoveOutDate, tdLeaseStartDate, tdLeaseEndDate);
-            /*try {
-                String searchTenantDetails = "SELECT * FROM TenantDetails WHERE HouseNumber = ?";
-                conn = DriverManager.getConnection(databaseURL);
-                pstmt = conn.prepareStatement(searchTenantDetails);
-                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                rs = pstmt.executeQuery();
-                if (!rs.next()) {
-                    tenantRowId = 0;
-                    setTDEmpty1();
-                    if (tdHbox1.getChildren().contains(detIcon)) {
-                        tdHbox1.getChildren().remove(detIcon);
-                    }
-                } else {
-                    do {
-                        tenantRowId = rs.getInt("RowID");
-                        tdName.setText(rs.getString("TenantName"));
-                        tdPhone.setText(rs.getString("TenantPhoneNumber"));
-                        tdAmount.setText(rs.getString("RentAmount"));
-                        tdDeposit.setText(rs.getString("Deposit"));
-                        tdDueDate.setText(rs.getString("DueDate"));
-                        if (rs.getString("MoveInDate") != null) {
-                            tdMoveInDate.setValue(LocalDate.parse(rs.getString("MoveInDate"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            tdMoveInDate.setValue(null);
-                        }
-                        if (rs.getString("MoveOutDate") != null) {
-                            tdMoveOutDate.setValue(LocalDate.parse(rs.getString("MoveOutDate"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            tdMoveOutDate.setValue(null);
-                        }
-                        if (rs.getString("LeaseStartDate") != null) {
-                            tdLeaseStartDate.setValue(LocalDate.parse(rs.getString("LeaseStartDate"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            tdLeaseStartDate.setValue(null);
-                        }
-                        if (rs.getString("LeaseEndDate") != null) {
-                            tdLeaseEndDate.setValue(LocalDate.parse(rs.getString("LeaseEndDate"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            tdLeaseEndDate.setValue(null);
-                        }
-                        if (tdHbox1.getChildren().contains(detIcon)) {
-                            System.out.println("Icon already showing. Do nothing");
-                        } else {
-                            tdHbox1.getChildren().add(detIcon);
-                        }
-                    } while (rs.next());
-
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    conn.close();
-                    pstmt.close();
-                    rs.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            try {
-                String searchPDSql = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
-                conn = DriverManager.getConnection(databaseURL);
-                pstmt = conn.prepareStatement(searchPDSql);
-                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                rs = pstmt.executeQuery();
-                if (!rs.next()) {
-                    pdName.setText("");
-                    pdMonthCombo.setValue(PDModel.Strings.NONE);
-                    pdTableViewButton.setVisible(false);
-                    payLabel.textProperty().unbind();
-                    payLabel.setText("");
-                    payRowId = 0;
-                    setEmpty();
-                    if (pdHbox1.getChildren().contains(icon)) {
-                        pdHbox1.getChildren().remove(icon);
-                    }
-                    if (pdHbox1.getChildren().contains(payIcon)) {
-                        pdHbox1.getChildren().remove(payIcon);
-                    }
-                } else {
-                    do {
-                        payRowId = rs.getInt("RowID");
-                        pdName.setText(rs.getString("TenantName"));
-                        pdAmount.setText(rs.getString("Amount"));
-                        pdMonthCombo.setValue(PDModel.Strings.valueOf(rs.getString("Month")));
-                        if (rs.getString("PaymentDate") != null) {
-                            pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            pdPaymentDate.setValue(null);
-                        }
-                        payLabel.setText(rs.getString("PaymentMethod"));
-                        Object sticky = rs.getObject("StickyNote");
-                        if (pdHbox1.getChildren().contains(payIcon)) {
-                            System.out.println("PayIcon already showing. Do nothing");
-                        } else {
-                            pdHbox1.getChildren().add(payIcon);
-                        }
-                        if (sticky != null) {
-                            if (!pdHbox1.getChildren().contains(icon)) {
-                                stickyTextArea.setText(rs.getString("StickyNote"));
-                                pdHbox1.getChildren().add(icon);
-                            } else if (pdHbox1.getChildren().contains(icon)) {
-                                stickyTextArea.setText(rs.getString("StickyNote"));
-                            }
-                        } else {
-                            if (pdHbox1.getChildren().contains(icon)) {
-                                pdHbox1.getChildren().remove(icon);
-                            }
-                        }
-
-                    } while (rs.next());
-                    pdTableViewButton.setVisible(true);
-                    newEntryCheck = "";
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    conn.close();
-                    pstmt.close();
-                    rs.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            try {
-                String searchRepairsSql = "SELECT * FROM RepairsTable WHERE HouseNumber = ?";
-                conn = DriverManager.getConnection(databaseURL);
-                pstmt = conn.prepareStatement(searchRepairsSql);
-                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                rs = pstmt.executeQuery();
-                if (!rs.next()) {
-                    setEmpty();
-                    rdTableViewButton.setVisible(false);
-                } else {
-                    do {
-                        repairRowId = rs.getInt("RowID");
-                        rdMonthCombo.setValue(RModel.Strings.valueOf(rs.getString("Month")));
-                        rdRepairsDone.setText(rs.getString("Repairs"));
-                        rdRepairCost.setText(rs.getString("CostOfRepairs"));
-                        if (rs.getString("DateOfRepairs") != null) {
-                            rdRepairDate.setValue(LocalDate.parse(rs.getString("DateOfRepairs"), DateTimeFormatter.ISO_DATE));
-                        } else {
-                            rdRepairDate.setValue(null);
-                        }
-                        rdMiscCost.setText(rs.getString("MiscellaneousExpenses"));
-                    } while (rs.next());
-                    rdTableViewButton.setVisible(true);
-                    newEntryCheck = "";
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    conn.close();
-                    pstmt.close();
-                    rs.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
-            Platform.runLater(() -> {
-                if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
-                    System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                    blockA.setExpanded(false);
-                    blockB.setValue("Block B");
-                    blockC.setValue("Block C");
-                    nasraBlock.setValue("Nasra Block");
-                } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockB)) {
-                    blockB.setExpanded(false);
-                    blockA.setValue("Block A");
-                    blockC.setValue("Block C");
-                    nasraBlock.setValue("Nasra Block");
-                } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockC)) {
-                    blockC.setExpanded(false);
-                    blockA.setValue("Block A");
-                    blockB.setValue("Block B");
-                    nasraBlock.setValue("Nasra Block");
-                } else if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(nasraBlock)) {
-                    nasraBlock.setExpanded(false);
-                    blockA.setValue("Block A");
-                    blockB.setValue("Block B");
-                    blockC.setValue("Block C");
-                }
-            });*/
+            
         }
     };
 
@@ -1975,19 +1788,6 @@ public class PDController implements Initializable {
                 pdbankTextfield.clear();
                 pdMpesaTextfield.clear();
                 
-                /*if (paymentOptionsList.isExpanded()) {
-                    if (cashNodesList.isExpanded()) {
-                        cashNodesList.animateList(false);
-                    }
-                    if (bankNodesList.isExpanded()) {
-                        bankNodesList.animateList(false);
-                    }
-                    if (mpesaNodesList.isExpanded()) {
-                        mpesaNodesList.animateList(false);
-                    }
-                    paymentOptionsList.animateList(false);
-                }*/
-                
                 if (pdHbox1.getChildren().contains(icon)) {
                     pdHbox1.getChildren().remove(icon);
                 }
@@ -2046,17 +1846,52 @@ public class PDController implements Initializable {
                 
             }
             
-            if (fetchPaymentDetails.getValue().get(6) != null) {
-               
-            } else {
-                
-            }
             pdTableViewButton.setVisible(true);
         });
         
         MainApp.databaseExecutor.submit(fetchPaymentDetails);
     }
     
+    private void checkReminderNote() throws Exception {
+        final checkReminderNoteTask checkReminderNote = new checkReminderNoteTask();
+
+        checkReminderNote.setOnSucceeded((event) -> {
+            try {
+                if (checkReminderNote.getValue().isEmpty()) {
+                    if (payLayout.getChildren().contains(stickyBadge)) {
+                        payLayout.getChildren().remove(stickyBadge);
+                    }
+                    stickyBadgeSize = 0;
+                } else {
+                    stickyBadgeSize = checkReminderNote.getValue().size();
+                    
+                    reminderNoteArrayList.clear();
+                    dateReminderArrayList.clear();
+                    
+                    for (int i = 0; i < stickyBadgeSize; i++) {
+                        ReminderNoteModel rmDetails = checkReminderNote.getValue().get(i);
+                        reminderNoteArrayList.add(rmDetails.getReminderNote());
+                        /*System.out.println(reminderNoteArrayList.get(i));*/
+                        dateReminderArrayList.add(rmDetails.getDateTime());
+                    }
+                    
+                    if (payLayout.getChildren().contains(stickyBadge)) {
+                        stickyBadge.setText(String.valueOf(stickyBadgeSize));
+                        stickyBadge.refreshBadge();
+                    } else {
+                        stickyBadge.setText(String.valueOf(stickyBadgeSize));
+                        payLayout.add(stickyBadge, 2, 0);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        MainApp.databaseExecutor.submit(checkReminderNote);
+    }
+
     private void saveToTenantDetailsTable(final JFXSpinner databaseActivityIndicator) {
         final SaveTenantDetailsTask saveTenantDetails = new SaveTenantDetailsTask();
         
@@ -2178,6 +2013,16 @@ public class PDController implements Initializable {
         MainApp.databaseExecutor.submit(updateTenantDetails);
     }
     
+    private void updateReminderNote() {
+        final UpdateReminderNoteTask updateReminderNote = new UpdateReminderNoteTask();
+        
+        updateReminderNote.setOnSucceeded((event) -> {
+            System.out.println("Updated ReminderNoteTable successfully");
+        });
+        
+        MainApp.databaseExecutor.submit(updateReminderNote);
+    }
+    
     private void updatePaymentDetails(final JFXSpinner databaseActivityIndicator) {
         final UpdatePaymentDetailsTask updatePaymentDetails = new UpdatePaymentDetailsTask();
         
@@ -2231,10 +2076,15 @@ public class PDController implements Initializable {
     }
     
     public void createStickyDialog(String houseNumber, StackPane pane) {
-        StackPane stickyContainer = new StackPane();
-
-        JFXDialogLayout content = new JFXDialogLayout();
-
+        textAreaArrayList.clear();
+        textAreaList.clear();
+        
+        JFXListView<BorderPane> list = new JFXListView<>();
+        Rectangle rec = new Rectangle(60, 40);
+        
+        stickyArea.setPrefWidth(10);
+        stickyArea.setPrefHeight(60);
+        stickyArea.setLabelFloat(true);
         stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
         stickyArea.textProperty().addListener((observable, oldValue, newValue) -> {
             stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 15));
@@ -2242,21 +2092,212 @@ public class PDController implements Initializable {
                 stickyArea.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
             }
         });
-        stickyArea.setPromptText("Sticky Note");
+        stickyArea.setPromptText("Reminder Note");
+        
+        BorderPane defaultPane = new BorderPane(stickyArea);
+        
+        FontAwesomeIconView deleteRemIcon;
+        
+                
+        if (stickyBadgeSize == 0) {
 
+            textAreaList.add(defaultPane);
+        } else {
+
+            for (int i = 1; i <= stickyBadgeSize; i++) {
+
+                JFXTextArea reminderNoteArea = new JFXTextArea();
+
+                BorderPane stickyPane = new BorderPane(reminderNoteArea);
+
+                HBox dateLabelHbox = new HBox();
+
+                Label label = new Label();
+                label.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 16));
+                label.setStyle("-fx-font-color: grey");
+                Region hboxFiller = new Region();
+                hboxFiller.setPrefWidth(60);
+                HBox.setHgrow(hboxFiller, Priority.ALWAYS);
+
+                deleteRemIcon = new FontAwesomeIconView();
+                deleteRemIcon.setGlyphSize(18);
+                deleteRemIcon.setIcon(FontAwesomeIcon.TRASH);
+                deleteRemIcon.setVisible(false);
+                dateLabelHbox.getChildren().addAll(label, hboxFiller, deleteRemIcon);
+
+                stickyPane.setTop(dateLabelHbox);
+
+                rec.setArcWidth(40.0);
+                rec.setArcHeight(40.0);
+
+                reminderNoteArea.setShape(rec);
+                reminderNoteArea.setPrefHeight(40);
+                reminderNoteArea.setOpacity(0.3);
+
+                textAreaArrayList.add(stickyPane);
+                textAreaList.add(stickyPane);
+
+            }
+            
+            
+            for (int j = 0; j < reminderNoteArrayList.size(); j++) {
+                JFXTextArea tArea = (JFXTextArea) textAreaArrayList.get(j).getCenter();
+                tArea.setText(reminderNoteArrayList.get(j));
+                tArea.setPrefWidth(10);
+                
+                HBox hbox = (HBox) textAreaArrayList.get(j).getTop();
+                Label label = (Label) hbox.getChildren().get(0);
+
+                FontAwesomeIconView tempDeleteIcon = (FontAwesomeIconView) hbox.getChildren().get(2);
+                
+                label.setText(dateReminderArrayList.get(j));
+
+                int clickedElement = j;
+                
+                tArea.setOnMouseClicked((event) -> {
+                    System.out.println("TextArea clicked");
+                    JFXTextArea textArea = (JFXTextArea) event.getSource();
+                    textArea.setOpacity(1);
+
+                    ScaleTransition st = new ScaleTransition();
+                    /*st.statusProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue == Status.RUNNING) {
+                            System.out.println("Animation is running on "+ st.getNode());
+                        } else if (newValue == Status.STOPPED) {
+                            System.out.println("Animation is stopped on "+ st.getNode());
+                        }
+                    });*/
+                    st.setNode(textArea);
+                    st.setDuration(Duration.millis(300));
+                    st.setByX(0.03);
+                    st.setByY(0.03);
+                    st.setCycleCount(1);
+
+                    StrokeTransition strokeTransition = new StrokeTransition();
+                    Rectangle rec1 = (Rectangle) textArea.getShape();
+                    strokeTransition.setShape(rec1);
+                    strokeTransition.setDuration(Duration.millis(300));
+                    strokeTransition.setToValue(Color.AQUAMARINE);
+                    strokeTransition.setCycleCount(Timeline.INDEFINITE);
+
+                    ParallelTransition parT = new ParallelTransition(textArea, st);
+                    parT.play();
+                    
+                    tempDeleteIcon.setVisible(true);
+                    
+                    if (tempTextAreaArray.isEmpty()) {
+                        System.out.println("No previous textfield clicked");
+                    } else if (tempTextAreaArray.get(0).equals(tArea)) {
+                        System.out.println("Same text area");
+                    } else {
+                        JFXTextArea jfxTextArea = tempTextAreaArray.get(0);
+
+                        ScaleTransition st2 = new ScaleTransition();
+                        st2.setNode(jfxTextArea);
+                        double x = st2.getByX();
+                        double y = st2.getByY();
+                        st2.setByX(-0.03);
+                        st2.setByY(-0.03);
+                        st2.play();
+                        
+                        tempDeleteIconArray.get(0).setVisible(false);
+                        
+                        jfxTextArea.setOpacity(0.3);  
+                    }
+                    tempTextAreaArray.clear();
+                    tempDeleteIconArray.clear();
+                    dateReminderArrayList2.clear();
+                    tempTextAreaArray.add(tArea);
+                    dateReminderArrayList2.add(label.getText());
+                    tempDeleteIconArray.add(tempDeleteIcon);
+                });
+            }
+            stickyArea.clear();
+            textAreaList.add(defaultPane);
+        }
+        
+        stickyArea.setOnMouseClicked((event) -> {
+            if (tempTextAreaArray.isEmpty()) {
+                System.out.println("No previous textfield clicked");
+            } else {
+                JFXTextArea jfxTextArea = tempTextAreaArray.get(0);
+
+                ScaleTransition st2 = new ScaleTransition();
+                st2.setNode(jfxTextArea);
+                double x = st2.getByX();
+                double y = st2.getByY();
+                st2.setByX(-0.03);
+                st2.setByY(-0.03);
+                st2.play();
+                
+                tempDeleteIconArray.get(0).setVisible(false);
+                
+                tempTextAreaArray.clear();
+                tempDeleteIconArray.clear();
+                dateReminderArrayList2.clear();
+                
+                jfxTextArea.setOpacity(0.3);
+            }
+        });
+        
+        saveStickyButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+        saveStickyButton.setOnMouseClicked(act -> {
+            //Won't work if text is selected without clicking the textarea. No textarea is selected hence tempTextAreaArray is empty and so it saves new entry.
+            try {
+                if (tempTextAreaArray.isEmpty()) {
+                    saveToReminderNote();
+
+                    if (act.getButton() == MouseButton.PRIMARY) {
+                        stickyBadgeSize++;
+                    }
+
+                    checkReminderNote();
+                    if (!payLayout.getChildren().contains(stickyBadge)) {
+                        payLayout.add(stickyBadge, 2, 0);
+                    }
+                    stickyBadge.setText(String.valueOf(stickyBadgeSize));
+
+                    stickyDialog.close();
+                    System.out.println("New entry saved");
+                } else {
+                    updateReminderNote();
+                    checkReminderNote();
+                    stickyDialog.close();
+                    System.out.println("Entry updated");
+                }
+                
+            } catch (Exception ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        
+        StackPane stickyContainer = new StackPane();
+
+        JFXDialogLayout content = new JFXDialogLayout();
+        
         Label stickyHouseLabel = new Label();
         stickyHouseLabel.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 17));
         stickyHouseLabel.setText(houseNumber);
 
         content.setHeading(stickyHouseLabel);
-
-        content.setBody(stickyArea);
+        
+        list.setPrefWidth(30);
+        list.prefHeightProperty().bind(Bindings.size(textAreaList).multiply(80));
+        /*list.depthProperty().set(1);*/
+        list.setVerticalGap(10.0);
+        list.setItems(textAreaList);
+        list.setExpanded(true);
+        content.setBody(list);
 
         content.setActions(saveStickyButton);
 
         stickyDialog.setDialogContainer(stickyContainer);
         stickyDialog.setContent(content);
         stickyDialog.setTransitionType(JFXDialog.DialogTransition.TOP);
+        stickyDialog.setOnDialogClosed((event) -> {
+            tempTextAreaArray.clear();
+        });
+        
         stickyDialog.show(pane);
     }
     
@@ -2542,17 +2583,39 @@ public class PDController implements Initializable {
         //End of Payment Option Nodes List
         stickyIconPane.setPadding(new Insets(10));
         stickyBadge.setStyle(ICONS_BADGE);
-        stickyBadge.setText("0");
         stickyBadge.setAlignment(Pos.TOP_RIGHT);
         stickyIconPane.getChildren().add(GlyphsDude.createIcon(FontAwesomeIcon.STAR, "23"));
         stickyBadge.setControl(stickyIconPane);
         stickyBadge.setOnMouseClicked((event) -> {
-            stickyBadge.refreshBadge();
+            try {
+                stickyBadge.refreshBadge();
+                checkReminderNote();
+                createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);
+            } catch (Exception ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         
-        
-        saveStickyButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
-        
+        /*saveStickyButton.setOnMouseClicked(act -> {
+            try {
+                saveToReminderNote();
+                
+                if (act.getButton() == MouseButton.PRIMARY) {
+                    stickyBadgeSize++;
+                }
+                
+                checkReminderNote();
+                if (!payLayout.getChildren().contains(stickyBadge)) {
+                    payLayout.add(stickyBadge, 2, 0);
+                }
+                stickyBadge.setText(String.valueOf(stickyBadgeSize));
+                
+                stickyDialog.close();
+            } catch (Exception ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });*/
+
         pdHbox5.setPadding(new Insets(10, 0, 0, 0));
         
         l1.setMinSize(120, 20);
@@ -3133,61 +3196,19 @@ public class PDController implements Initializable {
                 noRecordAlert.setContent(content);
                 noRecordAlert.showAndWait();
             } else {
-                value = Integer.parseInt(stickyBadge.getText());
+                /*value = Integer.parseInt(stickyBadge.getText());
                 
                 if (value == 0) {
                     stickyBadge.setEnabled(false);
                 } else {
                     stickyBadge.setEnabled(true);
-                }
+                }*/
                 
                 if (!payLayout.getChildren().contains(stickyBadge)) {
                     createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);
-                    saveStickyButton.setOnMouseClicked(act -> {
-                        saveToReminderNote();
-                        payLayout.add(stickyBadge, 2, 0);
-
-                        if (act.getButton() == MouseButton.PRIMARY) {
-                            value++;
-                        }
-                        stickyBadge.setText(String.valueOf(value));
-                        stickyDialog.close();
-                    });
-
-                    
                 } else {
-                    createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);
-                    saveStickyButton.setOnMouseClicked((act) -> {
-                        saveToReminderNote();
-                        if (act.getButton() == MouseButton.PRIMARY) {
-                            value++;
-                        }
-                        stickyBadge.setText(String.valueOf(value));
-                        stickyDialog.close();
-                    });
-                    
+                    createStickyDialog(blockTreeView.getSelectionModel().getSelectedItem().getValue(), wrapStackPane);   
                 }
-                
-                
-
-                /*MyPopUp popUp = new MyPopUp();
-
-                stickyStage = (Stage) popUp.getScene().getWindow();
-                parentStickyStage = (Stage) detIcon.getScene().getWindow();
-
-                double centerXPosition = parentStickyStage.getX() + parentStickyStage.getWidth() / 2d;;
-                double centerYPsition = parentStickyStage.getY() + parentStickyStage.getHeight() / 2d;
-
-                stickyStage.setOnShowing((e) -> stickyStage.hide());
-
-                stickyStage.setOnShown((e) -> {
-                    stickyStage.setX(centerXPosition - stickyStage.getWidth() / 2);
-                    stickyStage.setY(centerYPsition - stickyStage.getHeight() / 2);
-                    stickyStage.show();
-                });
-
-                stickyTextArea.clear();
-                popUp.showAndWait();*/
             }
         });
 
@@ -3327,141 +3348,26 @@ public class PDController implements Initializable {
         });
 
         pdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            fetchPaymentDetailsFromDBToUI(pdAmount, pdPaymentDate);
-            /*if (newEntryCheck.equals("Payments Tab New Entry")) {
-                System.out.println("Do nothing. New selection");
-            } else if (newValue.getMonth().equals("All")) {
-                try {
-                    String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNumber = ?";
-                    conn = DriverManager.getConnection(databaseURL);
-                    pstmt = conn.prepareStatement(searchPDTable);
-                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                    rs = pstmt.executeQuery();
-                    if (!rs.next()) {
-                        setEmpty();
-                        payLabel.textProperty().unbind();
-                        payLabel.setText("");
-                        if (timeline.getStatus().equals(Animation.Status.RUNNING)) {
-                            timeline.stop();
-                        }
-                    } else {
-                        do {
-                            pdAmount.clear();
-                            pdPaymentDate.setValue(null);
-                            payLabel.textProperty().unbind();
-                            payLabel.setText("");
-                        } while (rs.next());
-                        pstmt.close();
-                        conn.close();
-                        addBlinkAnimation();
-                        if (timeline.getStatus().equals(Animation.Status.STOPPED)) {
-                            timeline.playFromStart();
-                        }
-                        rentArrearslabel.setVisible(false);
-                    }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                } finally {
-                    try {
-                        conn.close();
-                        pstmt.close();
-                        rs.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+            if (newValue == PDModel.Strings.NONE) {
+                pdAmount.clear();
+                pdPaymentDate.setValue(null);
+                pdCashTextfield.clear();
+                pdbankTextfield.clear();
+                pdMpesaTextfield.clear();
+                if (payLayout.getChildren().contains(stickyBadge)) {
+                    payLayout.getChildren().remove(stickyBadge);
                 }
-            } else if (newValue.getMonth().equals("")) {
-                setEmpty();
-                rentArrearslabel.setVisible(false);
-                payLabel.textProperty().unbind();
-                payLabel.setText("");
             } else {
+                fetchPaymentDetailsFromDBToUI(pdAmount, pdPaymentDate);
                 try {
-                    String searchPDTable = "SELECT * FROM PaymentDetails WHERE HouseNumber = ? AND Month = ?";
-                    conn = DriverManager.getConnection(databaseURL);
-                    pstmt = conn.prepareStatement(searchPDTable);
-                    String searchTDTable = "SELECT RentAmount FROM TenantDetails WHERE HouseNumber = ?";
-                    pstmt1 = conn.prepareStatement(searchTDTable);
-                    pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                    pstmt1.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
-                    pstmt.setString(2, pdMonthCombo.getSelectionModel().getSelectedItem().name());
-                    rs = pstmt.executeQuery();
-                    rs1 = pstmt1.executeQuery();
-                    if (!rs.next()) {
-                        setEmpty();
-                        payLabel.textProperty().unbind();
-                        payLabel.setText("");
-                        rentArrearslabel.setVisible(false);
-                        payRowId = 0;
-                        if (pdHbox1.getChildren().contains(icon)) {
-                            pdHbox1.getChildren().remove(icon);
-                        }
-                        if (timeline.getStatus().equals(Animation.Status.RUNNING)) {
-                            timeline.stop();
-                        }
-                    } else {
-                        do {
-                            payRowId = rs.getInt("RowID");
-                            pdAmount.setText(rs.getString("Amount"));
-                            Object paymentDate = rs.getObject("PaymentDate");
-                            if (paymentDate == null) {
-                                pdPaymentDate.setValue(null);
-                            } else {
-                                pdPaymentDate.setValue(LocalDate.parse(rs.getString("PaymentDate"), DateTimeFormatter.ISO_DATE));
-                            }
-                            payLabel.setText(rs.getString("PaymentMethod"));
-                            showRentArrears(getStringNumber(rs1.getString("RentAmount")), getStringNumber(rs.getString("Amount")));
-                            Object sticky = rs.getObject("StickyNote");
-                            if (sticky == null) {
-                                if (pdHbox1.getChildren().contains(icon)) {
-                                    pdHbox1.getChildren().remove(icon);
-                                }
-                            } else {
-                                if (!pdHbox1.getChildren().contains(icon)) {
-                                    stickyTextArea.setText(rs.getString("StickyNote"));
-                                    pdHbox1.getChildren().add(icon);
-                                } else if (pdHbox1.getChildren().contains(icon)) {
-                                    stickyTextArea.setText(rs.getString("StickyNote"));
-                                }
-                            }
-
-                        } while (rs.next());
-                        if (pdHbox1.getChildren().contains(icon)) {
-                            icon.stickyMenuItem.setOnAction((event) -> {
-                                try {
-                                    String deleteSticky = "UPDATE PaymentDetails SET StickyNote = null WHERE RowID = ?";
-                                    Connection con = DriverManager.getConnection(databaseURL);
-                                    PreparedStatement stmt = con.prepareStatement(deleteSticky);
-                                    stmt.setInt(1, payRowId);
-                                    stmt.executeUpdate();
-                                    stmt.close();
-                                    con.close();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                pdHbox1.getChildren().remove(icon);
-                            });
-                        }
-                        if (payRowId != 0) {
-                            timeline.stop();
-                        }
-
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        conn.close();
-                        pstmt.close();
-                        pstmt1.close();
-                        rs.close();
-                        rs1.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                    checkReminderNote();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        */});
+
+        });
 
         pdMonthCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
             payTenantDetails = getPaymentDetails();
@@ -3859,6 +3765,96 @@ public class PDController implements Initializable {
         }
     }
     
+    class MyEventHandler implements EventHandler<MouseEvent> {
+
+        @Override
+        public void handle(MouseEvent t) {
+
+            /*Getting value in selected cell
+            TablePosition cellPos = paymentsTable.getSelectionModel().getSelectedCells().get(0);
+            int row = cellPos.getRow();
+            PDModel payitem = paymentsTable.getItems().get(row);
+            TableColumn col = cellPos.getTableColumn();
+            String payData = (String) col.getCellObservableValue(payitem).getValue();
+            System.out.println(payData);*/
+            if (t.getButton() == MouseButton.PRIMARY && t.getClickCount() == 2) {
+                TableRow c = (TableRow) t.getSource();
+                int index = c.getIndex();
+                try {
+                    PDModel item = getPaymentDetails().get(index);
+                    pdName.setText(item.gettenantNameTablePD());
+                    pdAmount.setText(item.getamountTablePD());
+                    pdMonthCombo.setValue(item.getmonthTablePD());
+                    pdPaymentDate.setValue(LocalDate.parse(item.getpaymentDateTablePD(), DateTimeFormatter.ISO_DATE));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    class ReminderNoteModel extends RecursiveTreeObject<ReminderNoteModel> {
+        public StringProperty houseNumber;
+        public StringProperty reminderNote;
+        public StringProperty month;
+        public StringProperty dateTime;
+        
+        public ReminderNoteModel(String houseNumber, String reminderNote, String month, String dateTime) {
+            this.houseNumber = new SimpleStringProperty(houseNumber);
+            this.reminderNote = new SimpleStringProperty(reminderNote);
+            this.month = new SimpleStringProperty(month);
+            this.dateTime  = new SimpleStringProperty(dateTime);
+        }
+        
+        public String getHouseNumber() {
+            return houseNumber.get();
+        }
+        
+        public void setHouseNumber(String value) {
+            houseNumber.set(value);
+        }
+        
+        public StringProperty houseNumberProperty() {
+            return houseNumber;
+        }
+        
+        public String getReminderNote() {
+            return reminderNote.get();
+        }
+        
+        public void setReminderNote(String value) {
+            reminderNote.set(value);
+        }
+        
+        public StringProperty reminderNoteProperty() {
+            return reminderNote;
+        }
+        
+        public String getMonth() {
+            return month.get();
+        }
+        
+        public void setMonth(String value) {
+            month.set(value);
+        }
+        
+        public StringProperty monthProperty() {
+            return month;
+        }
+        
+        public String getDateTime() {
+            return dateTime.get();
+        }
+        
+        public void setDateTime(String value) {
+            dateTime.set(value);
+        }
+        
+        public StringProperty dateTimeProperty() {
+            return dateTime;
+        }
+    }
+    
     class FetchTenantDetailsTask extends DBTask<ObservableList<String>> {
 
         @Override
@@ -3927,7 +3923,7 @@ public class PDController implements Initializable {
                 } else {
                     do {                        
                        payRowId = rs.getInt("RowID");
-                       paymentDetails.addAll(rs.getString("HouseNumber"), rs.getString("TenantName"), rs.getString("Amount"), rs.getString("Month"), rs.getString("PaymentDate"), rs.getString("PaymentMethod"), rs.getString("StickyNote"));
+                       paymentDetails.addAll(rs.getString("HouseNumber"), rs.getString("TenantName"), rs.getString("Amount"), rs.getString("Month"), rs.getString("PaymentDate"), rs.getString("PaymentMethod"));
                     } while (rs.next());
                     logger.info("Found entry");
                 }
@@ -3943,6 +3939,48 @@ public class PDController implements Initializable {
             }
             
             return paymentDetails;
+        }
+    }
+    
+    class checkReminderNoteTask extends DBTask<ObservableList<ReminderNoteModel>> {
+        @Override
+        protected ObservableList<ReminderNoteModel> call() throws Exception {
+            try (Connection con = getConnection()) {
+                return checkReminderNote(con);
+            }
+        }
+        
+        private ObservableList<ReminderNoteModel> checkReminderNote(Connection con) {
+            logger.info("Checking if reminder note is available.");
+            ObservableList<ReminderNoteModel> reminderNoteDetails = FXCollections.observableArrayList();
+            
+            try {
+                String checkReminderTable = "SELECT * FROM ReminderNoteTable WHERE HouseNumber = ? AND Month = ?";
+                pstmt = con.prepareStatement(checkReminderTable);
+                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                pstmt.setString(2, pdMonthCombo.getSelectionModel().getSelectedItem().name());
+                rs = pstmt.executeQuery();
+                if (!rs.next()) {
+                    logger.info("No reminder note");
+                } else {
+                    do {              
+                     logger.info("Reminder note found");
+                     ReminderNoteModel reminderNote = new ReminderNoteModel(rs.getString("HouseNumber"), rs.getString("RemNote"), rs.getString("Month"), rs.getString("DateTime"));
+                     reminderNoteDetails.add(reminderNote);
+                    } while (rs.next());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.info("Error checking reminder note table");
+            } finally {
+                try {
+                    pstmt.close();
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return reminderNoteDetails;
         }
     }
     
@@ -4059,23 +4097,15 @@ public class PDController implements Initializable {
         @Override
         protected Boolean call() throws Exception {
             try (Connection con = getConnection()) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                if (saveReminderNoteToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), stickyArea.getText(), pdMonthCombo.getValue(), LocalDateTime.now().format(formatter))) {
-                    try {
-                        stickyAvailableStr = "Reminder Added";
-                        updatePaymentDetails(databaseActivityIndicator);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    return false;
-                }
-                stickyAvailableStr = null;
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                saveReminderNoteToTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), stickyArea.getText(), pdMonthCombo.getValue(), LocalDateTime.now().format(formatter));
+
             }
             return true;
         }
         
         private boolean saveReminderNoteToTable(Connection con, String Housenumber, String ReminderNote, PDModel.Strings Month, String DateTime) {
+            
             logger.info("Inserting into ReminderNote Table");
             try {
                 String insertReminderTable = "INSERT INTO ReminderNoteTable(HouseNumber, RemNote, Month, DateTime) VALUES(?, ?, ?, ?)";
@@ -4087,6 +4117,42 @@ public class PDController implements Initializable {
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Insert into ReminderNoteTable failed.");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    }
+    
+    class UpdateReminderNoteTask extends DBTask {
+
+        @Override
+        protected Void call() throws Exception {
+            try (Connection con = getConnection()) {
+                updateReminderNoteTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), tempTextAreaArray.get(0).getText(), pdMonthCombo.getValue(), dateReminderArrayList2.get(0));
+            }
+            return null;
+        }
+
+        private boolean updateReminderNoteTable(Connection con, String houseNumber, String reminderNote, PDModel.Strings month, String DateTime) {
+            logger.info("Updating ReminderNoteTable");
+
+            try {
+                String updateReminderNote = "UPDATE ReminderNoteTable SET RemNote = ? WHERE HouseNumber = ? AND Month = ? AND DateTime = ?";
+                pstmt = con.prepareStatement(updateReminderNote);
+                pstmt.setString(1, reminderNote);
+                pstmt.setString(2, houseNumber);
+                pstmt.setString(3, month.name());
+                pstmt.setString(4, DateTime);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                logger.info("Failed to update ReminderNoteTable entry");
+                e.printStackTrace();
                 return false;
             } finally {
                 try {
@@ -4158,7 +4224,7 @@ public class PDController implements Initializable {
             Thread.sleep(1000);
 
             try (Connection con = getConnection()) {
-                if (updatePaymentDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payMethodString, stickyAvailableStr , payRowId)) {
+                if (updatePaymentDetails(con, pdAmount.getText(), getDateValueAsString(pdPaymentDate.getValue()), payMethodString, payRowId)) {
                     try {
                         File file = new File(excelFileLocation);
                         updatePDExcelRowValue(file);
@@ -4171,17 +4237,16 @@ public class PDController implements Initializable {
             return null;
         }
 
-        private boolean updatePaymentDetails(Connection con, String Amount, String PaymentDate, String paymentMethod, String reminderStatus, int rowID) {
+        private boolean updatePaymentDetails(Connection con, String Amount, String PaymentDate, String paymentMethod, int rowID) {
             logger.info("Updating Payment Details");
 
             try {
-                String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ?, StickyNote = ?  WHERE RowID = ?";
+                String updateAmountSql = "UPDATE PaymentDetails SET Amount = ?, PaymentDate = ?, PaymentMethod = ? WHERE RowID = ?";
                 pstmt = con.prepareStatement(updateAmountSql);
                 pstmt.setString(1, Amount);
                 pstmt.setString(2, PaymentDate);
                 pstmt.setString(3, paymentMethod);
-                pstmt.setString(4, reminderStatus);
-                pstmt.setInt(5, rowID);
+                pstmt.setInt(4, rowID);
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Updating Payment Details table failed.");
@@ -4344,6 +4409,14 @@ public class PDController implements Initializable {
                     createSchema(con);
                     createSchema3(con);
                 }
+                /*if (!schemaExists(con) && !schemaExists2(con)) {
+                    createSchema(con);
+                    createSchema2(con);
+                } else if (!schemaExists(con) && schemaExists2(con)) {
+                    createSchema(con);
+                } else if (schemaExists(con) && !schemaExists2(con)) {
+                    createSchema2(con);
+                }*/
             }
 
             return null;
@@ -4361,11 +4434,11 @@ public class PDController implements Initializable {
                 logger.info("TenantDetails not in DB. Create new one");
                 return false;
             } finally {
-                try {
+                /*try {
                     pstmt.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
 
             return true;
@@ -4383,11 +4456,11 @@ public class PDController implements Initializable {
                 logger.info("PaymentDetails not in DB. Create new one.");
                 return false;
             } finally {
-                try {
-                    pstmt.close();
+                /*try {
+                    pstmt.closeOnCompletion();
                 } catch (SQLException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
             return true;
         }
@@ -4404,11 +4477,11 @@ public class PDController implements Initializable {
                 logger.info("ReminderNoteTable not in DB. Create new one.");
                 return false;
             } finally {
-                try {
+                /*try {
                     pstmt.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
             return true;
         }
@@ -4434,7 +4507,7 @@ public class PDController implements Initializable {
         
         private void createSchema2(Connection con) {
             logger.info("Creating second schema");
-            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text CHECK(TenantName<>''), Amount text, Month text, PaymentDate text, PaymentMethod text, StickyNote text, UNIQUE(HouseNumber, Month))";
+            String createPDSql = "CREATE TABLE IF NOT EXISTS PaymentDetails(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, TenantName text CHECK(TenantName<>''), Amount text, Month text, PaymentDate text, PaymentMethod text, UNIQUE(HouseNumber, Month))";
             try {
                 pstmt = con.prepareStatement(createPDSql);
                 pstmt.execute();
