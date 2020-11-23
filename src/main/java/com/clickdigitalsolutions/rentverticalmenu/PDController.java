@@ -2023,6 +2023,16 @@ public class PDController implements Initializable {
         MainApp.databaseExecutor.submit(updateReminderNote);
     }
     
+    private void deleteFromReminderNoteTable() {
+        final DeleteFromReminderNoteTableTask deleteReminderNote = new DeleteFromReminderNoteTableTask();
+        
+        deleteReminderNote.setOnSucceeded((event) -> {
+            System.out.println("Deleted from ReminderNoteTable");
+        });
+        
+        MainApp.databaseExecutor.submit(deleteReminderNote);
+    }
+    
     private void updatePaymentDetails(final JFXSpinner databaseActivityIndicator) {
         final UpdatePaymentDetailsTask updatePaymentDetails = new UpdatePaymentDetailsTask();
         
@@ -2096,11 +2106,11 @@ public class PDController implements Initializable {
         
         BorderPane defaultPane = new BorderPane(stickyArea);
         
-        FontAwesomeIconView deleteRemIcon;
+        FontAwesomeIconView deleteRemIcon = new FontAwesomeIconView();
         
                 
         if (stickyBadgeSize == 0) {
-
+            
             textAreaList.add(defaultPane);
         } else {
 
@@ -2144,16 +2154,16 @@ public class PDController implements Initializable {
                 JFXTextArea tArea = (JFXTextArea) textAreaArrayList.get(j).getCenter();
                 tArea.setText(reminderNoteArrayList.get(j));
                 tArea.setPrefWidth(10);
-                
+
                 HBox hbox = (HBox) textAreaArrayList.get(j).getTop();
                 Label label = (Label) hbox.getChildren().get(0);
 
                 FontAwesomeIconView tempDeleteIcon = (FontAwesomeIconView) hbox.getChildren().get(2);
-                
+
                 label.setText(dateReminderArrayList.get(j));
 
                 int clickedElement = j;
-                
+
                 tArea.setOnMouseClicked((event) -> {
                     System.out.println("TextArea clicked");
                     JFXTextArea textArea = (JFXTextArea) event.getSource();
@@ -2182,9 +2192,29 @@ public class PDController implements Initializable {
 
                     ParallelTransition parT = new ParallelTransition(textArea, st);
                     parT.play();
-                    
+
                     tempDeleteIcon.setVisible(true);
-                    
+
+                    tempDeleteIcon.setOnMouseClicked(act -> {
+                        System.out.println(tArea.getText());
+                        for (int i = 0; i < textAreaList.size(); i++) {
+                            if (textAreaList.get(i).getCenter().equals(tArea)) {
+                                try {
+                                    textAreaList.remove(i);
+                                    deleteFromReminderNoteTable();
+                                    stickyBadgeSize--;
+                                    stickyBadge.setText(String.valueOf(stickyBadgeSize));
+                                    checkReminderNote();
+                                    if (stickyBadgeSize == 0) {
+                                        stickyDialog.close();
+                                    }
+                                } catch (Exception ex) {
+                                    Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        }
+                    });
+
                     if (tempTextAreaArray.isEmpty()) {
                         System.out.println("No previous textfield clicked");
                     } else if (tempTextAreaArray.get(0).equals(tArea)) {
@@ -2199,10 +2229,10 @@ public class PDController implements Initializable {
                         st2.setByX(-0.03);
                         st2.setByY(-0.03);
                         st2.play();
-                        
+
                         tempDeleteIconArray.get(0).setVisible(false);
-                        
-                        jfxTextArea.setOpacity(0.3);  
+
+                        jfxTextArea.setOpacity(0.3);
                     }
                     tempTextAreaArray.clear();
                     tempDeleteIconArray.clear();
@@ -2255,7 +2285,7 @@ public class PDController implements Initializable {
                     if (!payLayout.getChildren().contains(stickyBadge)) {
                         payLayout.add(stickyBadge, 2, 0);
                     }
-                    stickyBadge.setText(String.valueOf(stickyBadgeSize));
+                    /*stickyBadge.setText(String.valueOf(stickyBadgeSize));*/
 
                     stickyDialog.close();
                     System.out.println("New entry saved");
@@ -4117,6 +4147,40 @@ public class PDController implements Initializable {
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Insert into ReminderNoteTable failed.");
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    }
+    
+    class  DeleteFromReminderNoteTableTask extends DBTask {
+        @Override
+        protected Void call() throws Exception {
+            try (Connection con = getConnection()) {
+                deleteFromReminderNoteTable(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), pdMonthCombo.getValue(), dateReminderArrayList2.get(0));
+            }
+            return null;
+        }
+        
+        private boolean  deleteFromReminderNoteTable(Connection con, String houseNumber, PDModel.Strings month, String date) {
+            logger.info("Deleting from ReminderNoteTable");
+            
+            try {
+                String deleteReminderNote = "DELETE FROM ReminderNoteTable WHERE HouseNumber = ? AND Month = ? AND DateTime = ?";
+                pstmt = con.prepareStatement(deleteReminderNote);
+                pstmt.setString(1, houseNumber);
+                pstmt.setString(2, month.name());
+                pstmt.setString(3, date);
+                pstmt.execute();
+            } catch (SQLException e) {
+                logger.info("Failed to delete from ReminderNoteTable failed");
+                e.printStackTrace();
                 return false;
             } finally {
                 try {
