@@ -28,7 +28,6 @@
                    <items>
                        <MenuItem fx:id="Search" mnemonicParsing="false" onAction="#searchAction" text="Search" />
                        <MenuItem fx:id="Import" mnemonicParsing="false" text="Import" />
-                       <MenuItem fx:id="print" mnemonicParsing="false" text="Print Receipt" />
                    </items>
                </Menu>
                <Menu mnemonicParsing="false" text="Edit">

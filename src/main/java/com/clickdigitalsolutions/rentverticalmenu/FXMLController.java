@@ -50,10 +50,13 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.oasis.Utility;
 import net.sf.jasperreports.view.JasperViewer;
+import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -109,9 +112,6 @@ public class FXMLController implements Initializable {
     private MenuItem Import;
     
     @FXML
-    private MenuItem print;
-
-    @FXML
     private MenuItem about;
     
     private double tabWidth = 90.0;
@@ -160,7 +160,7 @@ public class FXMLController implements Initializable {
             }
         };
 
-        configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_sell_property_48px.png", replaceBackgroundColorHandler);
+        configureViewTab(paymentDetailsTab, "Payment\nDetails", "/images/icons8_rent_48px.png", replaceBackgroundColorHandler);
         configureViewTab(monthlyExpensesTab, "Monthly\nExpenses", "/images/icons8_overtime_48px.png", replaceBackgroundColorHandler);
     }
     
@@ -230,7 +230,7 @@ public class FXMLController implements Initializable {
     private Map getReceiptParameters(){
         HashMap map = new HashMap();
         map.put("houseNumber", subcontroller.blockTreeView.getSelectionModel().getSelectedItem());
-        map.put("PayMonth", subcontroller.monthComboPD.getSelectionModel().getSelectedItem());
+        map.put("PayMonth", subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem());
         return map;
     }
     
@@ -267,7 +267,7 @@ public class FXMLController implements Initializable {
                 workbookExists.write(outputStream);
                 workbookExists.close();
                 outputStream.close();
-            } catch (Exception e) {
+            } catch (IOException | EncryptedDocumentException e) {
                 e.printStackTrace();
             }
 
@@ -354,41 +354,6 @@ public class FXMLController implements Initializable {
         
         rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
 
-        
-        print.setOnAction((event) -> {
-            
-            PDModel pdmodel = new PDModel();
-            Map map = null;
-
-            try {
-                map = getReceiptParameters();
-            } catch (Exception e) {
-                e.printStackTrace();
-                String message = "An Error occured while compiling the report";
-                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
-                alert.setTitle("Error occured");
-                alert.setHeaderText("Error in retrieving data for printing the receipt");
-                alert.showAndWait();
-                return;
-            }
-
-            final String resourcePath = "/Receipt/Receipt.jasper";
-            JasperPrint jasperPrint = null;
-
-            try (InputStream reportStream = this.getClass().getResourceAsStream(resourcePath)) {
-                jasperPrint = JasperFillManager.fillReport(reportStream, map);
-            } catch (Exception e) {
-                String message = "An Error occurred while preparing to print the receipt";
-                Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
-                alert.setTitle("Error Occurred");
-                alert.setHeaderText("Error in printing the receipt");
-                alert.showAndWait();
-            }
-            JasperViewer jasperViewer = new JasperViewer(jasperPrint, false);
-            jasperViewer.setTitle("Rent Receipt");
-            jasperViewer.setVisible(true);
-        });
-        
         Import.setOnAction((event) -> {
             FileChooser excelFileChooser = new FileChooser();
             excelFileChooser.setTitle("Import Excel File");

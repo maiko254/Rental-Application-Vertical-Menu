@@ -330,7 +330,7 @@ and open the template in the editor.
 .animated-option-buttonTD {
     -fx-background-color: #F1F1F1;
     -fx-background-radius: 30px;
-    -fx-pref-height: 20px;
+    -fx-pref-height: 30px;
     -fx-pref-width: 100px;
     -fx-min-width: -fx-pref-width;
     -fx-max-width: -fx-pref-width;
