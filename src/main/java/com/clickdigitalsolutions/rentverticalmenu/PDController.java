@@ -170,8 +170,6 @@ public class PDController implements Initializable {
     @FXML
     private StackPane wrapStackPane;
     
-    public  JFXTreeTableView<PDModel> paymentsTable = new JFXTreeTableView<>();
-    
     private BorderPane tableViewPane = new BorderPane();
 
     @FXML
@@ -186,6 +184,7 @@ public class PDController implements Initializable {
 
     private GridPane repairsLayout = new GridPane();
     
+    private GridPane repairsCostsGrid = new GridPane();
 
     public JFXButton updatePDAmount;
 
@@ -205,18 +204,16 @@ public class PDController implements Initializable {
     private JFXTreeTableColumn<PDModel, PDModel.Strings> monthCol = new JFXTreeTableColumn("Month");
     private JFXTreeTableColumn<PDModel, String> dateCol = new JFXTreeTableColumn("Payment Date");
     private JFXTreeTableColumn<PDModel, String> methodCol = new JFXTreeTableColumn("Payment Method");
-    
+    public  JFXTreeTableView<PDModel> paymentsTable = new JFXTreeTableView<>();
 
-    public TableColumn<RModel, String> houseNo = new TableColumn("House Number");
-    public TableColumn<RModel, String> tenantName = new TableColumn("Tenant Name");
-    public TableColumn<RModel, RModel.Strings> repairMonthCol = new TableColumn<>("Month");
-    public TableColumn<RModel, String> repairDone = new TableColumn("Repairs");
-    public TableColumn<RModel, String> costOfRepair = new TableColumn<>("Repair Cost");
-    public TableColumn<RModel, String> dateOfRepair = new TableColumn("Repair Date");
-    public TableColumn<RModel, String> miscExpenses = new TableColumn<>("Miscellaneous Expenses");
-    public TableView<RModel> repairsTable = new TableView<>();
-
-    String newEntryCheck = "";
+    public JFXTreeTableColumn<RModel, String> repairHouseCol = new JFXTreeTableColumn<>("House Number");
+    public JFXTreeTableColumn<RModel, RModel.Strings> repairMonthCol = new JFXTreeTableColumn<>("Month");
+    public JFXTreeTableColumn<RModel, String> repairDone = new JFXTreeTableColumn("Repairs");
+    public JFXTreeTableColumn<RModel, String> materialCostOfRepair = new JFXTreeTableColumn<>("Material Cost");
+    public JFXTreeTableColumn<RModel, String> labourCostOfRepair = new JFXTreeTableColumn<>("Labour Cost");
+    public JFXTreeTableColumn<RModel, String> dateOfRepair = new JFXTreeTableColumn("Repair Date");
+    public JFXTreeTableColumn<RModel, String> miscExpenses = new JFXTreeTableColumn<>("Miscellaneous Expenses");
+    public JFXTreeTableView<RModel> repairsTable = new JFXTreeTableView<>();
 
     ObservableList<PDModel> rentPaymentList1 = FXCollections.observableArrayList();
 
@@ -226,7 +223,6 @@ public class PDController implements Initializable {
     MenuItem tdSave = new MenuItem("Save");
     MenuItem tdSaveAs = new MenuItem("Save As...");
 
-    MenuItem pdNewRecord = new MenuItem("New Entry");
     MenuItem pdUpdate = new MenuItem("Update");
     MenuItem pdDelete = new MenuItem("Delete");
     MenuItem pdSave = new MenuItem("Save");
@@ -294,6 +290,7 @@ public class PDController implements Initializable {
     
     JFXButton tdBackButton = new JFXButton();
     JFXButton pdBackButton = new JFXButton();
+    JFXButton rdBackButton = new JFXButton();
     
     public GridPane tdDatesGrid = new GridPane();
     public GridPane pdPayGrid = new GridPane();
@@ -364,13 +361,12 @@ public class PDController implements Initializable {
     public JFXComboBox<PDModel.Strings> pdMonthCombo = new JFXComboBox<>();
     public JFXTextField pdAmount = new JFXTextField();
     public JFXDatePicker pdPaymentDate = new JFXDatePicker();
-    public JFXButton pdTableViewButton = new JFXButton("Show details >>");
+    public JFXButton pdTableViewButton = new JFXButton();
     public Label rentArrearslabel = new Label();
     public JFXSpinner databaseActivityIndicatorPD = new JFXSpinner();
     public JFXTextField pdCashTextfield = new JFXTextField();
     public JFXTextField pdbankTextfield = new JFXTextField();
     public JFXTextField pdMpesaTextfield = new JFXTextField();
-    public JFXTextArea pdOtherExpenseField = new JFXTextArea();
     public JFXButton pdCashButton = new JFXButton();
     public JFXButton pdBankButton = new JFXButton();
     public JFXButton pdMpesaButton = new JFXButton();
@@ -386,18 +382,30 @@ public class PDController implements Initializable {
     public JFXButton cashButton = new JFXButton();
     public JFXButton bankButton = new JFXButton();
     public JFXButton mpesaButton = new JFXButton();
-    public HBox cashContainerHbox = new HBox();
-    public HBox bankContainerHbox = new HBox();
-    public HBox mpesaContainerHbox = new HBox();
+    public HBox cashContainerHbox = new HBox(10);
+    public HBox bankContainerHbox = new HBox(10);
+    public HBox mpesaContainerHbox = new HBox(10);
     public String payMethodString = new String();
     
     public JFXComboBox<RModel.Strings> rdMonthCombo = new JFXComboBox<>();
     public JFXTextArea rdRepairsDone = new JFXTextArea();
-    public JFXTextField rdRepairCost = new JFXTextField();
     public JFXDatePicker rdRepairDate = new JFXDatePicker();
-    public JFXTextField rdMiscCost = new JFXTextField();
-    public JFXButton rdTableViewButton = new JFXButton("Show details >>");
+    public JFXButton rdTableViewButton = new JFXButton();
     public JFXSpinner databaseActivityIndicatorRD = new JFXSpinner();
+    public JFXButton repairCostSceneButton = new JFXButton();
+    public JFXButton materialButton =  new JFXButton();
+    public JFXButton labourButton = new JFXButton();
+    public JFXButton miscButton = new JFXButton();
+    public JFXTextField materialText = new JFXTextField();
+    public JFXTextField labourText = new JFXTextField();
+    public JFXTextField miscText = new JFXTextField();
+    public HBox rdMaterialHbox = new HBox(10);
+    public HBox rdLabourHbox = new HBox(10);
+    public HBox rdMiscHbox = new HBox(10);
+    public JFXButton doneButton = new JFXButton("Done");
+    public JFXNodesList labourNodesList = new JFXNodesList();
+    public JFXNodesList materialNodesList = new JFXNodesList();
+    public JFXNodesList miscNodesList = new JFXNodesList();
     
     private static final String ANIMATED_OPTION_BUTTON = "animated-option-button";
     private static final String ANIMATED_OPTION_SUB_BUTTON = "animated-option-sub-button";
@@ -405,7 +413,9 @@ public class PDController implements Initializable {
     private static final String ANIMATED_HEADER_BUTTON = "animated-header-button";
     private static final String ANIMATED_HEADER_BUTTONTD = "animated-header-buttonTD";
     private static final String ANIMATED_OPTION_BUTTONTD = "animated-option-buttonTD";
+    private static final String ANIMATED_OPTION_BUTTONRD = "animated-option-buttonRD";
     private static final String TREE_TABLE_VIEW = "tree-table-view";
+    private static final String TABLE_SCROLL_BAR = "scroll-bar";
     private static final String ICONS_BADGE = "icons-badge";
     
     HBox tdHbox1 = new HBox(10, l1, tdName);
@@ -419,16 +429,16 @@ public class PDController implements Initializable {
     HBox pdHbox2 = new HBox(10, l11, pdMonthCombo);
     HBox pdHbox3 = new HBox(10, l12, pdAmount, rentArrearslabel);
     HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
-    HBox pdHbox5 = new HBox(160, l14, paymentOptionButton);
+    HBox pdHbox5 = new HBox(158, l14, paymentOptionButton);
     HBox pdHbox6 = new HBox(pdTableViewButton);
 
     HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
     HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);
-    HBox rdHbox3 = new HBox(10, l17, rdRepairCost);
+    HBox rdHbox3 = new HBox(158, l17, repairCostSceneButton);
     HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
-    HBox rdHbox5 = new HBox(10, l19, rdMiscCost);
     HBox rdHbox6 = new HBox(rdTableViewButton);
-
+    public HBox rdDoneHbox = new HBox(10, doneButton);
+    
     double xCursorPos = 0;
     double yCursorPos = 0;
     double rdXCursorPos = 0;
@@ -465,7 +475,10 @@ public class PDController implements Initializable {
     public String loc = "location";
 
     XSSFWorkbook workBook;
-
+    
+    String repairsDoneText = null;
+    String repairsDateText = null;
+    
     Connection conn = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -694,9 +707,7 @@ public class PDController implements Initializable {
         pdAmount.setText("");
         pdPaymentDate.setValue(null);
         rdRepairsDone.setText("");
-        rdRepairCost.setText("");
         rdRepairDate.setValue(null);
-        rdMiscCost.setText("");
     }
 
     public void setEmpty() {
@@ -720,9 +731,7 @@ public class PDController implements Initializable {
 
     public void setRepairsEmpty() {
         rdRepairsDone.setText("");
-        rdRepairCost.setText("");
         rdRepairDate.setValue(null);
-        rdMiscCost.setText("");
     }
 
     public ObservableList<PDModel> getPaymentDetails() {
@@ -929,12 +938,18 @@ public class PDController implements Initializable {
                             default:
                                 break;
                         }
+                        
                         String repairsDone = rs.getString("RepairsDone");
-                        String costOfRepair1 = rs.getString("RepairCosts");
+                        String materialCostOfRepair1 = rs.getString("MaterialCost");
+                        String labourCostofRepair1 = rs.getString("LabourCost");
                         String dateOfRepair1 = rs.getString("RepairsDateTime");
                         String miscellaneous = rs.getString("MiscellaneousExpenses");
                         
-                        RModel repairsInfo = new RModel(houseNo, month, repairsDone, costOfRepair1, dateOfRepair1, miscellaneous);
+                        System.out.println(houseNo);
+                        System.out.println(month);
+                        System.out.println(repairsDone);
+                        
+                        RModel repairsInfo = new RModel(houseNo, month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
                         repairsData.add(repairsInfo);
                     }
                 } catch (SQLException e) {
@@ -1002,11 +1017,12 @@ public class PDController implements Initializable {
                                 break;
                         }
                         String repairsDone = rs.getString("RepairsDone");
-                        String costOfRepair = rs.getString("RepairCosts");
-                        String dateOfRepair = rs.getString("RepairsDateTime");
+                        String materialCostOfRepair1 = rs.getString("MaterialCost");
+                        String labourCostofRepair1 = rs.getString("LabourCost");
+                        String dateOfRepair1 = rs.getString("RepairsDateTime");
                         String miscellaneous = rs.getString("MiscellaneousExpenses");
                         
-                        RModel repairsInfo = new RModel(houseNo1, month, repairsDone, costOfRepair, dateOfRepair, miscellaneous);
+                        RModel repairsInfo = new RModel(houseNo1, month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
                         repairsData.add(repairsInfo);
                     }
                 } catch (SQLException e) {
@@ -1024,10 +1040,20 @@ public class PDController implements Initializable {
         return repairsData;
     }
 
-    private <T> void setupCellValueFactory(JFXTreeTableColumn<PDModel, T> column, Function<PDModel, ObservableValue<T>> mapper) {
+    private <T> void setupPaymentsTableCellValueFactory(JFXTreeTableColumn<PDModel, T> column, Function<PDModel, ObservableValue<T>> mapper) {
         column.setCellValueFactory((TreeTableColumn.CellDataFeatures<PDModel, T> param) -> {
             if (column.validateValue(param)) {
                 return mapper.apply(param.getValue().getValue());
+            } else {
+                return column.getComputedValue(param);
+            }
+        });
+    }
+    
+    private <T> void setupRepairsTableCellValueFactory(JFXTreeTableColumn<RModel, T> column, Function<RModel, ObservableValue<T>> mapper) {
+        column.setCellValueFactory((TreeTableColumn.CellDataFeatures<RModel, T> param) -> {
+            if (column.validateValue(param)) {
+               return mapper.apply(param.getValue().getValue());
             } else {
                 return column.getComputedValue(param);
             }
@@ -1146,9 +1172,8 @@ public class PDController implements Initializable {
                 try {
                     RModel item = getRepairsDetails().get(index);
                     rdRepairsDone.setText(item.getrepairsDoneTableR());
-                    rdRepairCost.setText(item.getcostofRepairsTableR());
                     rdRepairDate.setValue(LocalDate.parse(item.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
-                    rdMiscCost.setText(item.getmiscellaneousTableR());
+                    /*rdMiscCost.setText(item.getmiscellaneousTableR());*/
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1156,83 +1181,47 @@ public class PDController implements Initializable {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void editRepairFocusedCell() {
-        final TablePosition<RModel, String> focusedCell = repairsTable
-                .focusModelProperty().get().focusedCellProperty().get();
-        repairsTable.edit(focusedCell.getRow(), focusedCell.getTableColumn());
-    }
-
-    @SuppressWarnings("unchecked")
-    private void selectPrevious() {
-        if (repairsTable.getSelectionModel().isCellSelectionEnabled()) {
-            TablePosition<RModel, ?> pos = repairsTable.getFocusModel().getFocusedCell();
-            if (pos.getColumn() - 1 >= 0) {
-                repairsTable.getSelectionModel().select(pos.getRow(), getRepairTableColumn(pos.getTableColumn(), -1));
-            } else if (pos.getRow() < repairsTable.getItems().size()) {
-                repairsTable.getSelectionModel().select(pos.getRow() - 1,
-                        repairsTable.getVisibleLeafColumn(
-                                repairsTable.getVisibleLeafColumns().size() - 1));
-            }
-        } else {
-            int focusindex = repairsTable.getFocusModel().getFocusedIndex();
-            if (focusindex == -1) {
-                repairsTable.getSelectionModel().select(repairsTable.getItems().size() - 1);
-            } else if (focusindex > 0) {
-                repairsTable.getSelectionModel().select(focusindex - 1);
-            }
-        }
-    }
-
-    private TableColumn<RModel, ?> getRepairTableColumn(final TableColumn<RModel, ?> column, int offset) {
+    private TreeTableColumn<RModel, ?> getRepairTableColumn(final JFXTreeTableColumn<RModel, ?> column, int offset) {
         int columnIndex = repairsTable.getVisibleLeafIndex(column);
         int newColumnIndex = columnIndex + offset;
         return repairsTable.getVisibleLeafColumn(newColumnIndex);
     }
-
-    private void setupHouseNoColumn() {
-        houseNo.setPrefWidth(90);
-        houseNo.setCellValueFactory(cellData -> cellData.getValue().houseNumberTableRProperty());
+    
+    private void setupRepairHouseNoColumn() {
+        repairHouseCol.setPrefWidth(90);
+        repairHouseCol.setCellValueFactory(cellData -> cellData.getValue().getValue().houseNumberTableRProperty());
     }
-
+    
     private void setupRepairMonthColumn() {
         repairMonthCol.setPrefWidth(90);
-        repairMonthCol.setCellValueFactory(cellData -> cellData.getValue().monthTableRProperty());
+        repairMonthCol.setCellValueFactory(cellData -> cellData.getValue().getValue().monthTableRProperty());
     }
 
     private void setupRepairsDoneColumn() {
         repairDone.setPrefWidth(90);
-        repairDone.setCellValueFactory(cellData -> cellData.getValue().repairsDoneTableRProperty());
+        repairDone.setCellValueFactory(cellData -> cellData.getValue().getValue().repairsDoneTableRProperty());
     }
 
-    /*
-    private void updateRepairsTableData(String column, String newValue, String houseNumber, String repairsDate) {
-        try {
-            Connection conn = DriverManager.getConnection(databaseURL);
-            PreparedStatement pstmt = conn.prepareStatement("UPDATE RepairsTable SET " + column + " = ? WHERE HouseNumber = ? AND DateOfRepairs = ?");
-            pstmt.setString(1, newValue);
-            pstmt.setString(2, houseNumber);
-            pstmt.setString(3, repairsDate);
-            pstmt.execute();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
-
-    private void setupRepairCostColumn() {
-        costOfRepair.setPrefWidth(90);
-        costOfRepair.setCellValueFactory(cellData -> cellData.getValue().costofRepairsTableRProperty());
+    private void setupMaterialCostColumn() {
+        materialCostOfRepair.setPrefWidth(90);
+        materialCostOfRepair.setCellValueFactory(cellData -> cellData.getValue().getValue().materialCostofRepairsTableRProperty());
     }
-
+    
+    private void setupLabourCostColumn() {
+        labourCostOfRepair.setPrefWidth(90);
+        labourCostOfRepair.setCellValueFactory(cellData -> cellData.getValue().getValue().labourCostofRepairsTableRProperty());
+    }
+    
     private void setupRepairsDateColumn() {
         dateOfRepair.setPrefWidth(90);
-        dateOfRepair.setCellValueFactory(cellData -> cellData.getValue().dateofRepairsTableRProperty());
+        dateOfRepair.setCellValueFactory(cellData -> cellData.getValue().getValue().dateofRepairsTableRProperty());
     }
 
     private void setupMiscellaneousColumn() {
-        DoubleBinding usedWidth = houseNo.widthProperty().add(tenantName.widthProperty()).add(repairDone.widthProperty()).add(costOfRepair.widthProperty()).add(dateOfRepair.widthProperty());
-        miscExpenses.prefWidthProperty().bind(repairsTable.widthProperty().subtract(usedWidth));
-        miscExpenses.setCellValueFactory(cellData -> cellData.getValue().miscellaneousTableRProperty());
+        miscExpenses.setPrefWidth(90);
+        /*DoubleBinding usedWidth = houseNo.widthProperty().add(tenantName.widthProperty()).add(repairDone.widthProperty()).add(materialCostOfRepair.widthProperty()).add(dateOfRepair.widthProperty());
+        miscExpenses.prefWidthProperty().bind(repairsTable.widthProperty().subtract(usedWidth));*/
+        miscExpenses.setCellValueFactory(cellData -> cellData.getValue().getValue().miscellaneousTableRProperty());
     }
 
     public void createExcelSheet(File fileLocation, String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
@@ -1381,7 +1370,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     fileOut.close();
-                } catch (Exception e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -1390,27 +1379,7 @@ public class PDController implements Initializable {
     }
 
     public void createAndWriteExcelSheet(File fileLocation, String hNo, String tName, String amount, String monthlyRent, String paymentDate, String paymentMethod) throws FileNotFoundException {
-        /*try {
-            String searchPaymentsTable = "SELECT * FROM PaymentDetails WHERE RowID = ?";
-            conn = DriverManager.getConnection(databaseURL);
-            pstmt = conn.prepareStatement(searchPaymentsTable);
-            pstmt.setInt(1, payRowId);
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                conn.close();
-                pstmt.close();
-                rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }*/
-
+       
         File tenantDataExists = fileLocation;
 
         if (tenantDataExists.exists() == false) {
@@ -1483,13 +1452,94 @@ public class PDController implements Initializable {
                 workbookExists.write(outputStream);
                 workbookExists.close();
                 outputStream.close();
-            } catch (Exception e) {
+            } catch (IOException | EncryptedDocumentException e) {
                 e.printStackTrace();
             }
         }
 
     }
 
+    public void createAndWriteRepairDetailsToExcelFile(File fileLocation, String houseNumber, String month, String repairsDone, String materialCost, String labourCost, String otherCosts, String repairDateTime) throws FileNotFoundException {
+        File houseDataExcel = fileLocation;
+        
+        if (houseDataExcel.exists()) {
+            try {
+                FileInputStream is = new FileInputStream(houseDataExcel);
+                Workbook workBookExists = WorkbookFactory.create(is);
+                
+                Sheet spreadSheet = workBookExists.getSheet("Repair Details");
+                
+                Font boldFont = workBookExists.createFont();
+                boldFont.setFontName("Arial");
+                boldFont.setBold(true);
+                CellStyle headerRowStyle = workBookExists.createCellStyle();
+                headerRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                headerRowStyle.setFont(boldFont);
+                
+                Map<String, Object[]> repairData = new TreeMap<>();
+                repairData.put("1", new Object[]{"House Number", "Month", "Repairs Done", "Material Cost", "Labour Cost", "Other Costs", "Repairs Date"});
+                repairData.put("2", new Object[]{houseNumber, month, repairsDone, materialCost, labourCost, otherCosts, repairDateTime});
+                
+                Set<String> keySet = repairData.keySet();
+                int rowNum = 0;
+                
+                if (spreadSheet == null) {
+                    spreadSheet = workBookExists.createSheet("Repair Details");
+                    for (String key : keySet) {
+                        Row row = spreadSheet.createRow(rowNum++);
+                        if (rowNum == 1) {
+                            row.setRowStyle(headerRowStyle);
+                        }
+                        Object[] objArr = repairData.get(key);
+                        int cellnum = 0;
+                        for (Object obj : objArr) {
+                            Cell cell = row.createCell(cellnum++);
+                            cell.setCellStyle(getPrefferedCellStyle(cell));
+                            if (obj instanceof String) {
+                                cell.setCellValue((String) obj);
+                            } else if (obj instanceof Integer) {
+                                cell.setCellValue((Integer) obj);
+                            }
+                        }
+                    }
+                    for (int c = 0; c < repairData.get("1").length; c++) {
+                        spreadSheet.autoSizeColumn(c); 
+                    }
+                } else {
+                    Object[][] rData = {{houseNumber, month, repairsDone, materialCost, labourCost, otherCosts, repairDateTime}};
+                    
+                    int rowCount = spreadSheet.getPhysicalNumberOfRows();
+                    
+                    for (Object[] rBook : rData) {
+                        Row row = spreadSheet.createRow(rowCount++);
+
+                        int columnCount = 0;
+
+                        for (Object obj : rBook) {
+                            Cell cell = row.createCell(columnCount++);
+                            if (obj instanceof String) {
+                                cell.setCellValue((String) obj);
+                            } else if (obj instanceof Integer) {
+                                cell.setCellValue((Integer) obj);
+                            }
+                        }
+                    }
+                }
+                is.close();
+                
+                FileOutputStream outputStream = new FileOutputStream(houseDataExcel);
+                workBookExists.write(outputStream);
+                outputStream.close();
+                workBookExists.close();
+                
+            } catch (IOException | EncryptedDocumentException ex) {
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            
+        }
+    }
+    
     public void readExcelFile(File tenantDataExists) throws FileNotFoundException {
         String hNo = null;
         String tName = null;
@@ -1660,12 +1710,12 @@ public class PDController implements Initializable {
         try {
             fileOut = new FileOutputStream(file);
             workBook.write(fileOut);
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
                 fileOut.close();
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -1680,6 +1730,7 @@ public class PDController implements Initializable {
             if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(3).getStringCellValue().equals(pdMonthCombo.getValue().name())) {
                 row.getCell(2).setCellValue(pdAmount.getText());
                 row.getCell(4).setCellValue(getDateValueAsString(pdPaymentDate.getValue()));
+                row.getCell(5).setCellValue(payMethodString);
             }
         }
 
@@ -1692,12 +1743,45 @@ public class PDController implements Initializable {
         } finally {
             try {
                 fileOut.close();
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    public void updateRDExcelRowValue(File file) throws FileNotFoundException, IOException {
+        workBook = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = workBook.getSheet("Repair Details");
+        
+        fetchRepairDetailsFromDBToUI();
+        
+        for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow row = sheet.getRow(i);
+            
+            if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(rdMonthCombo.getValue().getMonth()) && row.getCell(2).getStringCellValue().equals(repairsDoneText) && row.getCell(6).getStringCellValue().equals(repairsDateText)) {
+                row.getCell(2).setCellValue(rdRepairsDone.getText());
+                row.getCell(6).setCellValue(getDateValueAsString(rdRepairDate.getValue()));
+                row.getCell(3).setCellValue(materialText.getText());
+                row.getCell(4).setCellValue(labourText.getText());
+                /*row.getCell(5).setCellValue(miscText.getText());*/
+            }
+        }
+        
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(file);
+            workBook.write(fileOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public void removeExcelRowValue(File file) throws IOException, InvalidFormatException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Tenant Data");
@@ -1762,6 +1846,8 @@ public class PDController implements Initializable {
         }
     }   
     
+    
+    
     public void removePDExcelRow(File file) throws FileNotFoundException, IOException {
         workBook = new XSSFWorkbook(new FileInputStream(file));
         XSSFSheet sheet = workBook.getSheet("Payment Details");
@@ -1786,46 +1872,42 @@ public class PDController implements Initializable {
         } finally {
             try {
                 fileOut.close();
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    /*private void runTask() {
-        JFXSpinner loadSpinner = new JFXSpinner();
-        loadSpinner.getStylesheets().add("/styles/spinnerCss.css");
-        loadSpinner.setRadius(10.0);
-        tdHbox1.getChildren().add(3, loadSpinner);
+    public void removeRDExcelRow(File file) throws FileNotFoundException, IOException {
+        workBook = new XSSFWorkbook(new FileInputStream(file));
+        XSSFSheet sheet = workBook.getSheet("Repair Details");
         
-        Task insertTask = new Task() {
-            @Override
-            protected Object call() throws Exception {
-                int maxIterations = 1;
-                for (int i = 1; i <= maxIterations; i++) {
-                    if (isCancelled()) {
-                        break;
-                    }
-                    updateProgress(i, maxIterations);
-                    
-                    Thread.sleep(1000);
-                }
-                return null;
+        for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+            XSSFRow row = sheet.getRow(i);
+            if (row.getRowNum() == sheet.getLastRowNum() && row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(rdMonthCombo.getValue().getMonth()) && row.getCell(2).getStringCellValue().equals(rdRepairsDone.getText()) && row.getCell(6).getStringCellValue().equals(getDateValueAsString(rdRepairDate.getValue()))) {
+                sheet.removeRow(row);
+                continue;
             }
-        };
+            if (row.getCell(0).getStringCellValue().equals(blockTreeView.getSelectionModel().getSelectedItem().getValue()) && row.getCell(1).getStringCellValue().equals(rdMonthCombo.getValue().getMonth()) && row.getCell(2).getStringCellValue().equals(repairsDoneText) && row.getCell(6).getStringCellValue().equals(repairsDateText)) {
+                sheet.shiftRows(i + 1, sheet.getLastRowNum(), -1);
+            }
+        }
         
-        insertTask.setOnSucceeded((event) -> {
-            tdHbox1.getChildren().remove(loadSpinner);
-        });
-        
-        insertTask.setOnFailed((event) -> {
-            System.out.println("Faled insert");
-        });
-        
-        loadSpinner.progressProperty().bind(insertTask.progressProperty());
-        
-        new Thread(insertTask).start();
-    }*/
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = new FileOutputStream(file);
+            workBook.write(fileOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+   
     private void resetHouseSeletion() {
         if (blockTreeView.getSelectionModel().getSelectedItem().getParent().equals(blockA)) {
                 blockA.setExpanded(false);
@@ -1919,12 +2001,6 @@ public class PDController implements Initializable {
                     payLayout.add(payIcon, 1, 0);
                 }
 
-                if (repairsLayout.getChildren().contains(repairsIcon)) {
-                    System.out.println("repairsIcon already showing");
-                } else {
-                    repairsLayout.add(repairsIcon, 1, 0);
-                }
-
                 blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 resetHouseSeletion();
             }
@@ -2002,27 +2078,54 @@ public class PDController implements Initializable {
     
     private void fetchRepairDetailsFromDBToUI() {
         final FetchRepairDetailsTask fetchRepairDetails = new FetchRepairDetailsTask();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        prefs = Preferences.userRoot().node(this.getClass().getName());
         
         fetchRepairDetails.setOnSucceeded((event) -> {
             if (fetchRepairDetails.getValue().isEmpty()) {
+                excelFileLocation = prefs.get(loc, "location");
                 setRepairsEmpty();
             } else {
-                rdRepairsDone.setText(fetchRepairDetails.getValue().get(2));
-                rdRepairCost.setText(fetchRepairDetails.getValue().get(3));
+                repairsDoneText = fetchRepairDetails.getValue().get(2);
                 
-                if (fetchRepairDetails.getValue().get(4) != null) {
-                    rdRepairDate.setValue(LocalDate.parse(fetchRepairDetails.getValue().get(4), formatter));
+                rdRepairsDone.setText(fetchRepairDetails.getValue().get(2));
+                materialText.setText(fetchRepairDetails.getValue().get(3));
+                materialNodesList.animateList(true);
+                labourText.setText(fetchRepairDetails.getValue().get(4));
+                labourNodesList.animateList(true);
+                
+                if (fetchRepairDetails.getValue().get(6) != null) {
+                    rdRepairDate.setValue(LocalDate.parse(fetchRepairDetails.getValue().get(6), formatter));
+                    repairsDateText = fetchRepairDetails.getValue().get(6);
                 } else {
                     rdRepairDate.setValue(null);
                 }
                 
-                rdMiscCost.setText(fetchRepairDetails.getValue().get(5));
+                miscText.setText(fetchRepairDetails.getValue().get(5));
+                miscNodesList.animateList(true);
                 rdTableViewButton.setVisible(true);
+                
+                try {
+                    getRepairDetailsRowID();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
 
         MainApp.databaseExecutor.submit(fetchRepairDetails);
+    }
+    
+    private void getRepairDetailsRowID() throws Exception {
+        final CheckRepairRowIDTask checkRepairRowID = new CheckRepairRowIDTask();
+        
+        checkRepairRowID.setOnSucceeded((event) -> {
+            repairRowId = checkRepairRowID.getValue();
+        });
+        
+        MainApp.databaseExecutor.submit(checkRepairRowID);
     }
     
     private void checkReminderNote() throws Exception {
@@ -2274,16 +2377,6 @@ public class PDController implements Initializable {
         MainApp.databaseExecutor.submit(updateReminderNote);
     }
     
-    private void deleteFromReminderNoteTable() {
-        final DeleteFromReminderNoteTableTask deleteReminderNote = new DeleteFromReminderNoteTableTask();
-        
-        deleteReminderNote.setOnSucceeded((event) -> {
-            System.out.println("Deleted from ReminderNoteTable");
-        });
-        
-        MainApp.databaseExecutor.submit(deleteReminderNote);
-    }
-    
     private void updatePaymentDetails(final JFXSpinner databaseActivityIndicator) {
         final UpdatePaymentDetailsTask updatePaymentDetails = new UpdatePaymentDetailsTask();
         
@@ -2312,15 +2405,53 @@ public class PDController implements Initializable {
     }
     
     private void updateRepairsDetailsTable(final JFXSpinner databaseActivityIndicator) {
-        final updateRepairDetailsTableTask updateRepairDetailsTable = new updateRepairDetailsTableTask();
+        final UpdateRepairDetailsTableTask updateRepairDetailsTable = new UpdateRepairDetailsTableTask();
         
         databaseActivityIndicator.visibleProperty().bind(updateRepairDetailsTable.runningProperty());
         databaseActivityIndicator.progressProperty().bind(updateRepairDetailsTable.progressProperty());
         
         updateRepairDetailsTable.setOnSucceeded((event) -> {
-            System.out.println("Updated Repair Details");
+            if (updateRepairDetailsTable.getValue()) {
+                repairsLayout.add(rdInsertSuccessIcon, 2, 0);
+
+                FadeTransition ft = new FadeTransition(Duration.millis(600), rdInsertSuccessIcon);
+                ft.setFromValue(1.0);
+                ft.setToValue(0.0);
+                ft.setCycleCount(1);
+                ft.setAutoReverse(false);
+
+                Timeline repairsLayoutTimeline = new Timeline(
+                        new KeyFrame(Duration.millis(700), (act) -> {
+                            repairsLayout.getChildren().remove(rdInsertSuccessIcon);
+                        }));
+                repairsLayoutTimeline.setCycleCount(1);
+
+                SequentialTransition st = new SequentialTransition(ft, repairsLayoutTimeline);
+                st.play();
+            } else {
+                JFXAlert updateRDErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                updateRDErrorAlert.initModality(Modality.APPLICATION_MODAL);
+                updateRDErrorAlert.setOverlayClose(false);
+
+                JFXDialogLayout content = new JFXDialogLayout();
+                content.setHeading(new Label("Database Error"));
+                content.setBody(new Label("Updating Repair Details table failed. Try agein. "));
+
+                JFXButton okButton = new JFXButton("OK");
+                okButton.setStyle("-fx-background-color: red; -fx-text-fill: white");
+                okButton.setOnAction(act -> {
+                    updateRDErrorAlert.hideWithAnimation();
+                    repairsLayout.getChildren().remove(rdErrorIcon);
+                });
+
+                content.setActions(okButton);
+                updateRDErrorAlert.setContent(content);
+                updateRDErrorAlert.show();
+
+                repairsLayout.add(rdErrorIcon, 2, 0);
+            }
         });
-        
+
         MainApp.databaseExecutor.submit(updateRepairDetailsTable);
     }
     
@@ -2364,6 +2495,70 @@ public class PDController implements Initializable {
         MainApp.databaseExecutor.submit(deleteFromPaymentDetails);
     }
     
+    private void deleteFromReminderNoteTable() {
+        final DeleteFromReminderNoteTableTask deleteReminderNote = new DeleteFromReminderNoteTableTask();
+        
+        deleteReminderNote.setOnSucceeded((event) -> {
+            System.out.println("Deleted from ReminderNoteTable");
+        });
+        
+        MainApp.databaseExecutor.submit(deleteReminderNote);
+    }
+    
+    private void deleteFromRepairDetailsTable(JFXSpinner databaseActivityIndicator) {
+        final DeleteFromRepairDetailsTask deleteRepairDetails = new DeleteFromRepairDetailsTask();
+        
+        databaseActivityIndicator.visibleProperty().bind(deleteRepairDetails.runningProperty());
+        databaseActivityIndicator.progressProperty().bind(deleteRepairDetails.progressProperty());
+        
+        deleteRepairDetails.setOnSucceeded((event) -> {
+            System.out.println("Entry successfully deleted");
+            if (deleteRepairDetails.getValue()) {
+                repairsLayout.add(rdInsertSuccessIcon, 2, 0);
+
+                FadeTransition ft = new FadeTransition(Duration.millis(600), rdInsertSuccessIcon);
+                ft.setFromValue(1.0);
+                ft.setToValue(0.0);
+                ft.setCycleCount(1);
+                ft.setAutoReverse(false);
+
+                Timeline repairsLayoutTimeline = new Timeline(
+                        new KeyFrame(Duration.millis(700), (act) -> {
+                            repairsLayout.getChildren().remove(rdInsertSuccessIcon);
+                        }));
+                repairsLayoutTimeline.setCycleCount(1);
+
+                SequentialTransition st = new SequentialTransition(ft, repairsLayoutTimeline);
+                st.play();
+                
+                rdMonthCombo.setValue(RModel.Strings.NONE);
+            } else {
+                JFXAlert deleteRDErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                deleteRDErrorAlert.initModality(Modality.APPLICATION_MODAL);
+                deleteRDErrorAlert.setOverlayClose(false);
+
+                JFXDialogLayout content = new JFXDialogLayout();
+                content.setHeading(new Label("Database Error"));
+                content.setBody(new Label("Updating Repair Details table failed."));
+
+                JFXButton okButton = new JFXButton("OK");
+                okButton.setStyle("-fx-background-color: red; -fx-text-fill: white");
+                okButton.setOnAction(act -> {
+                    deleteRDErrorAlert.hideWithAnimation();
+                    repairsLayout.getChildren().remove(rdErrorIcon);
+                });
+
+                content.setActions(okButton);
+                deleteRDErrorAlert.setContent(content);
+                deleteRDErrorAlert.show();
+
+                repairsLayout.add(rdErrorIcon, 2, 0);
+            }
+        });
+        
+        MainApp.databaseExecutor.submit(deleteRepairDetails);
+    }
+    
     /*private JasperPrint fillReceiptDetails() {
         final fillReceiptDetailsTask fillReceiptDetails = new fillReceiptDetailsTask();
         
@@ -2397,12 +2592,22 @@ public class PDController implements Initializable {
     }*/
     
     private void setupPaymentsTable() {
-        setupCellValueFactory(houseNoCol, PDModel::houseNumberTablePDProperty);
-        setupCellValueFactory(tenantNameCol, PDModel::tenantNameTablePDProperty);
-        setupCellValueFactory(monthCol, PDModel::monthTablePDProperty);
-        setupCellValueFactory(amountCol, PDModel::amountTablePDProperty);
-        setupCellValueFactory(dateCol, PDModel::paymentDateTablePDProperty);
-        setupCellValueFactory(methodCol, PDModel::paymentMethodPDProperty);   
+        setupPaymentsTableCellValueFactory(houseNoCol, PDModel::houseNumberTablePDProperty);
+        setupPaymentsTableCellValueFactory(tenantNameCol, PDModel::tenantNameTablePDProperty);
+        setupPaymentsTableCellValueFactory(monthCol, PDModel::monthTablePDProperty);
+        setupPaymentsTableCellValueFactory(amountCol, PDModel::amountTablePDProperty);
+        setupPaymentsTableCellValueFactory(dateCol, PDModel::paymentDateTablePDProperty);
+        setupPaymentsTableCellValueFactory(methodCol, PDModel::paymentMethodPDProperty);   
+    }
+    
+    private void setupRepairsTable() {
+        setupRepairsTableCellValueFactory(repairHouseCol, RModel::houseNumberTableRProperty);
+        setupRepairsTableCellValueFactory(repairMonthCol, RModel::monthTableRProperty);
+        setupRepairsTableCellValueFactory(repairDone, RModel::repairsDoneTableRProperty);
+        setupRepairsTableCellValueFactory(materialCostOfRepair, RModel::materialCostofRepairsTableRProperty);
+        setupRepairsTableCellValueFactory(labourCostOfRepair, RModel::labourCostofRepairsTableRProperty);
+        setupRepairsTableCellValueFactory(miscExpenses, RModel::miscellaneousTableRProperty);
+        setupRepairsTableCellValueFactory(dateOfRepair, RModel::dateofRepairsTableRProperty);
     }
     
     public void createStickyDialog(String houseNumber, StackPane pane) {
@@ -2655,6 +2860,16 @@ public class PDController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
+        pdUpdate.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
+        pdDelete.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
+        pdSave.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
+        pdStickyNote.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
+        pdPrintReceipt.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
+        rdNewRecord.disableProperty().bind(rdMonthCombo.valueProperty().isEqualTo(RModel.Strings.NONE));
+        rdUpdate.disableProperty().bind(rdMonthCombo.valueProperty().isEqualTo(RModel.Strings.NONE));
+        rdDelete.disableProperty().bind(rdMonthCombo.valueProperty().isEqualTo(RModel.Strings.NONE));
+        rdSave.disableProperty().bind(rdMonthCombo.valueProperty().isEqualTo(RModel.Strings.NONE));
+        
         databaseActivityIndicatorTD.setVisible(false);
         databaseActivityIndicatorTD.setRadius(8.5);
         
@@ -2750,11 +2965,6 @@ public class PDController implements Initializable {
         l21.setAlignment(Pos.CENTER_RIGHT);
         tdChooseDateButton.setGraphic(l21);
         
-        //Start of Payment Option NodeList
-        cashContainerHbox.setSpacing(10);
-        bankContainerHbox.setSpacing(10);
-        mpesaContainerHbox.setSpacing(10);
-        
         cashContainerHbox.setAlignment(Pos.CENTER_RIGHT);
         cashContainerHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
         bankContainerHbox.setAlignment(Pos.CENTER_RIGHT);
@@ -2811,11 +3021,27 @@ public class PDController implements Initializable {
             timelinePayOptionScene.play();
         });
         
+        repairCostSceneButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        repairCostSceneButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOUBLE_RIGHT, "20px"));
+        repairCostSceneButton.setOnAction((event) -> {
+            Scene scene = repairCostSceneButton.getScene();
+            rdStackPane.translateXProperty().set(-1 * scene.getWidth());
+            
+            rdStackPane.getChildren().remove(rdScrollPane);
+            rdStackPane.getChildren().add(repairsCostsGrid);
+            
+            Timeline repairCostsTimeline = new Timeline();
+            KeyValue kv = new KeyValue(rdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
+            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+            repairCostsTimeline.getKeyFrames().add(kf);
+            repairCostsTimeline.play();
+        });
+        
         tdBackButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         tdBackButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOUBLE_LEFT, "20px"));
         tdBackButton.setOnAction((event) -> {
             Scene scene = tdBackButton.getScene();
-            tdStackPane.translateXProperty().set(-1 * scene.getWidth());
+            tdStackPane.translateXProperty().set(scene.getWidth());
             
             Timeline timelineDateScene = new Timeline();
             KeyValue kv = new KeyValue(tdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
@@ -2837,7 +3063,7 @@ public class PDController implements Initializable {
             pdStackPane.translateXProperty().set(scene.getWidth());
             
             Timeline timelinePayOptionScene = new Timeline();
-            KeyValue kv = new KeyValue(pdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
+            KeyValue kv = new KeyValue(pdStackPane.translateXProperty(), 0, Interpolator.EASE_OUT);
             KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
             timelinePayOptionScene.getKeyFrames().add(kf);
             timelinePayOptionScene.setOnFinished(act -> {
@@ -2847,6 +3073,24 @@ public class PDController implements Initializable {
             
             pdStackPane.getChildren().add(pdScrollPane);
             
+        });
+        
+        rdBackButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        rdBackButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOUBLE_LEFT, "20px"));
+        rdBackButton.setOnAction((event) -> {
+            Scene scene = rdBackButton.getScene();
+            rdStackPane.translateXProperty().set(scene.getWidth());
+            
+            Timeline repairCostsTimeline = new Timeline();
+            KeyValue kv = new KeyValue(rdStackPane.translateXProperty(), 0, Interpolator.EASE_OUT);
+            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+            repairCostsTimeline.getKeyFrames().add(kf);
+            repairCostsTimeline.setOnFinished((act) -> {
+                rdStackPane.getChildren().remove(repairsCostsGrid);
+            });
+            repairCostsTimeline.play();
+            
+            rdStackPane.getChildren().add(rdScrollPane);
         });
         
         cashNodesList.setSpacing(95);
@@ -2875,17 +3119,6 @@ public class PDController implements Initializable {
             cashNodesList.animateList(false);
             bankNodesList.animateList(false);
         });
-        
-        /*paymentOptionsList.setSpacing(5);
-        paymentOptionsList.addAnimatedNode(paymentOptionButton);
-        paymentOptionsList.addAnimatedNode(cashNodesList);
-        paymentOptionsList.addAnimatedNode(bankNodesList);
-        paymentOptionsList.addAnimatedNode(mpesaNodesList);
-        paymentOptionButton.setOnAction((event) -> {
-            cashNodesList.animateList(false);
-            bankNodesList.animateList(false);
-            mpesaNodesList.animateList(false);
-        });*/
         
         pdCashButton.setVisible(false);
         pdCashButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -2973,14 +3206,168 @@ public class PDController implements Initializable {
             }
         });
         
+        
+        
         JFXNodesList.alignNodeToChild(cashContainerHbox, cashButton);
         JFXNodesList.alignNodeToChild(bankContainerHbox, bankButton);
         JFXNodesList.alignNodeToChild(mpesaContainerHbox, mpesaButton);
-        //End of Payment Option Nodes List
+        
+        doneButton.setVisible(false);
+        doneButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
+        doneButton.setOnAction((event) -> {
+            Scene scene = doneButton.getScene();
+            
+            rdStackPane.translateXProperty().set(scene.getWidth());
+            
+            Timeline repairCostsTimeline = new Timeline();
+            KeyValue kv = new KeyValue(rdStackPane.translateXProperty(), 0, Interpolator.EASE_OUT);
+            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
+            repairCostsTimeline.getKeyFrames().add(kf);
+            repairCostsTimeline.setOnFinished((act) -> {
+                rdStackPane.getChildren().remove(repairsCostsGrid);
+            });
+            repairCostsTimeline.play();
+            
+            rdStackPane.getChildren().add(rdScrollPane);
+        });
+        
+        materialText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+        materialText.setPromptText("Ksh...");
+        materialText.textProperty().addListener((observable, oldValue, newValue) -> {
+            materialText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
+            doneButton.setVisible(true);
+            
+            if (!newValue.isEmpty()) {
+                materialButton.setOnMouseClicked((event) -> {
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                });
+            } else {
+                materialText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+                doneButton.setVisible(false);
+                materialButton.setOnMouseClicked((event) -> {
+                    labourNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    labourNodesList.animateList(false);
+                });
+            }
+        });
+
+        labourText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+        labourText.setPromptText("Ksh...");
+        labourText.textProperty().addListener((observable, oldValue, newValue) -> {
+            labourText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
+            doneButton.setVisible(true);
+            
+            if (!newValue.isEmpty()) {
+                materialButton.setOnMouseClicked((event) -> {  
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                });
+            } else {
+                labourText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+                doneButton.setVisible(false);
+                materialButton.setOnMouseClicked((event) -> {
+                    labourNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    labourNodesList.animateList(false);
+                });
+            }
+        });
+        
+        miscText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+        miscText.setPromptText("Ksh or can be empty");
+        miscText.textProperty().addListener((observable, oldValue, newValue) -> {
+            miscText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.REGULAR, 16));
+            doneButton.setVisible(true);
+            if (!newValue.isEmpty()) {
+                materialButton.setOnMouseClicked((event) -> {  
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                });
+            } else {
+                miscText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
+                doneButton.setVisible(false);
+                materialButton.setOnMouseClicked((event) -> {
+                    labourNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                labourButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    miscNodesList.animateList(false);
+                });
+                miscButton.setOnMouseClicked((event) -> {
+                    materialNodesList.animateList(false);
+                    labourNodesList.animateList(false);
+                });
+            }
+        });
+        
+        rdMaterialHbox.setAlignment(Pos.CENTER_RIGHT);
+        rdMaterialHbox.getChildren().add(materialText);
+        rdLabourHbox.setAlignment(Pos.CENTER_RIGHT);
+        rdLabourHbox.getChildren().add(labourText);
+        rdMiscHbox.setAlignment(Pos.CENTER_RIGHT);
+        rdMiscHbox.getChildren().add(miscText);
+        
+        materialButton.setGraphic(new Label("Materials Cost"));
+        materialButton.getStyleClass().add(ANIMATED_OPTION_BUTTONRD);
+        labourButton.setGraphic(new Label("Labour Cost"));
+        labourButton.getStyleClass().add(ANIMATED_OPTION_BUTTONRD);
+        miscButton.setGraphic(new Label("Miscellaneous Cost"));
+        miscButton.getStyleClass().add(ANIMATED_OPTION_BUTTONRD);
+        
+        materialNodesList.setSpacing(180);
+        materialNodesList.addAnimatedNode(materialButton);
+        materialNodesList.addAnimatedNode(rdMaterialHbox);
+        materialNodesList.setRotate(270);
+        materialButton.setOnMouseClicked((event) -> {
+            labourNodesList.animateList(false);
+            miscNodesList.animateList(false);
+        });
+        
+        labourNodesList.setSpacing(180);
+        labourNodesList.addAnimatedNode(labourButton);
+        labourNodesList.addAnimatedNode(rdLabourHbox);
+        labourNodesList.setRotate(270);
+        labourButton.setOnMouseClicked((event) -> {
+            materialNodesList.animateList(false);
+            miscNodesList.animateList(false);
+        });
+        
+        miscNodesList.setSpacing(180);
+        miscNodesList.addAnimatedNode(miscButton);
+        miscNodesList.addAnimatedNode(rdMiscHbox);
+        miscNodesList.setRotate(270);
+        miscButton.setOnMouseClicked((event) -> {
+            materialNodesList.animateList(false);
+            labourNodesList.animateList(false);
+        });
+        
         stickyIconPane.setPadding(new Insets(10));
-        stickyBadge.setStyle(ICONS_BADGE);
+        stickyBadge.getStyleClass().add(ICONS_BADGE);
         stickyBadge.setAlignment(Pos.TOP_RIGHT);
-        stickyIconPane.getChildren().add(GlyphsDude.createIcon(FontAwesomeIcon.STICKY_NOTE_ALT, "19"));
+        stickyIconPane.getChildren().add(GlyphsDude.createIcon(FontAwesomeIcon.STICKY_NOTE, "19"));
         stickyBadge.setControl(stickyIconPane);
         stickyBadge.setOnMouseClicked((event) -> {
             try {
@@ -3034,20 +3421,6 @@ public class PDController implements Initializable {
         l20.setMinSize(120, 20);
         l14.setMinSize(120, 20);
         
-        setupHouseNumberColumn();
-        setupTenantNameColumn();
-        setupAmountColumn();
-        setupMonthColumn();
-        setupPaymentDateColumn();
-        setupPaymentMethodColumn();
-
-        setupHouseNoColumn();
-        setupRepairMonthColumn();
-        setupRepairsDoneColumn();
-        setupRepairCostColumn();
-        setupRepairsDateColumn();
-        setupMiscellaneousColumn();
-
         tdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         tdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         pdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -3118,7 +3491,16 @@ public class PDController implements Initializable {
         });
 
         rdUpdate.setOnAction((event) -> {
-            updateRepairsDetailsTable(databaseActivityIndicatorRD);
+            try {
+                updateRepairsDetailsTable(databaseActivityIndicatorRD);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        
+        rdDelete.setOnAction((event) -> {
+            deleteFromRepairDetailsTable(databaseActivityIndicatorRD);
         });
         
         pdDelete.setOnAction((event) -> {
@@ -3309,7 +3691,7 @@ public class PDController implements Initializable {
                 content.setActions(okButton);
                 monthErrorAlert.setContent(content);
                 monthErrorAlert.show();
-            } else if ("".equals(rdRepairsDone.getText()) || "".equals(rdRepairCost.getText()) || "".equals(rdRepairDate.getEditor().getText()) || "".equals(rdMiscCost.getText())) {
+            } else if ("".equals(rdRepairsDone.getText()) || "".equals(rdRepairDate.getEditor().getText())) {
                 
                 JFXAlert emptyFieldAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
                 emptyFieldAlert.initModality(Modality.APPLICATION_MODAL);
@@ -3351,17 +3733,13 @@ public class PDController implements Initializable {
             repairRowId = 0;
         });
 
-        pdNewRecord.setOnAction((event) -> {
-            pdMonthCombo.setValue(PDModel.Strings.NONE);
-            pdAmount.clear();
-            pdPaymentDate.setValue(null);
-            newEntryCheck = "Payments Tab New Entry";
-            payRowId = 0;
-        });
-
         rdNewRecord.setOnAction((event) -> {
-            rdMonthCombo.setValue(RModel.Strings.NONE);
             repairRowId = 0;
+            rdRepairsDone.clear();
+            rdRepairDate.setValue(null);
+            materialText.clear();
+            labourText.clear();
+            miscText.clear();
         });
          
         pdStickyNote.setOnAction((event) -> {
@@ -3476,7 +3854,20 @@ public class PDController implements Initializable {
         
         detIcon.visibleProperty().bind(tdName.textProperty().isEmpty().not());
         payIcon.visibleProperty().bind(pdName.textProperty().isEmpty().not());
-        repairsIcon.visibleProperty().bind(rdMonthCombo.getSelectionModel().selectedItemProperty().isNotNull());
+        /*repairsIcon.visibleProperty().bind(rdMonthCombo.valueProperty().isNotNull());*/
+        
+        rdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.equals(RModel.Strings.NONE)) {
+                if (!repairsLayout.getChildren().contains(repairsIcon)) {
+                    repairsLayout.add(repairsIcon, 1, 0);
+                }
+            } else {
+                if (repairsLayout.getChildren().contains(repairsIcon)) {
+                    repairsLayout.getChildren().remove(repairsIcon);
+                }
+            }
+
+        });
         
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
@@ -3488,6 +3879,7 @@ public class PDController implements Initializable {
                 pdCashTextfield.clear();
                 pdbankTextfield.clear();
                 pdMpesaTextfield.clear();
+                pdTableViewButton.setVisible(false);
                 if (payLayout.getChildren().contains(stickyBadge)) {
                     payLayout.getChildren().remove(stickyBadge);
                 }
@@ -3542,7 +3934,11 @@ public class PDController implements Initializable {
                 content.setActions(okButton);
                 noHouseAlert.setContent(content);
                 noHouseAlert.show();
-            } else {
+            } /*else if (newValue.equals(RModel.Strings.NONE)) {
+                materialNodesList.animateList(false);
+                labourNodesList.animateList(false);
+                miscNodesList.animateList(false);
+            }*/ else {
                 fetchRepairDetailsFromDBToUI();
             }
             
@@ -3565,8 +3961,8 @@ public class PDController implements Initializable {
                     return false;
                 });
                 SortedList<RModel> sortedData = new SortedList<>(filteredList);
-                sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());
-                repairsTable.setItems(houseRepairDetails);
+                /*sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());*/
+                repairsTable.setRoot(new RecursiveTreeItem<>(houseRepairDetails, RecursiveTreeObject::getChildren));
             }
         });
         
@@ -3603,7 +3999,7 @@ public class PDController implements Initializable {
                             .otherwise(contextMenu)
             );
             return row;
-        });*/
+        });
 
         repairsTable.setRowFactory((TableView<RModel> tableView) -> {
             final TableRow<RModel> row = new TableRow<>();
@@ -3619,13 +4015,11 @@ public class PDController implements Initializable {
                         RModel item = getRepairsDetails().get(index);
                         rdMonthCombo.setValue(item.getMonthTableR());
                         rdRepairsDone.setText(item.getrepairsDoneTableR());
-                        rdRepairCost.setText(item.getcostofRepairsTableR());
                         if (item.getdateofRepairsTableR() == null) {
                             rdRepairDate.setValue(null);
                         } else {
                             rdRepairDate.setValue(LocalDate.parse(item.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
                         }
-                        rdMiscCost.setText(item.getmiscellaneousTableR());
                     } catch (Exception e) {
                     }
                 }
@@ -3639,7 +4033,7 @@ public class PDController implements Initializable {
             );
             return row;
         });
-        /*
+        
         repairsTable.setEditable(true);
         repairsTable.getSelectionModel().setCellSelectionEnabled(true);
         repairsTable.setOnKeyPressed((event) -> {
@@ -3654,12 +4048,11 @@ public class PDController implements Initializable {
                 event.consume();
             }
         });*/
-        repairsTable.getColumns().addAll(houseNo, repairMonthCol, repairDone, costOfRepair, dateOfRepair, miscExpenses);
-
+        
         paymentDetails.setOnSelectionChanged((event) -> {
             if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                pdTableViewButton.setText("Show details >>");
+                pdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
                 Scene scene = paymentDetails.getTabPane().getScene();
                 Stage stage = (Stage) scene.getWindow();
                 MainApp.windowResize(stage);
@@ -3669,7 +4062,7 @@ public class PDController implements Initializable {
         repairDetails.setOnSelectionChanged((event) -> {
             if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                rdTableViewButton.setText("Show details >>");
+                rdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
                 Scene scene = repairDetails.getTabPane().getScene();
                 Stage stage = (Stage) scene.getWindow();
                 MainApp.windowResize(stage);
@@ -3677,7 +4070,7 @@ public class PDController implements Initializable {
         });
 
         rdRepairsDone.setWrapText(true);
-        rdRepairsDone.setPrefWidth(170);
+        rdRepairsDone.setPrefSize(170, 50);
         rdRepairsDone.sceneProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 rdRepairsDone.applyCss();
@@ -3692,22 +4085,8 @@ public class PDController implements Initializable {
             }
         });
 
-        pdOtherExpenseField.setWrapText(true);
-        pdOtherExpenseField.setPrefSize(100, 10);
-        pdOtherExpenseField.sceneProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                pdOtherExpenseField.applyCss();
-                Node text = pdOtherExpenseField.lookup(".text");
-                pdOtherExpenseField.prefHeightProperty().bind(Bindings.createDoubleBinding(() -> {
-                    return pdOtherExpenseField.getFont().getSize() + text.getBoundsInLocal().getHeight();
-                }, text.boundsInLocalProperty()));
-
-                text.boundsInLocalProperty().addListener((observableBoundsAfter, boundsBefore, boundsAfter) -> {
-                    Platform.runLater(() -> pdOtherExpenseField.requestLayout());
-                });
-            }
-        });
-
+        pdTableViewButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        pdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
         pdTableViewButton.setVisible(false);
         pdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
@@ -3716,42 +4095,63 @@ public class PDController implements Initializable {
                 paymentsTable.setShowRoot(false);
                 tableViewPane.setCenter(paymentsTable);
                 sp1.getItems().add(tableViewPane);
-                pdTableViewButton.setText("Hide details >>");
+                pdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_UP, "22"));
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 600);
             } else if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                pdTableViewButton.setText("Show details >>");
+                pdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.windowResize(stage);
             }
         });
 
+        rdTableViewButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        rdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
         rdTableViewButton.setVisible(false);
         rdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
                 repairsTable.setMinHeight(200);
-                repairsTable.setItems(getRepairsDetails());
+                repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
+                repairsTable.setShowRoot(false);
                 tableViewPane.setCenter(repairsTable);
                 sp1.getItems().add(tableViewPane);
-                rdTableViewButton.setText("Hide details >>");
+                rdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_UP, "22"));
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.changeWindowSize(stage, 600);
             } else if (sp1.getItems().size() == 2) {
                 sp1.getItems().remove(tableViewPane);
-                rdTableViewButton.setText("Show details >>");
+                rdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
                 Node source = (Node) event.getSource();
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.windowResize(stage);
             }
         });
         
-        paymentsTable.setStyle(TREE_TABLE_VIEW);
+        setupHouseNumberColumn();
+        setupTenantNameColumn();
+        setupAmountColumn();
+        setupMonthColumn();
+        setupPaymentDateColumn();
+        setupPaymentMethodColumn();
+
+        setupRepairHouseNoColumn();
+        setupRepairMonthColumn();
+        setupRepairsDoneColumn();
+        setupMaterialCostColumn();
+        setupLabourCostColumn();
+        setupRepairsDateColumn();
+        setupMiscellaneousColumn();
+        
+        paymentsTable.getStyleClass().add(TREE_TABLE_VIEW);
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
 
+        repairsTable.getStyleClass().add(TREE_TABLE_VIEW);
+        repairsTable.getColumns().addAll(repairHouseCol, repairMonthCol, repairDone, materialCostOfRepair, labourCostOfRepair, miscExpenses, dateOfRepair);
+        
         pdMonthCombo.setPrefWidth(170);
         rdMonthCombo.setPrefWidth(170);
         
@@ -3797,11 +4197,19 @@ public class PDController implements Initializable {
         repairsLayout.setPadding(new Insets(5));
         repairsLayout.add(rdHbox7, 0, 0);
         repairsLayout.add(rdHbox2, 0, 1);
-        repairsLayout.add(rdHbox3, 0, 2);
-        repairsLayout.add(rdHbox4, 0, 3);
-        repairsLayout.add(rdHbox5, 0, 4);
-        repairsLayout.add(rdHbox6, 0, 5);
+        repairsLayout.add(rdHbox4, 0, 2);
+        repairsLayout.add(rdHbox3, 0, 3);
+        repairsLayout.add(rdHbox6, 0, 4);
+        
         repairsLayout.add(databaseActivityIndicatorRD, 2, 0);
+        
+        repairsCostsGrid.setVgap(10);
+        repairsCostsGrid.setPadding(new Insets(10));
+        repairsCostsGrid.add(materialNodesList, 0, 0);
+        repairsCostsGrid.add(labourNodesList, 0, 1);
+        repairsCostsGrid.add(miscNodesList, 0, 2);
+        repairsCostsGrid.add(doneButton, 0, 3);
+        repairsCostsGrid.add(rdBackButton, 0, 4);
         
         tdStackPane.getChildren().add(tdScrollPane);
         pdStackPane.getChildren().add(pdScrollPane);
@@ -3837,7 +4245,7 @@ public class PDController implements Initializable {
             Label lab = new Label("•••");
             lab.setStyle("-fx-text-fill:white");
             lab.setOnMouseClicked((event) -> {
-                ContextMenu conMenu = new ContextMenu(pdNewRecord, new SeparatorMenuItem(), pdUpdate, pdDelete, new SeparatorMenuItem(), pdSave, new SeparatorMenuItem(), pdStickyNote, new SeparatorMenuItem(), pdPrintReceipt);
+                ContextMenu conMenu = new ContextMenu(pdUpdate, pdDelete, new SeparatorMenuItem(), pdSave, new SeparatorMenuItem(), pdStickyNote, new SeparatorMenuItem(), pdPrintReceipt);
                 conMenu.show(payIcon, Side.RIGHT, xCursorPos, yCursorPos);
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
@@ -4066,8 +4474,7 @@ public class PDController implements Initializable {
                     repairRowId = 0;
                 } else {
                     do {
-                        repairRowId = rs.getInt("RowID");
-                        repairDetails.addAll(rs.getString("HouseNumber"), rs.getString("Month"), rs.getString("RepairsDone"), rs.getString("RepairCosts"), rs.getString("RepairsDateTime"), rs.getString("MiscellaneousExpenses"));
+                        repairDetails.addAll(rs.getString("HouseNumber"), rs.getString("Month"), rs.getString("RepairsDone"), rs.getString("MaterialCost"), rs.getString("LabourCost"), rs.getString("MiscellaneousExpenses"), rs.getString("RepairsDateTime"));
                     } while (rs.next());
                     logger.info("Found Entry");
                 }
@@ -4082,6 +4489,51 @@ public class PDController implements Initializable {
                 }
             }
             return repairDetails;
+        }
+    }
+    
+    class CheckRepairRowIDTask extends DBTask<Integer> {
+        @Override
+        protected Integer call() throws Exception {
+            try (Connection con = getConnection()) {
+                System.out.println(getRepairRowID(con));
+                return getRepairRowID(con);
+            }
+        }
+        
+        private int getRepairRowID(Connection con) {
+            logger.info("Checking if repair table row is available");
+            int tempRepairRowID = 0;
+            
+            try {
+                String checkRowID = "SELECT * FROM RepairDetailsTable  WHERE HouseNumber = ? AND Month = ? AND RepairsDone = ? AND RepairsDateTime = ?";
+                pstmt = con.prepareStatement(checkRowID);
+                pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                pstmt.setString(2, rdMonthCombo.getValue().getMonth());
+                pstmt.setString(3, rdRepairsDone.getText());
+                pstmt.setString(4, getDateValueAsString(rdRepairDate.getValue()));
+                rs = pstmt.executeQuery();
+                
+                if (!rs.next()) {
+                    logger.info("No repair entry found");
+                } else {
+                    do {                        
+                        logger.info("Repair Detail found.");
+                        tempRepairRowID = rs.getInt("RowID");
+                    } while (rs.next());
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                logger.info("Error retrieving Repair Details Table entry");
+            } finally {
+                try {
+                    rs.close();
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return tempRepairRowID;
         }
     }
     
@@ -4222,6 +4674,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4238,21 +4691,33 @@ public class PDController implements Initializable {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             
             try (Connection con = getConnection()) {
-                return saveRepairDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getSelectionModel().getSelectedItem().getMonth(), rdRepairsDone.getText(), rdRepairCost.getText(), getDateValueTimeAsString(rdRepairDate.getValue().atTime(LocalTime.now())), rdMiscCost.getText());
+                if (saveRepairDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getSelectionModel().getSelectedItem().getMonth(), rdRepairsDone.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()))) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        System.out.println(excelFileLocation);
+                        createAndWriteRepairDetailsToExcelFile(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getValue().getMonth(), rdRepairsDone.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    return false;
+                }
             }
+            return true;
         }
         
-        private boolean saveRepairDetails (Connection con, String HouseNumber, String Month, String repairsDone, String repairCosts, String repairDate, String miscellaneousCost) {
+        private boolean saveRepairDetails (Connection con, String HouseNumber, String Month, String repairsDone, String materialCost, String labourCost, String miscellaneousCost, String repairDate) {
             logger.info("Inserting into Repairs Details table");
             try {
-                String insertToRepairDetails = "INSERT INTO RepairDetailsTable(HouseNumber, Month, RepairsDone, RepairCosts, RepairsDateTime, MiscellaneousExpenses) VALUES(?, ?, ?, ?, ?, ?)";
+                String insertToRepairDetails = "INSERT INTO RepairDetailsTable(HouseNumber, Month, RepairsDone, MaterialCost, LabourCost, MiscellaneousExpenses, RepairsDateTime) VALUES(?, ?, ?, ?, ?, ?, ?)";
                 pstmt = con.prepareStatement(insertToRepairDetails);
                 pstmt.setString(1, HouseNumber);
                 pstmt.setString(2, Month);
                 pstmt.setString(3, repairsDone);
-                pstmt.setString(4, repairCosts);
-                pstmt.setString(5, repairDate);
+                pstmt.setString(4, materialCost);
+                pstmt.setString(5, labourCost);
                 pstmt.setString(6, miscellaneousCost);
+                pstmt.setString(7, repairDate);
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Insert into Repair Details table failed.");
@@ -4261,6 +4726,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4298,6 +4764,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4332,6 +4799,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4368,6 +4836,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4420,6 +4889,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4444,7 +4914,6 @@ public class PDController implements Initializable {
                     }
                 }
             }
-
             return null;
         }
 
@@ -4466,6 +4935,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4474,28 +4944,39 @@ public class PDController implements Initializable {
         }
     }
     
-    class updateRepairDetailsTableTask extends DBTask {
+    class UpdateRepairDetailsTableTask extends DBTask<Boolean> {
         @Override
-        protected Void call() throws Exception {
+        protected Boolean call() throws Exception {
             Thread.sleep(1000);
             
             try (Connection con = getConnection()) {
-                updateRepairDetailsTable(con, rdRepairsDone.getText(), rdRepairCost.getText(), getDateValueTimeAsString(rdRepairDate.getValue().atTime(LocalTime.now())), rdMiscCost.getText(), repairRowId);
+                System.out.println(repairRowId);
+               if  (updateRepairDetailsTable(con, rdRepairsDone.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()), repairRowId)) {
+                   try {
+                       System.out.println(excelFileLocation);
+                       File file = new File(excelFileLocation);
+                       updateRDExcelRowValue(file);
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                       return false;
+                   }
+               }
             }
-            return null;
+            return true;
         }
         
-        private boolean updateRepairDetailsTable (Connection con, String repairsDone, String repairCosts, String repairsDateTime, String miscExp, int rowID) {
+        private boolean updateRepairDetailsTable (Connection con, String repairsDone, String materialCost, String labourCost, String miscExp, String repairsDateTime, int rowID) {
             logger.info("Updating RepairDetailsTable");
             
             try {
-                String rdUpdateSql = "UPDATE RepairDetailsTable SET RepairsDone = ?, RepairCosts = ?, RepairsDateTime = ?, MiscellaneousExpenses = ? WHERE RowID = ?";
+                String rdUpdateSql = "UPDATE RepairDetailsTable SET RepairsDone = ?, MaterialCost = ?, LabourCost = ?, MiscellaneousExpenses = ?, RepairsDateTime = ? WHERE RowID = ?";
                 pstmt = con.prepareStatement(rdUpdateSql);
                 pstmt.setString(1, repairsDone);
-                pstmt.setString(2, repairCosts);
-                pstmt.setString(3, repairsDateTime);
+                pstmt.setString(2, materialCost);
+                pstmt.setString(3, labourCost);
                 pstmt.setString(4, miscExp);
-                pstmt.setInt(5, rowID);
+                pstmt.setString(5, repairsDateTime);
+                pstmt.setInt(6, rowID);
                 pstmt.execute();
             } catch (SQLException ex) {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
@@ -4505,6 +4986,7 @@ public class PDController implements Initializable {
             } finally {
                 try {
                     pstmt.close();
+                    con.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -4612,6 +5094,50 @@ public class PDController implements Initializable {
                 pstmt.execute();
             } catch (SQLException e) {
                 logger.info("Failed to delete from Tenant Details.");
+                e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    }
+    
+    class DeleteFromRepairDetailsTask extends DBTask<Boolean> {
+
+        @Override
+        protected Boolean call() throws Exception {
+            Thread.sleep(1000);
+
+            try (Connection con = getConnection()) {
+                if (deleteFromRepairDetailsTable(con, repairRowId)) {
+                    try {
+                        File file = new File(excelFileLocation);
+                        removeRDExcelRow(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private boolean deleteFromRepairDetailsTable(Connection con, int rowID) {
+            logger.info("Deleteing from Repair Details Table");
+            
+            System.out.println(repairRowId);
+            try {
+                String deleteRepairDetails = "DELETE FROM RepairDetailsTable WHERE RowID = ?";
+                pstmt = con.prepareStatement(deleteRepairDetails);
+                pstmt.setInt(1, repairRowId);
+                pstmt.execute();
+            } catch (SQLException e) {
+                logger.info("Failed to delete from Repair Details Table");
                 e.printStackTrace();
                 return false;
             } finally {
@@ -4829,7 +5355,7 @@ public class PDController implements Initializable {
         private void createSchema4(Connection con) {
             logger.info("Creating Repair Details schema");
             
-            String createRepairDetailsTable = "CREATE TABLE IF NOT EXISTS RepairDetailsTable(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, Month text, RepairsDone text, RepairCosts text, RepairsDateTime text, MiscellaneousExpenses text, UNIQUE(Month, RepairsDateTime))";
+            String createRepairDetailsTable = "CREATE TABLE IF NOT EXISTS RepairDetailsTable(RowID Integer PRIMARY KEY AUTOINCREMENT, HouseNumber text, Month text, RepairsDone text, MaterialCost text, LabourCost, MiscellaneousExpenses text, RepairsDateTime text, UNIQUE(HouseNumber, Month, RepairsDone, RepairsDateTime))";
             try {
                 pstmt = con.prepareStatement(createRepairDetailsTable);
                 pstmt.execute();

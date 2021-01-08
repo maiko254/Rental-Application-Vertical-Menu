@@ -5,6 +5,7 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
+import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,7 +15,7 @@ import javafx.beans.property.StringProperty;
  *
  * @author bonyo
  */
-public class RModel {
+public class RModel extends RecursiveTreeObject<RModel>{
     
     public enum Strings {
         ALL("All"),
@@ -46,15 +47,17 @@ public class RModel {
     public StringProperty houseNumberTableR;
     public ObjectProperty<Strings> monthTableR;
     public StringProperty repairsDoneTableR;
-    public StringProperty costofRepairsTableR;
+    public StringProperty materialCostofRepairsTableR;
+    public StringProperty labourCostofRepairsTableR;
     public StringProperty dateofRepairsTableR;
     public StringProperty miscellaneousTableR;
     
-    public RModel(String houseNumber, Strings month, String repairsDone, String costofRepair, String dateofRepairs, String miscellaneous){
+    public RModel(String houseNumber, Strings month, String repairsDone, String materialCost, String labourCost, String miscellaneous, String dateofRepairs){
        houseNumberTableR = new SimpleStringProperty(houseNumber);
        monthTableR = new SimpleObjectProperty<>(month);
        repairsDoneTableR = new SimpleStringProperty(repairsDone);
-       costofRepairsTableR = new SimpleStringProperty(costofRepair);
+       materialCostofRepairsTableR = new SimpleStringProperty(materialCost);
+       labourCostofRepairsTableR = new SimpleStringProperty(labourCost);
        dateofRepairsTableR = new SimpleStringProperty(dateofRepairs);
        miscellaneousTableR = new SimpleStringProperty(miscellaneous);
     }
@@ -89,14 +92,24 @@ public class RModel {
         return repairsDoneTableR;
     }
     
-    public String getcostofRepairsTableR(){
-        return costofRepairsTableR.get();
+    public String getMaterialCostofRepairsTableR(){
+        return materialCostofRepairsTableR.get();
     }
-    public void setcostofRepairsTableR(String value){
-        costofRepairsTableR.set(value);
+    public void setMaterialCostofRepairsTableR(String value){
+        materialCostofRepairsTableR.set(value);
     }
-    public StringProperty costofRepairsTableRProperty(){
-        return costofRepairsTableR;
+    public StringProperty materialCostofRepairsTableRProperty(){
+        return materialCostofRepairsTableR;
+    }
+    
+    public String getLabourCostofRepairsTableR(){
+        return labourCostofRepairsTableR.get();
+    }
+    public void setLabourCostofRepairsTableR(String value){
+        labourCostofRepairsTableR.set(value);
+    }
+    public StringProperty labourCostofRepairsTableRProperty(){
+        return labourCostofRepairsTableR;
     }
     
     public String getdateofRepairsTableR(){
