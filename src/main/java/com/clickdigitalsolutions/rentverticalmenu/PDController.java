@@ -94,6 +94,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -116,6 +117,7 @@ import javafx.scene.control.TreeTablePosition;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -206,7 +208,7 @@ public class PDController implements Initializable {
     private JFXTreeTableColumn<PDModel, String> methodCol = new JFXTreeTableColumn("Payment Method");
     public  JFXTreeTableView<PDModel> paymentsTable = new JFXTreeTableView<>();
 
-    public JFXTreeTableColumn<RModel, String> repairHouseCol = new JFXTreeTableColumn<>("House Number");
+    /*public JFXTreeTableColumn<RModel, String> repairHouseCol = new JFXTreeTableColumn<>("House Number");*/
     public JFXTreeTableColumn<RModel, RModel.Strings> repairMonthCol = new JFXTreeTableColumn<>("Month");
     public JFXTreeTableColumn<RModel, String> repairDone = new JFXTreeTableColumn("Repairs");
     public JFXTreeTableColumn<RModel, String> materialCostOfRepair = new JFXTreeTableColumn<>("Material Cost");
@@ -298,16 +300,28 @@ public class PDController implements Initializable {
     public StackPane tdStackPane = new StackPane();
     public StackPane pdStackPane = new StackPane();
     public StackPane rdStackPane = new StackPane();
+    public BorderPane rdBorderPane = new BorderPane();
+    public GridPane repairDetailsGrid = new GridPane();
+    public AnchorPane repairTableViewAnchorPane = new AnchorPane();
+    public GridPane repairTableViewGridPane = new GridPane();
+    public VBox repairDetailsVbox = new VBox(15);
+    public VBox vbox2 = new VBox(2);
+    public VBox vbox3 = new VBox(2);
+    public VBox vbox4 = new VBox(2);
+    public VBox vbox5 = new VBox(2);
+    
+    public TextArea repairDetailsTextArea = new TextArea();
     
     public ScrollPane tdScrollPane = new ScrollPane(tenantDetailsLayout);
     public ScrollPane pdScrollPane = new ScrollPane(payLayout);
-    public ScrollPane rdScrollPane = new ScrollPane(repairsLayout);
 
     public JFXTabPane tenantDataPane = new JFXTabPane();
     public Tab tenantDetails = new Tab("Tenant Details", tdStackPane);
     public Tab paymentDetails = new Tab("Payment Details", pdStackPane);
     public Tab repairDetails = new Tab("Repairs Details", rdStackPane);
 
+    Label repairHeaderLabel = new Label("Repairs Information");
+    
     Label l1 = new Label("Tenant Name");
     Label l2 = new Label("Phone Number");
     Label l3 = new Label("Monthly Rent");
@@ -328,7 +342,7 @@ public class PDController implements Initializable {
     Label l20 = new Label("Month");
     Label l16 = new Label("Repairs Done");
     Label l17 = new Label("Repair Costs");
-    Label l18 = new Label("Date");
+    Label l18 = new Label("Repairs Date");
     Label l19 = new Label("Miscellaneous\nCosts");
     
     public JFXTextField tdName = new JFXTextField();
@@ -406,6 +420,8 @@ public class PDController implements Initializable {
     public JFXNodesList labourNodesList = new JFXNodesList();
     public JFXNodesList materialNodesList = new JFXNodesList();
     public JFXNodesList miscNodesList = new JFXNodesList();
+    public JFXTextField repairsTableSearchTextField = new JFXTextField();
+    public HBox tableSearchHbox = new HBox();
     
     private static final String ANIMATED_OPTION_BUTTON = "animated-option-button";
     private static final String ANIMATED_OPTION_SUB_BUTTON = "animated-option-sub-button";
@@ -432,10 +448,10 @@ public class PDController implements Initializable {
     HBox pdHbox5 = new HBox(158, l14, paymentOptionButton);
     HBox pdHbox6 = new HBox(pdTableViewButton);
 
-    HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
-    HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);
+    /*HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
+    HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);*/
     HBox rdHbox3 = new HBox(158, l17, repairCostSceneButton);
-    HBox rdHbox4 = new HBox(10, l18, rdRepairDate);
+    /*HBox rdHbox4 = new HBox(10, l18, rdRepairDate);*/
     HBox rdHbox6 = new HBox(rdTableViewButton);
     public HBox rdDoneHbox = new HBox(10, doneButton);
     
@@ -730,7 +746,9 @@ public class PDController implements Initializable {
     }
 
     public void setRepairsEmpty() {
-        rdRepairsDone.setText("");
+        materialText.clear();
+        labourText.clear();
+        repairDetailsTextArea.clear();
         rdRepairDate.setValue(null);
     }
 
@@ -897,7 +915,6 @@ public class PDController implements Initializable {
                     pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                     rs = pstmt.executeQuery();
                     while (rs.next()) {
-                        String houseNo = rs.getString("HouseNumber");
                         switch (rs.getString("Month")) {
                             case "January":
                                 month = RModel.Strings.JANUARY;
@@ -945,11 +962,8 @@ public class PDController implements Initializable {
                         String dateOfRepair1 = rs.getString("RepairsDateTime");
                         String miscellaneous = rs.getString("MiscellaneousExpenses");
                         
-                        System.out.println(houseNo);
-                        System.out.println(month);
-                        System.out.println(repairsDone);
                         
-                        RModel repairsInfo = new RModel(houseNo, month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
+                        RModel repairsInfo = new RModel(month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
                         repairsData.add(repairsInfo);
                     }
                 } catch (SQLException e) {
@@ -971,11 +985,12 @@ public class PDController implements Initializable {
                     String selectRepairsData = "SELECT * FROM RepairDetailsTable WHERE HouseNumber = ? AND Month = ?";
                     conn = DriverManager.getConnection(databaseURL);
                     pstmt = conn.prepareStatement(selectRepairsData);
+                    System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                    System.out.println(rdMonthCombo.getSelectionModel().getSelectedItem().getMonth());
                     pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                     pstmt.setString(2, rdMonthCombo.getSelectionModel().getSelectedItem().getMonth());
                     rs = pstmt.executeQuery();
                     while (rs.next()) {
-                        String houseNo1 = rs.getString("HouseNumber");
                         switch (rs.getString("Month")) {
                             case "January":
                                 month = RModel.Strings.JANUARY;
@@ -1022,7 +1037,7 @@ public class PDController implements Initializable {
                         String dateOfRepair1 = rs.getString("RepairsDateTime");
                         String miscellaneous = rs.getString("MiscellaneousExpenses");
                         
-                        RModel repairsInfo = new RModel(houseNo1, month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
+                        RModel repairsInfo = new RModel(month, repairsDone, materialCostOfRepair1, labourCostofRepair1, miscellaneous, dateOfRepair1);
                         repairsData.add(repairsInfo);
                     }
                 } catch (SQLException e) {
@@ -1187,10 +1202,10 @@ public class PDController implements Initializable {
         return repairsTable.getVisibleLeafColumn(newColumnIndex);
     }
     
-    private void setupRepairHouseNoColumn() {
+    /*private void setupRepairHouseNoColumn() {
         repairHouseCol.setPrefWidth(90);
         repairHouseCol.setCellValueFactory(cellData -> cellData.getValue().getValue().houseNumberTableRProperty());
-    }
+    }*/
     
     private void setupRepairMonthColumn() {
         repairMonthCol.setPrefWidth(90);
@@ -1943,8 +1958,8 @@ public class PDController implements Initializable {
                 pdName.clear();
                 pdMonthCombo.setValue(PDModel.Strings.NONE);
                 setTDEmpty1();
-                /*rdMonthCombo.getSelectionModel().clearSelection();*/
-                rdMonthCombo.setValue(RModel.Strings.NONE);
+                /*rdMonthCombo.getSelectionModel().clearSelection();
+                rdMonthCombo.setValue(RModel.Strings.NONE);*/
                 setRepairsEmpty();
                 blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 resetHouseSeletion();
@@ -1986,8 +2001,6 @@ public class PDController implements Initializable {
                 }
 
                 pdMonthCombo.setValue(PDModel.Strings.NONE);
-
-                rdMonthCombo.setValue(RModel.Strings.NONE);
 
                 if (tenantDetailsLayout.getChildren().contains(detIcon)) {
                     System.out.println("detIcon already showing. Do nothing");
@@ -2089,11 +2102,9 @@ public class PDController implements Initializable {
             } else {
                 repairsDoneText = fetchRepairDetails.getValue().get(2);
                 
-                rdRepairsDone.setText(fetchRepairDetails.getValue().get(2));
+                repairDetailsTextArea.setText(fetchRepairDetails.getValue().get(2));
                 materialText.setText(fetchRepairDetails.getValue().get(3));
-                materialNodesList.animateList(true);
                 labourText.setText(fetchRepairDetails.getValue().get(4));
-                labourNodesList.animateList(true);
                 
                 if (fetchRepairDetails.getValue().get(6) != null) {
                     rdRepairDate.setValue(LocalDate.parse(fetchRepairDetails.getValue().get(6), formatter));
@@ -2103,11 +2114,11 @@ public class PDController implements Initializable {
                 }
                 
                 miscText.setText(fetchRepairDetails.getValue().get(5));
-                miscNodesList.animateList(true);
-                rdTableViewButton.setVisible(true);
                 
                 try {
                     getRepairDetailsRowID();
+                    /*repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
+                    repairsTable.setShowRoot(false);*/
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
@@ -2311,7 +2322,7 @@ public class PDController implements Initializable {
                 
                 setRepairsEmpty();
             } else {
-                JFXAlert insertRDErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert insertRDErrorAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 insertRDErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 insertRDErrorAlert.setOverlayClose(false);
                 
@@ -2429,7 +2440,7 @@ public class PDController implements Initializable {
                 SequentialTransition st = new SequentialTransition(ft, repairsLayoutTimeline);
                 st.play();
             } else {
-                JFXAlert updateRDErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert updateRDErrorAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 updateRDErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 updateRDErrorAlert.setOverlayClose(false);
 
@@ -2533,7 +2544,7 @@ public class PDController implements Initializable {
                 
                 rdMonthCombo.setValue(RModel.Strings.NONE);
             } else {
-                JFXAlert deleteRDErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert deleteRDErrorAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 deleteRDErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 deleteRDErrorAlert.setOverlayClose(false);
 
@@ -2601,7 +2612,7 @@ public class PDController implements Initializable {
     }
     
     private void setupRepairsTable() {
-        setupRepairsTableCellValueFactory(repairHouseCol, RModel::houseNumberTableRProperty);
+        /*setupRepairsTableCellValueFactory(repairHouseCol, RModel::houseNumberTableRProperty);*/
         setupRepairsTableCellValueFactory(repairMonthCol, RModel::monthTableRProperty);
         setupRepairsTableCellValueFactory(repairDone, RModel::repairsDoneTableRProperty);
         setupRepairsTableCellValueFactory(materialCostOfRepair, RModel::materialCostofRepairsTableRProperty);
@@ -2860,6 +2871,8 @@ public class PDController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
+        selectionPane.maxWidthProperty().bind(sp2.widthProperty().multiply(0.12));
+        
         pdUpdate.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
         pdDelete.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
         pdSave.disableProperty().bind(pdMonthCombo.valueProperty().isEqualTo(PDModel.Strings.NONE));
@@ -3027,7 +3040,7 @@ public class PDController implements Initializable {
             Scene scene = repairCostSceneButton.getScene();
             rdStackPane.translateXProperty().set(-1 * scene.getWidth());
             
-            rdStackPane.getChildren().remove(rdScrollPane);
+            /*rdStackPane.getChildren().remove(rdScrollPane);*/
             rdStackPane.getChildren().add(repairsCostsGrid);
             
             Timeline repairCostsTimeline = new Timeline();
@@ -3090,7 +3103,7 @@ public class PDController implements Initializable {
             });
             repairCostsTimeline.play();
             
-            rdStackPane.getChildren().add(rdScrollPane);
+            /*rdStackPane.getChildren().add(rdScrollPane);*/
         });
         
         cashNodesList.setSpacing(95);
@@ -3228,7 +3241,7 @@ public class PDController implements Initializable {
             });
             repairCostsTimeline.play();
             
-            rdStackPane.getChildren().add(rdScrollPane);
+            /*rdStackPane.getChildren().add(rdScrollPane);*/
         });
         
         materialText.setFont(javafx.scene.text.Font.font("Roboto", FontPosture.ITALIC, 15));
@@ -3324,9 +3337,9 @@ public class PDController implements Initializable {
         });
         
         rdMaterialHbox.setAlignment(Pos.CENTER_RIGHT);
-        rdMaterialHbox.getChildren().add(materialText);
+        /*rdMaterialHbox.getChildren().add(materialText);*/
         rdLabourHbox.setAlignment(Pos.CENTER_RIGHT);
-        rdLabourHbox.getChildren().add(labourText);
+        /*rdLabourHbox.getChildren().add(labourText);*/
         rdMiscHbox.setAlignment(Pos.CENTER_RIGHT);
         rdMiscHbox.getChildren().add(miscText);
         
@@ -3425,14 +3438,12 @@ public class PDController implements Initializable {
         tdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         pdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         pdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        rdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        rdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         rentArrearslabel.setVisible(false);
 
         pdMonthCombo.getItems().addAll(PDModel.Strings.values());
         rdMonthCombo.getItems().addAll(RModel.Strings.values());
-
+        
         blockA.getChildren().addAll(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
         blockB.getChildren().addAll(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12);
         blockC.getChildren().addAll(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12);
@@ -3655,7 +3666,7 @@ public class PDController implements Initializable {
         rdSave.setOnAction((event) -> {
             if (blockTreeView.getSelectionModel().getSelectedItem() == null || blockTreeView.getSelectionModel().getSelectedItem().getValue().equals("Block A") || blockTreeView.getSelectionModel().getSelectedItem().getValue().equals("Block B") || blockTreeView.getSelectionModel().getSelectedItem().getValue().equals("Block C") || blockTreeView.getSelectionModel().getSelectedItem().getValue().equals("Nasra Block")) {
 
-                JFXAlert noHouseAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert noHouseAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 noHouseAlert.initModality(Modality.APPLICATION_MODAL);
                 noHouseAlert.setOverlayClose(false);
 
@@ -3674,7 +3685,7 @@ public class PDController implements Initializable {
                 noHouseAlert.show();
             } else if (rdMonthCombo.getSelectionModel().getSelectedItem().equals(RModel.Strings.NONE)) {
 
-                JFXAlert monthErrorAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert monthErrorAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 monthErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 monthErrorAlert.setOverlayClose(true);
 
@@ -3693,7 +3704,7 @@ public class PDController implements Initializable {
                 monthErrorAlert.show();
             } else if ("".equals(rdRepairsDone.getText()) || "".equals(rdRepairDate.getEditor().getText())) {
                 
-                JFXAlert emptyFieldAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert emptyFieldAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 emptyFieldAlert.initModality(Modality.APPLICATION_MODAL);
                 emptyFieldAlert.setOverlayClose(true);
                 
@@ -3856,19 +3867,6 @@ public class PDController implements Initializable {
         payIcon.visibleProperty().bind(pdName.textProperty().isEmpty().not());
         /*repairsIcon.visibleProperty().bind(rdMonthCombo.valueProperty().isNotNull());*/
         
-        rdMonthCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.equals(RModel.Strings.NONE)) {
-                if (!repairsLayout.getChildren().contains(repairsIcon)) {
-                    repairsLayout.add(repairsIcon, 1, 0);
-                }
-            } else {
-                if (repairsLayout.getChildren().contains(repairsIcon)) {
-                    repairsLayout.getChildren().remove(repairsIcon);
-                }
-            }
-
-        });
-        
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
 
@@ -3917,7 +3915,7 @@ public class PDController implements Initializable {
             boolean isTreeViewEmpty = blockTreeView.getSelectionModel().isEmpty();
             
             if (isTreeViewEmpty) {
-                JFXAlert noHouseAlert = new JFXAlert((Stage) rdScrollPane.getScene().getWindow());
+                JFXAlert noHouseAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 noHouseAlert.initModality(Modality.APPLICATION_MODAL);
                 noHouseAlert.setOverlayClose(false);
 
@@ -3934,11 +3932,7 @@ public class PDController implements Initializable {
                 content.setActions(okButton);
                 noHouseAlert.setContent(content);
                 noHouseAlert.show();
-            } /*else if (newValue.equals(RModel.Strings.NONE)) {
-                materialNodesList.animateList(false);
-                labourNodesList.animateList(false);
-                miscNodesList.animateList(false);
-            }*/ else {
+            }  else {
                 fetchRepairDetailsFromDBToUI();
             }
             
@@ -3955,14 +3949,11 @@ public class PDController implements Initializable {
                         return true;
                     }
                     RModel.Strings comboFilter = newValue;
-                    if (t.getMonthTableR().equals(newValue) || newValue.getMonth().equals("All")) {
-                        return true;
-                    }
-                    return false;
+                    return t.getMonthTableR().equals(newValue) || newValue.getMonth().equals("All");
                 });
                 SortedList<RModel> sortedData = new SortedList<>(filteredList);
-                /*sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());*/
-                repairsTable.setRoot(new RecursiveTreeItem<>(houseRepairDetails, RecursiveTreeObject::getChildren));
+                /*sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());
+                repairsTable.setRoot(new RecursiveTreeItem<>(houseRepairDetails, RecursiveTreeObject::getChildren));*/
             }
         });
         
@@ -4138,7 +4129,7 @@ public class PDController implements Initializable {
         setupPaymentDateColumn();
         setupPaymentMethodColumn();
 
-        setupRepairHouseNoColumn();
+        /*setupRepairHouseNoColumn();*/
         setupRepairMonthColumn();
         setupRepairsDoneColumn();
         setupMaterialCostColumn();
@@ -4150,10 +4141,9 @@ public class PDController implements Initializable {
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
 
         repairsTable.getStyleClass().add(TREE_TABLE_VIEW);
-        repairsTable.getColumns().addAll(repairHouseCol, repairMonthCol, repairDone, materialCostOfRepair, labourCostOfRepair, miscExpenses, dateOfRepair);
+        repairsTable.getColumns().addAll(repairMonthCol, repairDone, materialCostOfRepair, labourCostOfRepair, miscExpenses, dateOfRepair);
         
         pdMonthCombo.setPrefWidth(170);
-        rdMonthCombo.setPrefWidth(170);
         
         tenantDetailsLayout.setHgap(10);
         tenantDetailsLayout.setVgap(10);
@@ -4195,9 +4185,9 @@ public class PDController implements Initializable {
         repairsLayout.setHgap(10);
         repairsLayout.setVgap(10);
         repairsLayout.setPadding(new Insets(5));
-        repairsLayout.add(rdHbox7, 0, 0);
+        /*repairsLayout.add(rdHbox7, 0, 0);
         repairsLayout.add(rdHbox2, 0, 1);
-        repairsLayout.add(rdHbox4, 0, 2);
+        repairsLayout.add(rdHbox4, 0, 2);*/
         repairsLayout.add(rdHbox3, 0, 3);
         repairsLayout.add(rdHbox6, 0, 4);
         
@@ -4211,9 +4201,52 @@ public class PDController implements Initializable {
         repairsCostsGrid.add(doneButton, 0, 3);
         repairsCostsGrid.add(rdBackButton, 0, 4);
         
+        repairHeaderLabel.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 16));
+        repairHeaderLabel.setUnderline(true);
+        repairHeaderLabel.setPadding(new Insets(0, 5, 0, 10));
+        
+        repairsTableSearchTextField.setPromptText("Search By Name...");
+        repairsTableSearchTextField.setPrefWidth(250);
+        tableSearchHbox.setPadding(new Insets(20, 5, 5, 5));
+        tableSearchHbox.getChildren().add(repairsTableSearchTextField);
+        repairTableViewGridPane.add(tableSearchHbox, 0, 1);
+        
+        rdMonthCombo.setPrefWidth(210);
+        
+        repairDetailsTextArea.setPromptText("Enter repairs done.");
+        repairDetailsTextArea.setPrefSize(180, 100);
+        
+        vbox2.getChildren().addAll(l16, repairDetailsTextArea);
+        vbox3.getChildren().addAll(l18, rdRepairDate);
+        vbox4.getChildren().addAll(new Label("Material Cost"), materialText);
+        vbox5.getChildren().addAll(new Label("Labour Cost"), labourText);
+        
+        
+        repairDetailsVbox.getChildren().addAll(rdMonthCombo, vbox4, vbox5, vbox2, vbox3);
+        
+        repairDetailsGrid.setStyle("-fx-border-color: #d9d9d9");
+        repairDetailsVbox.setPadding(new Insets(5, 5, 5, 5));
+        repairDetailsGrid.add(repairDetailsVbox, 0, 1, 2, 1);
+        repairDetailsGrid.add(repairHeaderLabel, 0, 0, 2, 1);
+        repairDetailsGrid.add(repairsIcon, 2, 0);
+        GridPane.setMargin(repairsIcon, new Insets(0, 10, 0, 0));
+        repairTableViewAnchorPane.setPadding(new Insets(5, 5, 5, 5));
+        repairsTable.setPrefSize(580, 300);
+        repairTableViewGridPane.add(repairsTable, 0, 0);
+        /*repairTableViewAnchorPane.setStyle("-fx-border-color: #d9d9d9");*/
+        repairTableViewAnchorPane.getChildren().add(repairTableViewGridPane);
+        
+        AnchorPane.setBottomAnchor(repairTableViewGridPane, 0.0);
+        AnchorPane.setLeftAnchor(repairTableViewGridPane, 0.0);
+        AnchorPane.setRightAnchor(repairTableViewGridPane, 0.0);
+        AnchorPane.setTopAnchor(repairTableViewGridPane, 0.0);
+        
         tdStackPane.getChildren().add(tdScrollPane);
         pdStackPane.getChildren().add(pdScrollPane);
-        rdStackPane.getChildren().add(rdScrollPane);
+        rdBorderPane.setCenter(repairTableViewAnchorPane);
+        rdBorderPane.setRight(repairDetailsGrid);
+        BorderPane.setMargin(repairDetailsGrid, new Insets(5));
+        rdStackPane.getChildren().add(rdBorderPane);
         
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);
@@ -4228,7 +4261,7 @@ public class PDController implements Initializable {
 
         public DetailsIcon() {
             Label lab = new Label("•••");
-            lab.setStyle("-fx-text-fill:white");
+            lab.setStyle("-fx-text-fill:black");
             lab.setOnMouseClicked((event) -> {
                 ContextMenu conMenu = new ContextMenu(tdNewRecord, new SeparatorMenuItem(), tdUpdate, tdDelete, new SeparatorMenuItem(), tdSave, tdSaveAs);
                 conMenu.show(detIcon, Side.RIGHT, xCursorPos, yCursorPos);
@@ -4257,13 +4290,17 @@ public class PDController implements Initializable {
 
         public repairsMenuIcon() {
             Label lab = new Label("•••");
-            lab.setStyle("-fx-text-fill:white");
+            lab.setStyle("-fx-text-fill:black");
             lab.setOnMouseClicked((event) -> {
                 ContextMenu conMenu = new ContextMenu(rdNewRecord, new SeparatorMenuItem(), rdUpdate, rdDelete, new SeparatorMenuItem(), rdSave);
-                conMenu.show(repairsIcon, Side.RIGHT, xCursorPos, yCursorPos);
+                if (conMenu.isShowing()) {
+                    conMenu.hide();
+                } else {
+                    conMenu.show(repairsIcon, Side.LEFT, xCursorPos, yCursorPos);
+                }
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
-            getChildren().addAll(circle, lab);
+            getChildren().add(lab);
         }
     }
     
@@ -4459,6 +4496,8 @@ public class PDController implements Initializable {
             try {
                 String searchRepairDetails = "SELECT * FROM RepairDetailsTable WHERE HouseNumber = ? AND Month = ?";
                 pstmt = con.prepareStatement(searchRepairDetails);
+                System.out.println(blockTreeView.getSelectionModel().getSelectedItem().getValue());
+                System.out.println(rdMonthCombo.getValue().getMonth());
                 pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 if (rdMonthCombo.getSelectionModel().isEmpty()) {
                     System.out.println("No repairs month selection");
@@ -4510,7 +4549,7 @@ public class PDController implements Initializable {
                 pstmt = con.prepareStatement(checkRowID);
                 pstmt.setString(1, blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 pstmt.setString(2, rdMonthCombo.getValue().getMonth());
-                pstmt.setString(3, rdRepairsDone.getText());
+                pstmt.setString(3, repairDetailsTextArea.getText());
                 pstmt.setString(4, getDateValueAsString(rdRepairDate.getValue()));
                 rs = pstmt.executeQuery();
                 

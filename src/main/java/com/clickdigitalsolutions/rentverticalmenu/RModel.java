@@ -18,6 +18,7 @@ import javafx.beans.property.StringProperty;
 public class RModel extends RecursiveTreeObject<RModel>{
     
     public enum Strings {
+        Select("Select Month"),
         ALL("All"),
         NONE(""),
         JANUARY("January"),
@@ -44,7 +45,6 @@ public class RModel extends RecursiveTreeObject<RModel>{
         }
     }
     
-    public StringProperty houseNumberTableR;
     public ObjectProperty<Strings> monthTableR;
     public StringProperty repairsDoneTableR;
     public StringProperty materialCostofRepairsTableR;
@@ -52,24 +52,13 @@ public class RModel extends RecursiveTreeObject<RModel>{
     public StringProperty dateofRepairsTableR;
     public StringProperty miscellaneousTableR;
     
-    public RModel(String houseNumber, Strings month, String repairsDone, String materialCost, String labourCost, String miscellaneous, String dateofRepairs){
-       houseNumberTableR = new SimpleStringProperty(houseNumber);
+    public RModel(Strings month, String repairsDone, String materialCost, String labourCost, String miscellaneous, String dateofRepairs){
        monthTableR = new SimpleObjectProperty<>(month);
        repairsDoneTableR = new SimpleStringProperty(repairsDone);
        materialCostofRepairsTableR = new SimpleStringProperty(materialCost);
        labourCostofRepairsTableR = new SimpleStringProperty(labourCost);
        dateofRepairsTableR = new SimpleStringProperty(dateofRepairs);
        miscellaneousTableR = new SimpleStringProperty(miscellaneous);
-    }
-    
-    public String gethouseNumberTableR(){
-        return houseNumberTableR.get();
-    }
-    public void sethouseNumberTableR(String value){
-        houseNumberTableR.set(value);
-    }
-    public StringProperty houseNumberTableRProperty(){
-        return houseNumberTableR;
     }
     
     public Strings getMonthTableR() {
