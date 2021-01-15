@@ -20,6 +20,7 @@ import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTreeTableColumn;
+import com.jfoenix.controls.JFXTreeTableRow;
 import com.jfoenix.controls.JFXTreeTableView;
 import com.jfoenix.controls.JFXTreeView;
 import com.jfoenix.controls.RecursiveTreeItem;
@@ -114,6 +115,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTablePosition;
+import javafx.scene.control.TreeTableRow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -309,6 +311,7 @@ public class PDController implements Initializable {
     public VBox vbox3 = new VBox(2);
     public VBox vbox4 = new VBox(2);
     public VBox vbox5 = new VBox(2);
+    public VBox vbox6 = new VBox(2);
     
     public TextArea repairDetailsTextArea = new TextArea();
     
@@ -1958,8 +1961,8 @@ public class PDController implements Initializable {
                 pdName.clear();
                 pdMonthCombo.setValue(PDModel.Strings.NONE);
                 setTDEmpty1();
-                /*rdMonthCombo.getSelectionModel().clearSelection();
-                rdMonthCombo.setValue(RModel.Strings.NONE);*/
+                /*rdMonthCombo.getSelectionModel().clearSelection();*/
+                rdMonthCombo.setValue(RModel.Strings.NONE);
                 setRepairsEmpty();
                 blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 resetHouseSeletion();
@@ -2099,6 +2102,7 @@ public class PDController implements Initializable {
             if (fetchRepairDetails.getValue().isEmpty()) {
                 excelFileLocation = prefs.get(loc, "location");
                 setRepairsEmpty();
+                System.out.println("Empty Repair Details ObservableList");
             } else {
                 repairsDoneText = fetchRepairDetails.getValue().get(2);
                 
@@ -2116,8 +2120,8 @@ public class PDController implements Initializable {
                 miscText.setText(fetchRepairDetails.getValue().get(5));
                 
                 try {
-                    getRepairDetailsRowID();
-                    /*repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
+                    /*getRepairDetailsRowID();
+                    repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
                     repairsTable.setShowRoot(false);*/
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -3702,7 +3706,7 @@ public class PDController implements Initializable {
                 content.setActions(okButton);
                 monthErrorAlert.setContent(content);
                 monthErrorAlert.show();
-            } else if ("".equals(rdRepairsDone.getText()) || "".equals(rdRepairDate.getEditor().getText())) {
+            } else if ("".equals(materialText.getText()) || "".equals(labourText.getText())|| "".equals(repairDetailsTextArea.getText()) || "".equals(rdRepairDate.getEditor().getText())) {
                 
                 JFXAlert emptyFieldAlert = new JFXAlert((Stage) rdBorderPane.getScene().getWindow());
                 emptyFieldAlert.initModality(Modality.APPLICATION_MODAL);
@@ -3746,7 +3750,7 @@ public class PDController implements Initializable {
 
         rdNewRecord.setOnAction((event) -> {
             repairRowId = 0;
-            rdRepairsDone.clear();
+            repairDetailsTextArea.clear();
             rdRepairDate.setValue(null);
             materialText.clear();
             labourText.clear();
@@ -3954,6 +3958,8 @@ public class PDController implements Initializable {
                 SortedList<RModel> sortedData = new SortedList<>(filteredList);
                 /*sortedData.comparatorProperty().bind(repairsTable.comparatorProperty());
                 repairsTable.setRoot(new RecursiveTreeItem<>(houseRepairDetails, RecursiveTreeObject::getChildren));*/
+                repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
+                repairsTable.setShowRoot(false);
             }
         });
         
@@ -3990,10 +3996,47 @@ public class PDController implements Initializable {
                             .otherwise(contextMenu)
             );
             return row;
-        });
+        });*/
 
-        repairsTable.setRowFactory((TableView<RModel> tableView) -> {
-            final TableRow<RModel> row = new TableRow<>();
+        repairsTable.setRowFactory((param) -> {
+            final JFXTreeTableRow<RModel> row = new JFXTreeTableRow<>();
+            final ContextMenu contextMenu = new ContextMenu();
+            final MenuItem editPay = new MenuItem("Edit");
+            final MenuItem deletePay = new MenuItem("Remove");
+           
+            row.addEventHandler(MouseEvent.MOUSE_CLICKED, (event) -> {
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
+                    JFXTreeTableRow c = (JFXTreeTableRow) event.getSource();
+                    int index = c.getIndex();
+                    try {
+                        RModel item = getRepairsDetails().get(index);
+                        rdMonthCombo.setValue(item.getMonthTableR());
+                        materialText.setText(item.getMaterialCostofRepairsTableR());
+                        labourText.setText(item.getLabourCostofRepairsTableR());
+                        miscText.setText(item.getmiscellaneousTableR());
+                        repairDetailsTextArea.setText(item.getrepairsDoneTableR());
+                        if (item.getdateofRepairsTableR() == null) {
+                            rdRepairDate.setValue(null);
+                        } else {
+                            rdRepairDate.setValue(LocalDate.parse(item.getdateofRepairsTableR(), DateTimeFormatter.ISO_DATE));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            contextMenu.getItems().addAll(editPay, deletePay);
+            row.contextMenuProperty().bind(
+                    Bindings.when(row.emptyProperty())
+                            .then((ContextMenu) null)
+                            .otherwise(contextMenu)
+            );
+            return row;
+        });
+        
+        /*repairsTable.setRowFactory((JFXTreeTableView<RModel> tableView) -> {
+            final JFXTreeTableRow<RModel> row = new JFXTreeTableRow<>();
             final ContextMenu contextMenu = new ContextMenu();
             final MenuItem editPay = new MenuItem("Edit");
             final MenuItem deletePay = new MenuItem("Remove");
@@ -4102,7 +4145,7 @@ public class PDController implements Initializable {
         rdTableViewButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         rdTableViewButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOWN, "22"));
         rdTableViewButton.setVisible(false);
-        rdTableViewButton.setOnAction((event) -> {
+        /*rdTableViewButton.setOnAction((event) -> {
             if (sp1.getItems().size() == 1) {
                 repairsTable.setMinHeight(200);
                 repairsTable.setRoot(new RecursiveTreeItem<>(getRepairsDetails(), RecursiveTreeObject::getChildren));
@@ -4120,7 +4163,7 @@ public class PDController implements Initializable {
                 Stage stage = (Stage) source.getScene().getWindow();
                 MainApp.windowResize(stage);
             }
-        });
+        });*/
         
         setupHouseNumberColumn();
         setupTenantNameColumn();
@@ -4140,7 +4183,7 @@ public class PDController implements Initializable {
         paymentsTable.getStyleClass().add(TREE_TABLE_VIEW);
         paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
 
-        repairsTable.getStyleClass().add(TREE_TABLE_VIEW);
+        /*repairsTable.getStyleClass().add(TREE_TABLE_VIEW);*/
         repairsTable.getColumns().addAll(repairMonthCol, repairDone, materialCostOfRepair, labourCostOfRepair, miscExpenses, dateOfRepair);
         
         pdMonthCombo.setPrefWidth(170);
@@ -4215,23 +4258,24 @@ public class PDController implements Initializable {
         
         repairDetailsTextArea.setPromptText("Enter repairs done.");
         repairDetailsTextArea.setPrefSize(180, 100);
+        repairDetailsTextArea.setWrapText(true);
         
         vbox2.getChildren().addAll(l16, repairDetailsTextArea);
         vbox3.getChildren().addAll(l18, rdRepairDate);
         vbox4.getChildren().addAll(new Label("Material Cost"), materialText);
         vbox5.getChildren().addAll(new Label("Labour Cost"), labourText);
+        vbox6.getChildren().addAll(new Label("Other Costs"), miscText);
         
-        
-        repairDetailsVbox.getChildren().addAll(rdMonthCombo, vbox4, vbox5, vbox2, vbox3);
+        repairDetailsVbox.getChildren().addAll(rdMonthCombo, vbox4, vbox5, vbox6, vbox2, vbox3);
         
         repairDetailsGrid.setStyle("-fx-border-color: #d9d9d9");
         repairDetailsVbox.setPadding(new Insets(5, 5, 5, 5));
         repairDetailsGrid.add(repairDetailsVbox, 0, 1, 2, 1);
         repairDetailsGrid.add(repairHeaderLabel, 0, 0, 2, 1);
         repairDetailsGrid.add(repairsIcon, 2, 0);
-        GridPane.setMargin(repairsIcon, new Insets(0, 10, 0, 0));
+        GridPane.setMargin(repairsIcon, new Insets(0, 15, 0, 0));
         repairTableViewAnchorPane.setPadding(new Insets(5, 5, 5, 5));
-        repairsTable.setPrefSize(580, 300);
+        repairsTable.setPrefSize(580, 360);
         repairTableViewGridPane.add(repairsTable, 0, 0);
         /*repairTableViewAnchorPane.setStyle("-fx-border-color: #d9d9d9");*/
         repairTableViewAnchorPane.getChildren().add(repairTableViewGridPane);
@@ -4730,11 +4774,11 @@ public class PDController implements Initializable {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             
             try (Connection con = getConnection()) {
-                if (saveRepairDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getSelectionModel().getSelectedItem().getMonth(), rdRepairsDone.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()))) {
+                if (saveRepairDetails(con, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getSelectionModel().getSelectedItem().getMonth(), repairDetailsTextArea.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()))) {
                     try {
                         File file = new File(excelFileLocation);
                         System.out.println(excelFileLocation);
-                        createAndWriteRepairDetailsToExcelFile(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getValue().getMonth(), rdRepairsDone.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()));
+                        createAndWriteRepairDetailsToExcelFile(file, blockTreeView.getSelectionModel().getSelectedItem().getValue(), rdMonthCombo.getValue().getMonth(), repairDetailsTextArea.getText(), materialText.getText(), labourText.getText(), miscText.getText(), getDateValueAsString(rdRepairDate.getValue()));
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
