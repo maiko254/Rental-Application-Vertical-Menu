@@ -329,7 +329,7 @@ and open the template in the editor.
 
 .animated-option-buttonTD {
     -fx-background-color: #F1F1F1;
-    -fx-background-radius: 30px;
+    /*-fx-background-radius: 30px;*/
     -fx-pref-height: 30px;
     -fx-pref-width: 100px;
     -fx-min-width: -fx-pref-width;
@@ -353,9 +353,9 @@ and open the template in the editor.
 
 .animated-header-button {
     -fx-background-color: #F1F1F1;
-    -fx-background-radius: 30px;
+    /*-fx-background-radius: 30px;*/
     -fx-pref-height: 30px;
-    -fx-pref-width: 30px;
+    -fx-pref-width: 220px;
     -fx-min-width: -fx-pref-width;
     -fx-max-width: -fx-pref-width;
     -fx-min-height: -fx-pref-height;
@@ -365,9 +365,9 @@ and open the template in the editor.
 
 .animated-option-button {
     -fx-background-color: #F1F1F1;
-    -fx-background-radius: 30px;
-    -fx-pref-height: 30px;
-    -fx-pref-width: 70px;
+    /*-fx-background-radius: 30px;*/
+    -fx-pref-height: 25px;
+    -fx-pref-width: 65px;
     -fx-min-width: -fx-pref-width;
     -fx-max-width: -fx-pref-width;
     -fx-min-height: -fx-pref-height;

@@ -87,6 +87,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
@@ -94,6 +95,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -299,8 +301,47 @@ public class PDController implements Initializable {
     public GridPane tdDatesGrid = new GridPane();
     public GridPane pdPayGrid = new GridPane();
     
-    public StackPane tdStackPane = new StackPane();
     public StackPane pdStackPane = new StackPane();
+    public BorderPane payAndTenantDetailsBorderPane = new BorderPane();
+    public AnchorPane payAndTenantDetailsAnchorPane = new AnchorPane();
+    public GridPane payAndTenantDetailsGridPane = new GridPane();
+    public TabPane payAndTenantDetailsTabPane = new TabPane();
+    public Tab tenantTab  = new Tab("Tenant");
+    public Tab paymentsTab = new Tab("Payments");
+    public GridPane tenantsTabGridPane = new GridPane();
+    public GridPane paymentsTabGridPane = new GridPane();
+    public VBox tenantDetailsVbox = new VBox(10);
+    public VBox paymentDetailsVbox = new VBox(10);
+    public VBox vbox7 = new VBox();
+    public VBox vbox8 = new VBox();
+    public VBox vbox9 = new VBox();
+    public VBox vbox10 = new VBox();
+    public VBox vbox11 = new VBox();
+    public VBox vbox12 = new VBox(2);
+    public VBox vbox13 = new VBox(2);
+    public VBox vbox14 = new VBox(2);
+    public VBox vbox15 = new VBox(40);
+    public VBox vbox16 = new VBox(2);
+    public VBox vbox17 = new VBox();
+    public JFXNodesList selectPayOptionNode = new JFXNodesList();
+    public ButtonBar paymentNodesButtonBar = new ButtonBar();
+    public JFXNodesList cashNodesList = new JFXNodesList();
+    public JFXNodesList bankNodesList = new JFXNodesList();
+    public JFXNodesList mpesaNodesList = new JFXNodesList();
+    public JFXNodesList regAndLeaseDatesNodesList = new JFXNodesList();
+    public JFXNodesList regDatesNodesList = new JFXNodesList();
+    public JFXNodesList leaseDatesNodesList = new JFXNodesList();
+    public JFXButton regAndLeaseDatesButton = new JFXButton("Registration & Lease Dates");
+    public JFXButton regDatesButton = new JFXButton("Reg. Dates");
+    public JFXButton leaseDatesButton = new JFXButton("Lease Dates");
+    public JFXButton moveInButton = new JFXButton("Move-In");
+    public JFXButton moveOutButton = new JFXButton("Move-Out"); 
+    public JFXButton leaseStartButton = new JFXButton("Lease-Start");
+    public JFXButton leaseEndButton = new JFXButton("Lease-End");
+    public ButtonBar regAndLeaseDatesButtonBar = new ButtonBar();
+    public ButtonBar regDatesButtonBar = new ButtonBar();
+    public ButtonBar leaseDatesButtonBar = new ButtonBar();
+    
     public StackPane rdStackPane = new StackPane();
     public BorderPane rdBorderPane = new BorderPane();
     public GridPane repairDetailsGrid = new GridPane();
@@ -315,15 +356,15 @@ public class PDController implements Initializable {
     
     public TextArea repairDetailsTextArea = new TextArea();
     
-    public ScrollPane tdScrollPane = new ScrollPane(tenantDetailsLayout);
     public ScrollPane pdScrollPane = new ScrollPane(payLayout);
 
     public JFXTabPane tenantDataPane = new JFXTabPane();
-    public Tab tenantDetails = new Tab("Tenant Details", tdStackPane);
-    public Tab paymentDetails = new Tab("Payment Details", pdStackPane);
+    public Tab paymentDetails = new Tab("Tenant Details", pdStackPane);
     public Tab repairDetails = new Tab("Repairs Details", rdStackPane);
 
     Label repairHeaderLabel = new Label("Repairs Information");
+    Label tenantDetailsLabel = new Label("Tenant Information");
+    Label paymentDetailsLabel = new Label("Payment Information");
     
     Label l1 = new Label("Tenant Name");
     Label l2 = new Label("Phone Number");
@@ -389,19 +430,14 @@ public class PDController implements Initializable {
     public JFXButton pdMpesaButton = new JFXButton();
     public JFXButton pdOtherButton = new JFXButton();
     public Label payLabel = new Label();
-    public JFXNodesList cashNodesList = new JFXNodesList();
-    public JFXNodesList bankNodesList = new JFXNodesList();
-    public JFXNodesList mpesaNodesList = new JFXNodesList();
     public JFXButton paymentOptionButton = new JFXButton();
     public Label cashLabel = new Label("Cash");
     public Label bankLabel = new Label("Bank");
     public Label mpesaLabel = new Label("Mpesa");
+    public JFXButton paymentOptionsHeaderButton = new JFXButton("Select Payment Option");
     public JFXButton cashButton = new JFXButton();
     public JFXButton bankButton = new JFXButton();
     public JFXButton mpesaButton = new JFXButton();
-    public HBox cashContainerHbox = new HBox(10);
-    public HBox bankContainerHbox = new HBox(10);
-    public HBox mpesaContainerHbox = new HBox(10);
     public String payMethodString = new String();
     
     public JFXComboBox<RModel.Strings> rdMonthCombo = new JFXComboBox<>();
@@ -437,20 +473,6 @@ public class PDController implements Initializable {
     private static final String TABLE_SCROLL_BAR = "scroll-bar";
     private static final String ICONS_BADGE = "icons-badge";
     
-    HBox tdHbox1 = new HBox(10, l1, tdName);
-    HBox tdHbox2 = new HBox(10, l2, tdPhone);
-    HBox tdHbox3 = new HBox(10, l3, tdAmount);
-    HBox tdHbox4 = new HBox(10, l4, tdDeposit);
-    HBox tdHbox5 = new HBox(10, l5, tdDueDate);
-    HBox tdHbox6 = new HBox(200, l21, tdDatesSceneButton);
-
-    HBox pdHbox1 = new HBox(10, l10, pdName);
-    HBox pdHbox2 = new HBox(10, l11, pdMonthCombo);
-    HBox pdHbox3 = new HBox(10, l12, pdAmount, rentArrearslabel);
-    HBox pdHbox4 = new HBox(10, l13, pdPaymentDate);
-    HBox pdHbox5 = new HBox(158, l14, paymentOptionButton);
-    HBox pdHbox6 = new HBox(pdTableViewButton);
-
     /*HBox rdHbox7 = new HBox(10, l20, rdMonthCombo);
     HBox rdHbox2 = new HBox(10, l16, rdRepairsDone);*/
     HBox rdHbox3 = new HBox(158, l17, repairCostSceneButton);
@@ -1148,8 +1170,8 @@ public class PDController implements Initializable {
     }
 
     private void setupPaymentMethodColumn() {
-        DoubleBinding usedWidth = amountCol.widthProperty().add(monthCol.widthProperty()).add(dateCol.widthProperty());
-        methodCol.prefWidthProperty().bind(paymentsTable.widthProperty().subtract(usedWidth));
+        /*DoubleBinding usedWidth = amountCol.widthProperty().add(monthCol.widthProperty()).add(dateCol.widthProperty());
+        methodCol.prefWidthProperty().bind(paymentsTable.widthProperty().subtract(usedWidth));*/
         methodCol.addEventHandler(MouseEvent.MOUSE_CLICKED, new MyEventHandler());
         methodCol.setCellValueFactory(cellData -> cellData.getValue().getValue().paymentMethodPDProperty());
     }
@@ -2011,12 +2033,6 @@ public class PDController implements Initializable {
                     tenantDetailsLayout.add(detIcon, 1, 0);
                 }
 
-                if (payLayout.getChildren().contains(payIcon)) {
-                    System.out.println("payIcon already showing");
-                } else {
-                    payLayout.add(payIcon, 1, 0);
-                }
-
                 blockTreeView.getSelectionModel().getSelectedItem().getParent().setValue(blockTreeView.getSelectionModel().getSelectedItem().getValue());
                 resetHouseSeletion();
             }
@@ -2197,7 +2213,7 @@ public class PDController implements Initializable {
             if (saveTenantDetails.getValue()) {
                 setTDEmpty1();
             } else {
-                JFXAlert insertTDErrorAlert = new JFXAlert((Stage) tdScrollPane.getScene().getWindow());
+                JFXAlert insertTDErrorAlert = new JFXAlert((Stage) pdScrollPane.getScene().getWindow());
                 insertTDErrorAlert.initModality(Modality.APPLICATION_MODAL);
                 insertTDErrorAlert.setOverlayClose(false);
                 JFXDialogLayout content = new JFXDialogLayout();
@@ -2982,41 +2998,22 @@ public class PDController implements Initializable {
         l21.setAlignment(Pos.CENTER_RIGHT);
         tdChooseDateButton.setGraphic(l21);
         
-        cashContainerHbox.setAlignment(Pos.CENTER_RIGHT);
-        cashContainerHbox.getChildren().addAll(pdCashTextfield, pdCashButton);
-        bankContainerHbox.setAlignment(Pos.CENTER_RIGHT);
-        bankContainerHbox.getChildren().addAll(pdbankTextfield, pdBankButton);
-        mpesaContainerHbox.setAlignment(Pos.CENTER_RIGHT);
-        mpesaContainerHbox.getChildren().addAll(pdMpesaTextfield, pdMpesaButton);
-        
-        cashButton.setButtonType(JFXButton.ButtonType.RAISED);
+        l14.getStyleClass().add(ANIMATED_HEADER_BUTTON);
         cashButton.setGraphic(cashLabel);
         cashButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
-        bankButton.setButtonType(JFXButton.ButtonType.RAISED);
         bankButton.setGraphic(bankLabel);
         bankButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
-        mpesaButton.setButtonType(JFXButton.ButtonType.RAISED);
         mpesaButton.setGraphic(mpesaLabel);
         mpesaButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
+        paymentOptionsHeaderButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);
+        regAndLeaseDatesButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);
+        regDatesButton.getStyleClass().add(ANIMATED_OPTION_BUTTONTD);
+        leaseDatesButton.getStyleClass().add(ANIMATED_OPTION_BUTTONTD);
+        moveInButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
+        moveOutButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
         
         l14.setPadding(new Insets(4, 0, 0, 0));
         l21.setPadding(new Insets(3, 0, 0, 0));
-        
-        tdDatesSceneButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-        tdDatesSceneButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOUBLE_RIGHT, "20px"));
-        tdDatesSceneButton.setOnAction((event) -> {
-            Scene scene = tdDatesSceneButton.getScene();
-            tdStackPane.translateXProperty().set(-1 * scene.getWidth());
-            
-            tdStackPane.getChildren().remove(tdScrollPane);
-            tdStackPane.getChildren().add(tdDatesGrid);
-            
-            Timeline timelineDatesScene = new Timeline();
-            KeyValue kv = new KeyValue(tdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
-            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-            timelineDatesScene.getKeyFrames().add(kf);
-            timelineDatesScene.play();
-        });
         
         paymentOptionButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         /*paymentOptionButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);*/
@@ -3056,21 +3053,7 @@ public class PDController implements Initializable {
         
         tdBackButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         tdBackButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.ANGLE_DOUBLE_LEFT, "20px"));
-        tdBackButton.setOnAction((event) -> {
-            Scene scene = tdBackButton.getScene();
-            tdStackPane.translateXProperty().set(scene.getWidth());
-            
-            Timeline timelineDateScene = new Timeline();
-            KeyValue kv = new KeyValue(tdStackPane.translateXProperty(), 0, Interpolator.EASE_IN);
-            KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-            timelineDateScene.getKeyFrames().add(kf);
-            timelineDateScene.setOnFinished(act -> {
-                tdStackPane.getChildren().remove(tdDatesGrid);
-            });
-            timelineDateScene.play();
-            
-            tdStackPane.getChildren().add(tdScrollPane);
-        });
+        
         
         pdBackButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         /*backButton.getStyleClass().add(ANIMATED_HEADER_BUTTON);*/
@@ -3110,32 +3093,95 @@ public class PDController implements Initializable {
             /*rdStackPane.getChildren().add(rdScrollPane);*/
         });
         
-        cashNodesList.setSpacing(95);
-        cashNodesList.addAnimatedNode(cashButton);
-        cashNodesList.addAnimatedNode(cashContainerHbox);
+        cashNodesList.setSpacing(50);
         cashNodesList.setRotate(270);
         cashButton.setOnAction((event) -> {
-            bankNodesList.animateList(false);
-            mpesaNodesList.animateList(false);
+            if (vbox15.getChildren().contains(pdCashTextfield)) {
+                vbox15.getChildren().remove(pdCashTextfield);
+            } else if (vbox15.getChildren().contains(pdbankTextfield)) {
+                vbox15.getChildren().remove(pdbankTextfield);
+                vbox15.getChildren().add(pdCashTextfield);
+            } else if (vbox15.getChildren().contains(pdMpesaTextfield)) {
+                vbox15.getChildren().remove(pdMpesaTextfield);
+                vbox15.getChildren().add(pdCashTextfield);
+            } else {
+                vbox15.getChildren().add(pdCashTextfield);
+            }
         });
         
-        bankNodesList.setSpacing(95);
-        bankNodesList.addAnimatedNode(bankButton);
-        bankNodesList.addAnimatedNode(bankContainerHbox);
+        bankNodesList.setSpacing(50);
         bankNodesList.setRotate(270);
         bankButton.setOnAction((event) -> {
-            cashNodesList.animateList(false);
-            mpesaNodesList.animateList(false);
+            if (vbox15.getChildren().contains(pdbankTextfield)) {
+                vbox15.getChildren().remove(pdbankTextfield);
+            } else if (vbox15.getChildren().contains(pdCashTextfield)) {
+                vbox15.getChildren().remove(pdCashTextfield);
+                vbox15.getChildren().add(pdbankTextfield);
+            } else if (vbox15.getChildren().contains(pdMpesaTextfield)) {
+                vbox15.getChildren().remove(pdMpesaTextfield);
+                vbox15.getChildren().add(pdbankTextfield);
+            } else {
+                vbox15.getChildren().add(pdbankTextfield);
+            }
         });
         
-        mpesaNodesList.setSpacing(95);
-        mpesaNodesList.addAnimatedNode(mpesaButton);
-        mpesaNodesList.addAnimatedNode(mpesaContainerHbox);
+        mpesaNodesList.setSpacing(50);
         mpesaNodesList.setRotate(270);
         mpesaButton.setOnAction((event) -> {
-            cashNodesList.animateList(false);
-            bankNodesList.animateList(false);
+            if (vbox15.getChildren().contains(pdMpesaTextfield)) {
+                vbox15.getChildren().remove(pdMpesaTextfield);
+            } else if (vbox15.getChildren().contains(pdbankTextfield)) {
+                vbox15.getChildren().remove(pdbankTextfield);
+                vbox15.getChildren().add(pdMpesaTextfield);
+            } else if (vbox15.getChildren().contains(pdCashTextfield)) {
+                vbox15.getChildren().remove(pdCashTextfield);
+                vbox15.getChildren().add(pdMpesaTextfield);
+            } else {
+                vbox15.getChildren().add(pdMpesaTextfield);
+            }
         });
+        
+        ButtonBar.setButtonData(cashButton, ButtonBar.ButtonData.LEFT);
+        ButtonBar.setButtonData(bankButton, ButtonBar.ButtonData.LEFT);
+        ButtonBar.setButtonData(mpesaButton, ButtonBar.ButtonData.LEFT);
+        paymentNodesButtonBar.getButtons().addAll(cashButton, bankButton, mpesaButton);
+        
+        selectPayOptionNode.setAlignment(Pos.BOTTOM_LEFT);
+        selectPayOptionNode.setSpacing(10);
+        selectPayOptionNode.addAnimatedNode(paymentOptionsHeaderButton);
+        selectPayOptionNode.addAnimatedNode(paymentNodesButtonBar);
+        paymentOptionsHeaderButton.setOnMouseClicked((event) -> {
+            if (vbox15.getChildren().contains(pdCashTextfield)) {
+                vbox15.getChildren().remove(pdCashTextfield);
+            } else if (vbox15.getChildren().contains(pdbankTextfield)) {
+                vbox15.getChildren().remove(pdbankTextfield);
+            } else if (vbox15.getChildren().contains(pdMpesaTextfield)) {
+                vbox15.getChildren().remove(pdMpesaTextfield);
+            }
+        });
+        
+        regAndLeaseDatesNodesList.setAlignment(Pos.BOTTOM_LEFT);
+        regAndLeaseDatesNodesList.setSpacing(5);
+        regAndLeaseDatesNodesList.addAnimatedNode(regAndLeaseDatesButton);
+        regAndLeaseDatesNodesList.addAnimatedNode(regAndLeaseDatesButtonBar);
+        ButtonBar.setButtonData(regDatesNodesList, ButtonBar.ButtonData.LEFT);
+        ButtonBar.setButtonData(leaseDatesNodesList, ButtonBar.ButtonData.LEFT);
+        regAndLeaseDatesButtonBar.getButtons().addAll(regDatesNodesList, leaseDatesNodesList);
+        ButtonBar.setButtonData(moveInButton, ButtonBar.ButtonData.LEFT);
+        ButtonBar.setButtonData(moveOutButton, ButtonBar.ButtonData.LEFT);
+        regDatesButtonBar.getButtons().addAll(moveInButton, moveOutButton);
+        ButtonBar.setButtonData(leaseStartButton, ButtonBar.ButtonData.LEFT);
+        ButtonBar.setButtonData(leaseEndButton, ButtonBar.ButtonData.LEFT);
+        leaseDatesButtonBar.getButtons().addAll(leaseStartButton, leaseEndButton);
+        regDatesNodesList.setAlignment(Pos.BOTTOM_LEFT);
+        regDatesNodesList.setSpacing(10);
+        regDatesNodesList.addAnimatedNode(regDatesButton);
+        regDatesNodesList.addAnimatedNode(regDatesButtonBar);
+        leaseDatesNodesList.setAlignment(Pos.BOTTOM_LEFT);
+        leaseDatesNodesList.setSpacing(10);
+        leaseDatesNodesList.addAnimatedNode(leaseDatesButton);
+        leaseDatesNodesList.addAnimatedNode(leaseDatesButtonBar);
+        
         
         pdCashButton.setVisible(false);
         pdCashButton.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -3222,12 +3268,6 @@ public class PDController implements Initializable {
                 pdMpesaButton.setVisible(false);
             }
         });
-        
-        
-        
-        JFXNodesList.alignNodeToChild(cashContainerHbox, cashButton);
-        JFXNodesList.alignNodeToChild(bankContainerHbox, bankButton);
-        JFXNodesList.alignNodeToChild(mpesaContainerHbox, mpesaButton);
         
         doneButton.setVisible(false);
         doneButton.getStyleClass().add(ANIMATED_OPTION_BUTTON);
@@ -3415,8 +3455,6 @@ public class PDController implements Initializable {
                 Logger.getLogger(PDController.class.getName()).log(Level.SEVERE, null, ex);
             }
         });*/
-
-        pdHbox5.setPadding(new Insets(10, 0, 0, 0));
         
         l1.setMinSize(120, 20);
         l2.setMinSize(120, 20);
@@ -3438,8 +3476,6 @@ public class PDController implements Initializable {
         l20.setMinSize(120, 20);
         l14.setMinSize(120, 20);
         
-        tdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        tdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         pdScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         pdScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
@@ -3550,13 +3586,13 @@ public class PDController implements Initializable {
                 File initialFile = new File(prefs.get(loc, "location"));
                 if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
                     FileChooser initialLoc = new FileChooser();
-                    File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                    File initFile = initialLoc.showSaveDialog(pdScrollPane.getScene().getWindow());
                     prefs.put(loc, initFile.getPath());
                     saveToTenantDetailsTable(databaseActivityIndicatorTD);
                 } else if (!prefs.get(loc, "location").equals("location")) {
                     FileChooser savedLoc = new FileChooser();
                     savedLoc.setInitialDirectory(initialFile.getParentFile());
-                    File savedFile = savedLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                    File savedFile = savedLoc.showSaveDialog(pdScrollPane.getScene().getWindow());
                     prefs.put(loc, savedFile.getPath());
                     saveToTenantDetailsTable(databaseActivityIndicatorTD);
                 }
@@ -3589,7 +3625,7 @@ public class PDController implements Initializable {
                     
                     if (prefs.get(loc, "location").equals("location") || initialFile.exists() == false) {
                         FileChooser initialLoc = new FileChooser();
-                        File initFile = initialLoc.showSaveDialog(tdScrollPane.getScene().getWindow());
+                        File initFile = initialLoc.showSaveDialog(pdScrollPane.getScene().getWindow());
                         prefs.put(loc, initFile.getPath());
                         System.out.println(prefs.get(loc, "location"));
                         excelFileLocation = initFile.getPath();
@@ -3868,8 +3904,8 @@ public class PDController implements Initializable {
         });
         
         detIcon.visibleProperty().bind(tdName.textProperty().isEmpty().not());
-        payIcon.visibleProperty().bind(pdName.textProperty().isEmpty().not());
-        /*repairsIcon.visibleProperty().bind(rdMonthCombo.valueProperty().isNotNull());*/
+        /*payIcon.visibleProperty().bind(pdName.textProperty().isEmpty().not());
+        repairsIcon.visibleProperty().bind(rdMonthCombo.valueProperty().isNotNull());*/
         
         pdScrollPane.setFitToHeight(true);
         pdScrollPane.setFitToWidth(true);
@@ -4181,34 +4217,14 @@ public class PDController implements Initializable {
         setupMiscellaneousColumn();
         
         paymentsTable.getStyleClass().add(TREE_TABLE_VIEW);
-        paymentsTable.getColumns().addAll(houseNoCol, tenantNameCol, amountCol, monthCol, dateCol, methodCol);
+        paymentsTable.getColumns().addAll(amountCol, monthCol, dateCol, methodCol);
 
         /*repairsTable.getStyleClass().add(TREE_TABLE_VIEW);*/
         repairsTable.getColumns().addAll(repairMonthCol, repairDone, materialCostOfRepair, labourCostOfRepair, miscExpenses, dateOfRepair);
         
-        pdMonthCombo.setPrefWidth(170);
-        
-        tenantDetailsLayout.setHgap(10);
-        tenantDetailsLayout.setVgap(10);
-        tenantDetailsLayout.setPadding(new Insets(5));
-        tenantDetailsLayout.add(tdHbox1, 0, 0);
-        tenantDetailsLayout.add(tdHbox2, 0, 1);
-        tenantDetailsLayout.add(tdHbox3, 0, 2);
-        tenantDetailsLayout.add(tdHbox4, 0, 3);
-        tenantDetailsLayout.add(tdHbox5, 0, 4);
-        tenantDetailsLayout.add(tdHbox6, 0, 5);
-        tenantDetailsLayout.add(databaseActivityIndicatorTD, 3, 0);
-        
-        payLayout.setHgap(10);
-        payLayout.setVgap(10);
-        payLayout.setPadding(new Insets(5));
-        payLayout.add(pdHbox1, 0, 0);
-        payLayout.add(pdHbox2, 0, 1);
-        payLayout.add(pdHbox3, 0, 2);
-        payLayout.add(pdHbox4, 0, 3);
-        payLayout.add(pdHbox5, 0, 4);
-        payLayout.add(pdHbox6, 0, 5);
-        payLayout.add(databaseActivityIndicatorPD, 2, 0);
+        pdMonthCombo.setPrefWidth(220);
+        pdName.setPrefWidth(200);
+        pdAmount.setPrefWidth(200);
         
         tdDatesGrid.setVgap(10);
         tdDatesGrid.setPadding(new Insets(10));
@@ -4218,12 +4234,12 @@ public class PDController implements Initializable {
         tdDatesGrid.add(tdLeaseEndNodesList, 0, 4);
         tdDatesGrid.add(tdBackButton, 0, 7);
         
-        pdPayGrid.setVgap(10);
+        /*pdPayGrid.setVgap(10);
         pdPayGrid.setPadding(new Insets(10));
         pdPayGrid.add(cashNodesList, 0, 0);
         pdPayGrid.add(bankNodesList, 0, 1);
         pdPayGrid.add(mpesaNodesList, 0, 2);
-        pdPayGrid.add(pdBackButton, 0, 5);
+        pdPayGrid.add(pdBackButton, 0, 5);*/
         
         repairsLayout.setHgap(10);
         repairsLayout.setVgap(10);
@@ -4248,6 +4264,14 @@ public class PDController implements Initializable {
         repairHeaderLabel.setUnderline(true);
         repairHeaderLabel.setPadding(new Insets(0, 5, 0, 10));
         
+        tenantDetailsLabel.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 16));
+        tenantDetailsLabel.setUnderline(true);
+        tenantDetailsLabel.setPadding(new Insets(0, 5, 0, 10));
+        
+        paymentDetailsLabel.setFont(javafx.scene.text.Font.font("Roboto", FontWeight.BOLD, 16));
+        paymentDetailsLabel.setUnderline(true);
+        paymentDetailsLabel.setPadding(new Insets(0, 5, 0, 10));
+        
         repairsTableSearchTextField.setPromptText("Search By Name...");
         repairsTableSearchTextField.setPrefWidth(250);
         tableSearchHbox.setPadding(new Insets(20, 5, 5, 5));
@@ -4266,10 +4290,29 @@ public class PDController implements Initializable {
         vbox5.getChildren().addAll(new Label("Labour Cost"), labourText);
         vbox6.getChildren().addAll(new Label("Other Costs"), miscText);
         
+        vbox7.getChildren().addAll(l1, tdName);
+        vbox8.getChildren().addAll(l2, tdPhone);
+        vbox9.getChildren().addAll(l3, tdAmount);
+        vbox10.getChildren().addAll(l4, tdDeposit);
+        vbox11.getChildren().addAll(l5, tdDueDate);
+        vbox17.getChildren().add(regAndLeaseDatesNodesList);
+        
+        vbox16.getChildren().addAll(l10, pdName);
+        vbox12.getChildren().addAll(l11, pdMonthCombo);
+        vbox13.getChildren().addAll(l12, pdAmount);
+        vbox14.getChildren().addAll(l13, pdPaymentDate);
+        vbox15.setPadding(new Insets(10, 0, 0, 0));
+        vbox15.getChildren().add(selectPayOptionNode);
+        
+        tenantDetailsVbox.setPadding(new Insets(5));
+        tenantDetailsVbox.getChildren().addAll(vbox7, vbox8, vbox9, vbox10, vbox11, vbox17);
+        paymentDetailsVbox.setPadding(new Insets(5));
+        paymentDetailsVbox.getChildren().addAll(vbox16, vbox12, vbox13, vbox14, vbox15);
+        
         repairDetailsVbox.getChildren().addAll(rdMonthCombo, vbox4, vbox5, vbox6, vbox2, vbox3);
         
         repairDetailsGrid.setStyle("-fx-border-color: #d9d9d9");
-        repairDetailsVbox.setPadding(new Insets(5, 5, 5, 5));
+        repairDetailsVbox.setPadding(new Insets(5));
         repairDetailsGrid.add(repairDetailsVbox, 0, 1, 2, 1);
         repairDetailsGrid.add(repairHeaderLabel, 0, 0, 2, 1);
         repairDetailsGrid.add(repairsIcon, 2, 0);
@@ -4285,15 +4328,38 @@ public class PDController implements Initializable {
         AnchorPane.setRightAnchor(repairTableViewGridPane, 0.0);
         AnchorPane.setTopAnchor(repairTableViewGridPane, 0.0);
         
-        tdStackPane.getChildren().add(tdScrollPane);
-        pdStackPane.getChildren().add(pdScrollPane);
+        payAndTenantDetailsAnchorPane.setPadding(new Insets(5));
+        paymentsTable.setPrefSize(520, 360);
+        payAndTenantDetailsGridPane.add(paymentsTable, 0, 0);
+        payAndTenantDetailsAnchorPane.getChildren().add(payAndTenantDetailsGridPane);
+        payAndTenantDetailsTabPane.setPrefWidth(250);
+        payAndTenantDetailsTabPane.setStyle("-fx-border-color: #d9d9d9");
+        payAndTenantDetailsTabPane.getTabs().addAll(paymentsTab, tenantTab);
+        tenantsTabGridPane.add(tenantDetailsLabel, 0, 0, 2, 1);
+        tenantsTabGridPane.add(tenantDetailsVbox, 0, 1, 2, 1);
+        paymentsTabGridPane.add(paymentDetailsLabel, 0, 0, 2, 1);
+        paymentsTabGridPane.add(paymentDetailsVbox, 0, 1, 2, 1);
+        paymentsTabGridPane.add(payIcon, 2, 0);
+        GridPane.setMargin(payIcon, new Insets(0, 50, 0, 0));
+        tenantTab.setContent(tenantsTabGridPane);
+        paymentsTab.setContent(paymentsTabGridPane);
+        
+        AnchorPane.setBottomAnchor(payAndTenantDetailsGridPane, 0.0);
+        AnchorPane.setLeftAnchor(payAndTenantDetailsGridPane, 0.0);
+        AnchorPane.setRightAnchor(payAndTenantDetailsGridPane, 0.0);
+        AnchorPane.setTopAnchor(payAndTenantDetailsGridPane, 0.0);
+        
+        payAndTenantDetailsBorderPane.setCenter(payAndTenantDetailsAnchorPane);
+        payAndTenantDetailsBorderPane.setRight(payAndTenantDetailsTabPane);
+        BorderPane.setMargin(payAndTenantDetailsTabPane, new Insets(5));
+        pdStackPane.getChildren().add(payAndTenantDetailsBorderPane);
         rdBorderPane.setCenter(repairTableViewAnchorPane);
         rdBorderPane.setRight(repairDetailsGrid);
         BorderPane.setMargin(repairDetailsGrid, new Insets(5));
         rdStackPane.getChildren().add(rdBorderPane);
         
         tenantDataPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-        tenantDataPane.getTabs().addAll(tenantDetails, paymentDetails, repairDetails);
+        tenantDataPane.getTabs().addAll(paymentDetails, repairDetails);
 
         detailsPane.setMinSize(450, 300);
         detailsPane.setCenter(tenantDataPane);
@@ -4320,13 +4386,13 @@ public class PDController implements Initializable {
 
         public PayMenuIcon() {
             Label lab = new Label("•••");
-            lab.setStyle("-fx-text-fill:white");
+            lab.setStyle("-fx-text-fill:black");
             lab.setOnMouseClicked((event) -> {
                 ContextMenu conMenu = new ContextMenu(pdUpdate, pdDelete, new SeparatorMenuItem(), pdSave, new SeparatorMenuItem(), pdStickyNote, new SeparatorMenuItem(), pdPrintReceipt);
-                conMenu.show(payIcon, Side.RIGHT, xCursorPos, yCursorPos);
+                conMenu.show(payIcon, Side.BOTTOM, xCursorPos, yCursorPos);
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
-            getChildren().addAll(circle, lab);
+            getChildren().add(lab);
         }
     }
 
@@ -4340,7 +4406,7 @@ public class PDController implements Initializable {
                 if (conMenu.isShowing()) {
                     conMenu.hide();
                 } else {
-                    conMenu.show(repairsIcon, Side.LEFT, xCursorPos, yCursorPos);
+                    conMenu.show(repairsIcon, Side.BOTTOM, xCursorPos, yCursorPos);
                 }
             });
             Circle circle = new Circle(12f, Color.rgb(0, 122, 255));
