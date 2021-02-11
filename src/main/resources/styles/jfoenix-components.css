@@ -108,9 +108,9 @@ and open the template in the editor.
 
 .icons-badge .badge-pane {
     -fx-background-color: #ff4081;
-    -fx-background-radius: 23;
-    -fx-pref-width: 23;
-    -fx-pref-height: 23;
+    -fx-background-radius: 12;
+    -fx-pref-width: 14;
+    -fx-pref-height: 12;
     -fx-alignment: center;
 }
 
@@ -376,6 +376,9 @@ and open the template in the editor.
 }
 .animated-option-button .jfx-rippler{
     -jfx-rippler-fill: rgb(113, 118, 114);
+}
+.animated-option-button:selected{
+    -fx-background-color: #0F9B8E;
 }
 .sub-icon{
     -fx-fill: rgb(113, 118, 114);

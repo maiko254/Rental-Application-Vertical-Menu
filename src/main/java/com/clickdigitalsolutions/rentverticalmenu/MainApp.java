@@ -56,8 +56,8 @@ public class MainApp extends Application {
 
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/main_view.fxml"));
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(getClass().getResource("/styles/newCascadeStyleSheet.css").toExternalForm());
-        scene.getStylesheets().add(getClass().getResource("/styles/jfoenix-components.css").toExternalForm());
+        /*scene.getStylesheets().add(getClass().getResource("/styles/jfoenix-components.css").toExternalForm());*/
+        scene.getStylesheets().add(getClass().getResource("/styles/application.css").toExternalForm());
         stage.getIcons().add(new Image("/images/ApartmentPNG.png", 100.0, 100.0, true, true));
         stage.setTitle("RentApp");
         stage.setScene(scene);

@@ -106,9 +106,6 @@ public class FXMLController implements Initializable {
     private MenuItem editTable;
 
     @FXML
-    private MenuItem search;
-
-    @FXML
     private MenuItem Import;
     
     @FXML
@@ -202,21 +199,6 @@ public class FXMLController implements Initializable {
         return iconButton;
     }
 
-    @FXML
-    private void searchAction() throws IOException {
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/fxml/SearchFXML.fxml"));
-        SearchFXMLController sub = new SearchFXMLController(this);
-        loader.setController(sub);
-        Parent root = loader.load();
-        Scene searchScene = new Scene(root);
-        Stage window = new Stage();
-        window.setScene(searchScene);
-        window.setTitle("Search...");
-        window.initModality(Modality.APPLICATION_MODAL);
-        window.show();
-    }
-    
     public String getDateValueAsString(LocalDate dateConvert){
         String repairsDateString = null;
         if (dateConvert == null) {
@@ -227,14 +209,14 @@ public class FXMLController implements Initializable {
         return repairsDateString;
     }
     
-    private Map getReceiptParameters(){
+    /*private Map getReceiptParameters(){
         HashMap map = new HashMap();
         map.put("houseNumber", subcontroller.blockTreeView.getSelectionModel().getSelectedItem());
         map.put("PayMonth", subcontroller.pdMonthCombo.getSelectionModel().getSelectedItem());
         return map;
-    }
+    }*/
     
-    public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
+    /*public void createExcelSheet(String hNo, String tName, String phoneNo, String monthlyRent, String deposit, String dueDate, String moveInDate, String moveOutDate, String leaseStartDate, String leaseEndDate) throws FileNotFoundException {
         File tenantDataExists = new File("jatom tenants.xls");
         if (tenantDataExists.exists()) {
             try {
@@ -327,7 +309,7 @@ public class FXMLController implements Initializable {
             }
         }
 
-    }
+    }*/
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -343,14 +325,14 @@ public class FXMLController implements Initializable {
         }
         
         
-        FXMLLoader meLoader  = new FXMLLoader();
+        /*FXMLLoader meLoader  = new FXMLLoader();
         try {
             me = meLoader.load(getClass().getResourceAsStream("/fxml/Monthly Expense.fxml"));
             monthlyExpensesTab.setContent(me);
             expensesController = (ME2Controller)meLoader.getController();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
         
         rentalMenu.prefWidthProperty().bind(motherAnchor.widthProperty());
 

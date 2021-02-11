@@ -5,8 +5,8 @@
  */
 package com.clickdigitalsolutions.rentverticalmenu;
 
-import com.jfoenix.controls.RecursiveTreeItem;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
+import java.time.LocalDate;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -45,17 +45,12 @@ public class PDModel extends RecursiveTreeObject<PDModel>{
         }
     }
     
-    public StringProperty houseNumberTablePD;
-    public StringProperty tenantNameTablePD;
     public StringProperty amountTablePD;
     public ObjectProperty<Strings> monthTablePD;
     public StringProperty paymentDateTablePD;
     public StringProperty paymentMethodPD;
-    private static StringProperty titledPaneText = new SimpleStringProperty();
     
-    public PDModel(String houseNumber, String tenantName, String rentAmount, Strings monthPaid, String paymentDate, String paymentMethod){
-        houseNumberTablePD = new SimpleStringProperty(houseNumber);
-        tenantNameTablePD = new SimpleStringProperty(tenantName);
+    public PDModel(String rentAmount, Strings monthPaid, String paymentDate, String paymentMethod){
         amountTablePD = new SimpleStringProperty(rentAmount);
         monthTablePD = new SimpleObjectProperty<>(monthPaid);
         paymentDateTablePD = new SimpleStringProperty(paymentDate);
@@ -64,44 +59,11 @@ public class PDModel extends RecursiveTreeObject<PDModel>{
     
     @Override
     public String toString(){
-        return houseNumberTablePD.get() +","+ tenantNameTablePD.get() +","+ amountTablePD.get() +","+ monthTablePD.get() +","+ paymentDateTablePD.get() +","+ paymentMethodPD.get();
+        return amountTablePD.get() +","+ monthTablePD.get() +","+ paymentDateTablePD.get() +","+ paymentMethodPD.get();
     }
     
     public PDModel(){
         
-    }
-    
-    public static StringProperty titledPaneTextProperty() {
-        return titledPaneText;
-    }
-    
-    public static void setTitledPaneText(String data) {
-        titledPaneText.set(data + getTitledPaneText());
-    }
-
-    public static String getTitledPaneText() {
-        return titledPaneText.get();
-    }
-    
-    public String gethouseNumberTablePD(){
-        return houseNumberTablePD.get();
-    }
-    
-    public void sethouseNumberTablePD(String value){
-        houseNumberTablePD.set(value);
-    }
-    public StringProperty houseNumberTablePDProperty(){
-        return houseNumberTablePD;
-    }
-    
-    public String gettenantNameTablePD(){
-        return this.tenantNameTablePD.get();
-    }
-    public void settenantNameTablePD(String value){
-        tenantNameTablePD.set(value);
-    }
-    public StringProperty tenantNameTablePDProperty(){
-        return tenantNameTablePD;
     }
     
     public String getamountTablePD(){
